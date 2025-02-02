@@ -8,7 +8,7 @@
 
 
 # lib
-from utyls.logger import Logger
+from utyls import logger as log
 #import pdb
 
 
