@@ -3,26 +3,44 @@
 
     Modulo per la gestione dei mazzi di Hearthstone e delle operazioni correlate.
 
-  path:
+    Path:
         scr/models.py   
 
-Descrizione:
+    Descrizione:
+ 
+        Questo modulo contiene la classe DeckManager e funzioni utili per gestire:
 
-    Questo modulo contiene la classe DeckManager che gestisce:
-    - Caricamento/salvataggio dei mazzi da/in file JSON
-    - Parsing delle carte dai mazzi
-    - Sincronizzazione con il database
-    - Calcolo delle statistiche dei mazzi
+            - Caricamento/salvataggio dei mazzi da/in file JSON
+            - Parsing delle carte dai mazzi con verifica di validità
+            - Sincronizzazione delle carte con il database
+            - Calcolo delle statistiche e delle proprietà del mazzo
+            - Manipolazione delle informazioni relative ai mazzi (aggiunta, eliminazione)
 
-Utilizzo:
-    from models import DeckManager
-    from db import session
+    Utilizzo:
+        from models import DeckManager
+        from db import session
 
-    deck_manager = DeckManager()
-    deck_manager.add_deck_from_clipboard("Mazzo Prova")
+        deck_manager = DeckManager()
+        deck_manager.add_deck_from_clipboard()
+
+    Classi:
+        - DeckManager: Classe principale per la gestione dei mazzi.
+
+    Funzioni:
+        - parse_deck_metadata(deck_string): Estrae metadati (nome, classe, formato) dalla stringa del mazzo.
+        - parse_cards_from_deck(deck_string): Estrae le carte da una stringa di mazzo utilizzando regex.
+
+    Esempio di utilizzo:
+        deck_manager = DeckManager()
+        deck_manager.add_deck_from_clipboard()
+
+    Note:
+        Questo modulo utilizza il modulo `db` per l'interazione con il database SQLite.
+        Le funzioni di parsing utilizzano regex per estrarre le informazioni dai mazzi.
+
 """
 
-import json
+#lib
 import os
 import shutil
 import logging
@@ -32,7 +50,7 @@ import pyperclip
 from .db import session, Deck, DeckCard
 from datetime import datetime
 from .db import session, Card
-#from utyls.logger import Logger
+from utyls import logger as log
 #import pdb
 
 

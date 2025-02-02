@@ -3,29 +3,82 @@
 
     Modulo per la gestione del database SQLite e dei modelli SQLAlchemy.
 
-    path:
+    Path:
         scr/db.py
 
-Descrizione:
+    Descrizione:
 
-    Questo modulo definisce il modello `Card` per rappresentare le carte di Hearthstone
-    e gestisce la connessione al database SQLite. Fornisce funzioni per operazioni CRUD
-    (Create, Read, Update, Delete) sulle carte.
+        Questo modulo gestisce la connessione a un database SQLite per la memorizzazione delle carte e dei mazzi di Hearthstone.
+        Definisce tre modelli principali:
 
-Utilizzo:
-    - Importare il modulo e utilizzare la sessione `session` per interagire con il database.
-    - Utilizzare il modello `Card` per creare, aggiornare o eliminare carte.
+            - `Card`: Rappresenta una singola carta del gioco.
+            - `Deck`: Rappresenta un mazzo di carte.
+            - `DeckCard`: Gestisce la relazione tra mazzi e carte, inclusa la quantità di ciascuna carta in un mazzo.
 
-Esempio:
-    from db import session, Card
+        Include una funzione `setup_database` che crea le tabelle del database se non esistono già.
 
-    # Aggiungere una nuova carta
-    new_card = Card(name="Dragone Rosso", mana_cost=8, card_type="Creatura")
-    session.add(new_card)
-    session.commit()
+    Funzionalità principali:
 
-Dipendenze:
-    - sqlalchemy: Per la gestione del database e dei modelli.
+        - Creazione, lettura, aggiornamento ed eliminazione (CRUD) di carte e mazzi.
+        - Gestione delle relazioni tra mazzi e carte.
+        - Configurazione automatica del database SQLite.
+
+    Esempio di utilizzo:
+        from db import session, Card, Deck, DeckCard
+
+        # Aggiungere una nuova carta
+        new_card = Card(name="Dragone Rosso", mana_cost=8, card_type="Creatura")
+        session.add(new_card)
+        session.commit()
+
+        # Creare un nuovo mazzo
+        new_deck = Deck(name="Aggro Mage", player_class="Mage", game_format="Standard")
+        session.add(new_deck)
+        session.commit()
+
+        # Aggiungere una carta a un mazzo
+        deck_card = DeckCard(deck_id=new_deck.id, card_id=new_card.id, quantity=2)
+        session.add(deck_card)
+        session.commit()
+
+    Modelli:
+
+        - `Card`: Definisce una carta di Hearthstone.
+            Attributi principali:
+            - id (int): Identificativo univoco della carta.
+            - name (str): Nome della carta.
+            - class_name (str): Classe della carta.
+            - mana_cost (int): Costo in mana.
+            - card_type (str): Tipo di carta (Creatura, Magia, ecc.).
+            - card_subtype (str): Sottotipo della carta (es. Drago).
+            - attack (int): Attacco (opzionale, per Creature).
+            - health (int): Salute (opzionale, per Creature).
+            - durability (int): Integrità (opzionale, per Armi).
+            - rarity (str): Rarità della carta (Comune, Rara, ecc.).
+            - expansion (str): Espansione di appartenenza.
+
+        - `Deck`: Definisce un mazzo di Hearthstone.
+            Attributi principali:
+            - id (int): Identificativo univoco del mazzo.
+            - name (str): Nome del mazzo.
+            - player_class (str): Classe del giocatore (Mage, Warrior, ecc.).
+            - game_format (str): Formato del mazzo (Standard, Wild).
+
+        - `DeckCard`: Gestisce la relazione tra carte e mazzi.
+            Attributi principali:
+            - deck_id (int): Identificativo del mazzo.
+            - card_id (int): Identificativo della carta.
+            - quantity (int): Quantità di copie della carta nel mazzo.
+
+    Funzioni:
+        - `setup_database`: Crea il database e le tabelle necessarie se non esistono già.
+
+    Dipendenze:
+        - sqlalchemy: Per la gestione del database e dei modelli.
+
+    Note:
+        Il database viene configurato automaticamente all'importazione del modulo. Per modificare il percorso del database, aggiornare la costante `DATABASE_PATH`.
+
 """
 
 # lib
@@ -35,7 +88,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import ForeignKey
-#from utyls.logger import Logger
+from utyls import logger as log
 #import pdb
 
 # Configurazione del database

@@ -29,52 +29,67 @@ class EnuColors(Enum):
     BLUE = 'blue'
     YELLOW = 'yellow'
 
-class EnuCard(Enum):
-    Name = ""
-    CLASS = ""
-    ManaCost = 0
-    CardType = ""
-    CardSubType = ""
-    Rarity = ""
-    Expansion = ""
-    Text = ""
-    Attack = 0
-    Health = 0
-    Durability = 0
+class ENUCARD(Enum):
+    """ info base obblicagorie delel carte pe rl'interazione con il db. """
+
+    Name = "name"
+    ManaCost = "mana_cost"
+    CardType = "card_type"
+
+class EnuExtraCard(Enum):
+    """ info extra delle carte pe rl'interazione con il db. """
+
+    Name = "name"
+    CLASS = "class"
+    ManaCost = "mana_cost"
+    CardType = "card_type"
+    CardSubType = "card_subtype"
+    Rarity = "rarity"
+    Expansion = "expansion"
+    Attack = "attack"
+    Health = "health"
+    Durability = "durability"
 
 
 class EnuCardType(Enum):
+    """ tipi di carte """
+
     CREATURA = "Creatura"
     MAGIA = "Magia"
     LUOGO = "Luogo"
     ARMA = "Arma"
     EROE = "Eroe"
 
+class EnuHero(Enum):
+    """ eroi delle carte """
+    
+    CACCIATORE = "Cacciatore"
+    DRUIDO = "Druido"
+    GUERRIERO = "Guerriero"
+    KNIGHTDEATH = "cavaliere della morte"
+    LADRO = "Ladro"
+    MAGO = "Mago"
+    PALADINO = "Paladino"
+    SACERDOTE = "Sacerdote"
+    SCIAMANO = "Sciamano"
+    SHADOHUNTER = "Cacciatore di demoni"
+    STREGONE = "Stregone"
+
 class EnuRarity(Enum):
+    """ rarità delle carte """
+
     COMUNE = "Comune"
     RARA = "Rara"
     EPICA = "Epica"
     LEGGENDARIA = "Leggendaria"
 
+class EnuExpansion(Enum):
+    """ espansioni delle carte """
 
+    STANDARD = "standard"
+    CLASSIC = "Classic"
+    UNKNOWN = "Unknown"
 
-
-
-
-# classi per la gestione degli stati del personaggio
-class Position(Enum):
-    REGLINING = 0
-    SITTING = 1
-    STANDING = 2
-    FLOATING = 3
-
-
-class ChStatus(Enum):
-    CREAZIONE = -2
-    MORTO = -1
-    INATTIVO = 0
-    FERMO = 1
-    MOVIMENTO = 2
 
 
 

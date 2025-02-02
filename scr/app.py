@@ -1,21 +1,50 @@
 """
-app.py
+    app.py
 
-Modulo principale dell'applicazione 
+    Modulo principale dell'applicazione Hearthstone Deck Manager.
 
-path:
-    scr/app.py
+    Path:
+        scr/app.py
 
-Componenti:
-- Finestra principale (HearthstoneApp): interfaccia utente principale dell'applicazione
-- Controller (AppController): gestione degli eventi dell'interfaccia utente
-- Gestione degli eventi dell'interfaccia utente: aggiunta, copia, visualizzazione, aggiornamento, eliminazione e statistiche dei mazzi
+    Componenti:
 
-Descrizione:
-    Questo modulo gestisce l'interfaccia utente principale e coordina
-    le operazioni tra i vari componenti dell'applicazione.
+    - HearthstoneApp (Finestra principale):
+        - Gestisce l'interfaccia utente principale tramite wxPython.
+        - Visualizza l'elenco dei mazzi in un controllo (wx.ListCtrl) con colonne per nome, classe e formato.
+        - Include una barra di ricerca per filtrare i mazzi.
+        - Presenta vari pulsanti per operazioni quali aggiunta, copia, visualizzazione, aggiornamento, eliminazione dei mazzi, visualizzazione della collezione carte e uscita dall'applicazione.
+        - Gestisce una barra di stato per mostrare messaggi informativi.
+        
+    - AppController (Controller):
+        - Coordina le operazioni tra l'interfaccia utente e il gestore dei mazzi (DeckManager).
+        - Gestisce eventi dell'interfaccia quali l'aggiunta di un mazzo (importandolo dagli appunti), la cancellazione di un mazzo e il recupero delle statistiche del mazzo.
+
+    Descrizione:
+
+        Questo modulo rappresenta il cuore dell'applicazione, coordinando l'interazione tra l'interfaccia grafica, il database e la logica di gestione dei mazzi.
+        Le funzionalità principali includono:
+
+          - Visualizzazione e aggiornamento dell'elenco dei mazzi.
+          - Gestione degli eventi dell'utente per l'aggiunta (tramite contenuti copiati negli appunti), la copia (formattazione e copia negli appunti), la visualizzazione dettagliata, l'aggiornamento e l'eliminazione dei mazzi.
+          - Calcolo e visualizzazione delle statistiche dei mazzi (attraverso l'integrazione con il DeckManager e l'utilizzo di dialoghi specifici come DeckStatsDialog).
+          - Accesso alla collezione delle carte tramite CardCollectionDialog.
+          
+    Dipendenze:
+        - wxPython: per l'interfaccia grafica.
+        - pyperclip: per l'interazione con gli appunti.
+        - logging: per la gestione e il tracciamento degli errori.
+        - SQLAlchemy (attraverso scr.db): per la gestione del database contenente i mazzi e le carte.
+        - Moduli interni (scr.models, scr.views, utyls.enu_glob, utyls.logger): per la gestione dei mazzi, dei dialoghi e per il logging personalizzato.
+
+    Utilizzo:
+        L'applicazione viene avviata creando un'istanza di wx.App, istanziando HearthstoneApp e avviando il MainLoop di wxPython.
+
+    Note:
+        - Il modulo sfrutta il pattern MVC in maniera semplificata, con HearthstoneApp che rappresenta la vista e AppController che gestisce la logica applicativa.
+        - La gestione dei mazzi si avvale di DeckManager, il quale si occupa anche di importare mazzi dagli appunti, effettuare parsing dei dati e interfacciarsi con il database.
 """
 
+# lib
 import wx
 import logging
 import pyperclip
@@ -25,7 +54,7 @@ from scr.models import DeckManager
 from scr.views import CardCollectionDialog, DeckStatsDialog
 from scr.db import session
 from utyls import enu_glob as eg
-#from utyls.logger import Logger
+from utyls import logger as log
 #import pdb
 
 

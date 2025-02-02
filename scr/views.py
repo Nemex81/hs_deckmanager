@@ -19,7 +19,8 @@ Utilizzo:
 import wx
 import logging
 from .db import session, Card
-#from utyls.logger import Logger
+from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuHero, EnuRarity, EnuExpansion
+from utyls import logger as log
 #import pdb
 
 
@@ -29,7 +30,7 @@ class CardEditDialog(wx.Dialog):
 
     def __init__(self, parent, card=None):
         title = "Modifica Carta" if card else "Aggiungi Carta"
-        super().__init__(parent, title=title, size=(400, 300))
+        super().__init__(parent, title=title, size=(400, 400))  # Aumenta l'altezza della finestra
         self.card = card
         self.init_ui()
 
@@ -40,11 +41,99 @@ class CardEditDialog(wx.Dialog):
         # Campi di input
         fields = [
             ("Nome:", wx.TextCtrl(panel)),
+            ("Classe:", wx.ComboBox(panel, choices=[h.value for h in EnuHero], style=wx.CB_READONLY)),
             ("Costo Mana:", wx.SpinCtrl(panel, min=0, max=20)),
-            ("Tipo:", wx.ComboBox(panel, choices=["Creatura", "Magia", "Arma"], style=wx.CB_READONLY)),
+            ("Tipo:", wx.ComboBox(panel, choices=[t.value for t in EnuCardType], style=wx.CB_READONLY)),
+            ("Rarità:", wx.ComboBox(panel, choices=[r.value for r in EnuRarity], style=wx.CB_READONLY)),
+            ("Espansione:", wx.ComboBox(panel, choices=[e.value for e in EnuExpansion], style=wx.CB_READONLY))
+        ]
+
+        # Aggiungi i campi alla finestra
+        for label, control in fields:
+            row = wx.BoxSizer(wx.HORIZONTAL)
+            row.Add(wx.StaticText(panel, label=label), flag=wx.LEFT | wx.RIGHT, border=10)
+            row.Add(control, proportion=1)
+            sizer.Add(row, flag=wx.EXPAND | wx.ALL, border=5)
+            setattr(self, label.lower().replace(" ", "_").replace(":", ""), control)
+
+        # Pulsanti
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        btn_save = wx.Button(panel, label="Salva")
+        btn_close = wx.Button(panel, label="Chiudi")
+        btn_sizer.Add(btn_save, flag=wx.RIGHT, border=10)
+        btn_sizer.Add(btn_close)
+
+        # Eventi
+        btn_save.Bind(wx.EVT_BUTTON, self.on_save)
+        btn_close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
+
+        sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        panel.SetSizer(sizer)
+        self.Centre()
+
+        # Se è una modifica, pre-carica i dati della carta
+        if self.card:
+            self.nome.SetValue(self.card.name)
+            self.classe.SetValue(self.card.class_name)
+            self.costo_mana.SetValue(self.card.mana_cost)
+            self.tipo.SetValue(self.card.card_type)
+            self.rarità.SetValue(self.card.rarity)
+            self.espansione.SetValue(self.card.expansion)
+
+    def on_save(self, event):
+        """Salva la carta nel database."""
+        try:
+            card_data = {
+                "name": self.nome.GetValue(),
+                "class_name": self.classe.GetValue(),
+                "mana_cost": self.costo_mana.GetValue(),
+                "card_type": self.tipo.GetValue(),
+                "rarity": self.rarità.GetValue(),
+                "expansion": self.espansione.GetValue()
+            }
+
+            if self.card:
+                # Modifica la carta esistente
+                self.card.name = card_data["name"]
+                self.card.class_name = card_data["class_name"]
+                self.card.mana_cost = card_data["mana_cost"]
+                self.card.card_type = card_data["card_type"]
+                self.card.rarity = card_data["rarity"]
+                self.card.expansion = card_data["expansion"]
+            else:
+                # Aggiungi una nuova carta
+                new_card = Card(**card_data)
+                session.add(new_card)
+
+            session.commit()
+            self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
+
+        except Exception as e:
+            wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore")
+
+
+
+class last_CardEditDialog(wx.Dialog):
+    """Finestra di dialogo per aggiungere o modificare una carta."""
+
+    def __init__(self, parent, card=None):
+        title = "Modifica Carta" if card else "Aggiungi Carta"
+        super().__init__(parent, title=title, size=(400, 350))
+        self.card = card
+        self.init_ui()
+
+    def init_ui(self):
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Campi di input
+        fields = [
+            ("Nome:", wx.TextCtrl(panel)),
             ("Classe:", wx.TextCtrl(panel)),
-            ("Rarità:", wx.ComboBox(panel, choices=["Comune", "Rara", "Epica", "Leggendaria"], style=wx.CB_READONLY)),
-            ("Espansione:", wx.TextCtrl(panel))
+            ("Costo Mana:", wx.SpinCtrl(panel, min=0, max=20)),
+            ("Tipo:", wx.ComboBox(panel, choices=[t.value for t in EnuCardType], style=wx.CB_READONLY)),  # Usa EnuCardType
+            ("Rarità:", wx.ComboBox(panel, choices=[r.value for r in EnuRarity], style=wx.CB_READONLY)),  # Usa EnuRarity
+            ("Espansione:", wx.ComboBox(panel, choices=[e.value for e in EnuExpansion], style=wx.CB_READONLY))  # Usa EnuExpansion
         ]
 
         # Aggiungi i campi alla finestra
@@ -73,9 +162,9 @@ class CardEditDialog(wx.Dialog):
         # Se è una modifica, pre-carica i dati della carta
         if self.card:
             self.nome.SetValue(self.card.name)
+            self.classe.SetValue(self.card.class_name)
             self.costo_mana.SetValue(self.card.mana_cost)
             self.tipo.SetValue(self.card.card_type)
-            self.classe.SetValue(self.card.class_name)
             self.rarità.SetValue(self.card.rarity)
             self.espansione.SetValue(self.card.expansion)
 
@@ -84,9 +173,9 @@ class CardEditDialog(wx.Dialog):
         try:
             card_data = {
                 "name": self.nome.GetValue(),
+                "class_name": self.classe.GetValue(),
                 "mana_cost": self.costo_mana.GetValue(),
                 "card_type": self.tipo.GetValue(),
-                "class_name": self.classe.GetValue(),
                 "rarity": self.rarità.GetValue(),
                 "expansion": self.espansione.GetValue()
             }
@@ -94,9 +183,9 @@ class CardEditDialog(wx.Dialog):
             if self.card:
                 # Modifica la carta esistente
                 self.card.name = card_data["name"]
+                self.card.class_name = card_data["class_name"]
                 self.card.mana_cost = card_data["mana_cost"]
                 self.card.card_type = card_data["card_type"]
-                self.card.class_name = card_data["class_name"]
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
             else:
@@ -106,38 +195,10 @@ class CardEditDialog(wx.Dialog):
 
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
+
         except Exception as e:
             wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore")
 
-    def last_on_save(self, event):
-        """Salva la carta nel database."""
-        try:
-            card_data = {
-                "name": self.nome.GetValue(),
-                "mana_cost": self.costo_mana.GetValue(),
-                "card_type": self.tipo.GetValue(),
-                "class_name": self.classe.GetValue(),
-                "rarity": self.rarità.GetValue(),
-                "expansion": self.espansione.GetValue()
-            }
-
-            if self.card:
-                # Modifica la carta esistente
-                self.card.name = card_data["name"]
-                self.card.mana_cost = card_data["mana_cost"]
-                self.card.card_type = card_data["card_type"]
-                self.card.class_name = card_data["class_name"]
-                self.card.rarity = card_data["rarity"]
-                self.card.expansion = card_data["expansion"]
-            else:
-                # Aggiungi una nuova carta
-                new_card = Card(**card_data)
-                session.add(new_card)
-
-            session.commit()
-            self.Close()
-        except Exception as e:
-            wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore")
 
 
 
@@ -180,8 +241,8 @@ class FilterDialog(wx.Dialog):
         # Elementi UI
         self.search_ctrl = wx.SearchCtrl(panel)
         self.mana_cost = wx.SpinCtrl(panel, min=0, max=20)
-        self.card_type = wx.ComboBox(panel, choices=["Tutti", "Creatura", "Magia", "Arma"], style=wx.CB_READONLY)
-        self.rarity = wx.ComboBox(panel, choices=["Tutti", "Comune", "Rara", "Epica", "Leggendaria"], style=wx.CB_READONLY)
+        self.card_type = wx.ComboBox(panel, choices=["Tutti"] + [t.value for t in EnuCardType], style=wx.CB_READONLY)  # Usa EnuCardType
+        self.rarity = wx.ComboBox(panel, choices=["Tutti"] + [r.value for r in EnuRarity], style=wx.CB_READONLY)  # Usa EnuRarity
 
         # Layout
         controls = [
