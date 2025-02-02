@@ -38,8 +38,7 @@ from .db import session, Card
 
 
 def parse_deck_metadata(deck_string):
-    """ Estrae nome, classe e formato dalla sringa grezza del mazzo copiato. """
-
+    """ Estrae nome, classe e formato dalla stringa grezza del mazzo copiato. """
     lines = deck_string.splitlines()[:3]
     metadata = {
         "name": lines[0].replace("###", "").strip(),
@@ -69,7 +68,6 @@ class DeckManager:
 
     def is_valid_deck(self, deck_string):
         """Verifica se una stringa rappresenta un mazzo valido."""
-
         return bool(
             deck_string and 
             deck_string.startswith("###") and 
@@ -78,7 +76,6 @@ class DeckManager:
 
     def add_deck_from_clipboard(self):
         """Aggiunge un mazzo dagli appunti."""
-
         deck_string = pyperclip.paste()
         if self.is_valid_deck(deck_string):
             # Estrai i metadati del mazzo (incluso il nome)
@@ -97,30 +94,40 @@ class DeckManager:
             session.add(new_deck)
             session.commit()
 
-            # Sincronizza le carte con il database
-            self.sync_cards_with_database(deck_string)
+            # Ottimizzazione: Recupera tutte le carte esistenti in una sola query
+            existing_cards = session.query(Card.name).filter(Card.name.in_([card["name"] for card in cards])).all()
+            existing_card_names = {card.name for card in existing_cards}
 
-            # Aggiungi le carte al mazzo
+            # Filtra le nuove carte
+            new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
+
+            # Crea una lista di oggetti Card per le nuove carte
+            new_cards = [
+                Card(
+                    name=card_data["name"],
+                    class_name="Unknown",
+                    mana_cost=card_data["mana_cost"],
+                    card_type="Unknown",
+                    card_subtype="Unknown",
+                    rarity="Unknown",
+                    expansion="Unknown"
+                )
+                for card_data in new_cards_data
+            ]
+
+            # Inserisci tutte le nuove carte in una sola operazione
+            session.bulk_save_objects(new_cards)
+            session.commit()
+
+            # Aggiungi le relazioni tra mazzo e carte
+            deck_cards = []
             for card_data in cards:
                 card = session.query(Card).filter_by(name=card_data["name"]).first()
-                if not card:
-                    # Se la carta non esiste, creala
-                    card = Card(
-                        name=card_data["name"],
-                        class_name="Unknown",
-                        mana_cost=card_data["mana_cost"],
-                        card_type="Unknown",
-                        card_subtype="Unknown",
-                        rarity="Unknown",
-                        expansion="Unknown"
-                    )
-                    session.add(card)
-                    session.commit()
-
-                # Aggiungi la relazione tra il mazzo e la carta
-                deck_card = DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"])
-                session.add(deck_card)
-                session.commit()
+                deck_cards.append(DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"]))
+            
+            # Inserisci tutte le relazioni in una sola operazione
+            session.bulk_save_objects(deck_cards)
+            session.commit()
 
             logging.info(f"Mazzo '{deck_name}' aggiunto con successo.")
             wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
@@ -130,9 +137,38 @@ class DeckManager:
             wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
 
 
+    def sync_cards_with_database(self, deck_string):
+        """Sincronizza le carte del mazzo con il database."""
+        cards = self.parse_cards_from_deck(deck_string)
+
+        # Ottimizzazione: Recupera tutte le carte esistenti in una sola query
+        existing_cards = session.query(Card.name).filter(Card.name.in_([card["name"] for card in cards])).all()
+        existing_card_names = {card.name for card in existing_cards}
+
+        # Filtra le nuove carte
+        new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
+
+        # Crea una lista di oggetti Card per le nuove carte
+        new_cards = [
+            Card(
+                name=card_data["name"],
+                class_name="Unknown",
+                mana_cost=card_data["mana_cost"],
+                card_type="Unknown",
+                card_subtype="Unknown",
+                rarity="Unknown",
+                expansion="Unknown"
+            )
+            for card_data in new_cards_data
+        ]
+
+        # Inserisci tutte le nuove carte in una sola operazione
+        session.bulk_save_objects(new_cards)
+        session.commit()
+
+
     def parse_cards_from_deck(self, deck_string):
         """Estrae le carte da una stringa di mazzo con regex migliorata."""
-
         cards = []
         pattern = r'^#*\s*(\d+)x?\s*\((\d+)\)\s*(.+)$'
         
@@ -213,6 +249,7 @@ class DeckManager:
             logging.info(f"Mazzo '{deck_name}' eliminato con successo.")
         else:
             logging.warning(f"Mazzo '{deck_name}' non trovato.")
+
 
     def get_deck_statistics(self, deck_name):
         """Calcola statistiche dettagliate per un mazzo."""
