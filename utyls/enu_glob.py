@@ -1,11 +1,11 @@
 """
-	Modulo per la gestione delle enumerazioni globali
+    Modulo per la gestione delle enumerazioni globali
 
-	path:
-		utyls/enu_glob.py
-		
-	Descrizione:
-	Contiene le enumerazioni globali utilizzate nell'applicazione.
+    path:
+        utyls/enu_glob.py
+        
+    Descrizione:
+    Contiene le enumerazioni globali utilizzate nell'applicazione.
 
 """
 
@@ -21,7 +21,7 @@ from scr.db import Base, session, Card, Deck, DeckCard
 #import pdb
 
 # colori rgb
-class Colors(Enum):
+class EnuColors(Enum):
     BLACK = 'black'
     WHITE = 'white'
     RED = 'red'
@@ -29,14 +29,28 @@ class Colors(Enum):
     BLUE = 'blue'
     YELLOW = 'yellow'
 
-class CardType(Enum):
+class EnuCard(Enum):
+    Name = ""
+    CLASS = ""
+    ManaCost = 0
+    CardType = ""
+    CardSubType = ""
+    Rarity = ""
+    Expansion = ""
+    Text = ""
+    Attack = 0
+    Health = 0
+    Durability = 0
+
+
+class EnuCardType(Enum):
     CREATURA = "Creatura"
     MAGIA = "Magia"
     LUOGO = "Luogo"
     ARMA = "Arma"
     EROE = "Eroe"
 
-class Rarity(Enum):
+class EnuRarity(Enum):
     COMUNE = "Comune"
     RARA = "Rara"
     EPICA = "Epica"
