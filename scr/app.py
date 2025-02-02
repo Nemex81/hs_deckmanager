@@ -219,11 +219,16 @@ class HearthstoneApp(wx.Frame):
                 deck_info = f"### {deck_content['name']}\n"
                 deck_info += f"# Classe: {deck_content['player_class']}\n"
                 deck_info += f"# Formato: {deck_content['game_format']}\n"
-                deck_info += "# Anno del Pegaso\n\n"  # Espansione (puoi personalizzarla)
+                deck_info += "# Anno del Pegaso\n"  # Espansione (puoi personalizzarla)
+                deck_info += "#\n"
                 
                 # Aggiungi le carte
                 for card in deck_content["cards"]:
-                    deck_info += f"{card['quantity']}x ({card['mana_cost']}) {card['name']}\n"
+                    deck_info += f"# {card['quantity']}x ({card['mana_cost']}) {card['name']}\n"
+
+                deck_info += "#\n"
+                deck_info += "AAECAeSKBwaU1ATj+AXpngbSsAb3wAbO8QYMg58E0p8E7KAEx7AG7eoGn/EGwvEG3vEG4/EG5fEGqPcGiPgGAAA=\n#\n# Per utilizzare questo mazzo, copialo negli appunti e crea un nuovo mazzo in Hearthstone\n"
+
                 
                 # Copia il contenuto del mazzo negli appunti
                 pyperclip.copy(deck_info)
