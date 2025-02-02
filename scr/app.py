@@ -226,10 +226,10 @@ class HearthstoneApp(wx.Frame):
                 for card in deck_content["cards"]:
                     deck_info += f"# {card['quantity']}x ({card['mana_cost']}) {card['name']}\n"
 
+            # Aggiungi il codice del mazzo alla fine
                 deck_info += "#\n"
                 deck_info += "AAECAeSKBwaU1ATj+AXpngbSsAb3wAbO8QYMg58E0p8E7KAEx7AG7eoGn/EGwvEG3vEG4/EG5fEGqPcGiPgGAAA=\n#\n# Per utilizzare questo mazzo, copialo negli appunti e crea un nuovo mazzo in Hearthstone\n"
 
-                
                 # Copia il contenuto del mazzo negli appunti
                 pyperclip.copy(deck_info)
                 self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
