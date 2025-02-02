@@ -19,6 +19,8 @@ Utilizzo:
 import wx
 import logging
 from .db import session, Card
+from utyls.logger import Logger
+#import pdb
 
 
 

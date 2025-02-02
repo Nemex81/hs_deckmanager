@@ -25,6 +25,8 @@ from scr.models import DeckManager
 from scr.views import CardCollectionDialog, DeckStatsDialog
 from scr.db import session
 from utyls import enu_glob as eg
+from utyls.logger import Logger
+#import pdb
 
 
 

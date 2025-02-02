@@ -50,6 +50,8 @@ Punto di ingresso principale dell'applicazione.
 import wx
 from scr.app import HearthstoneApp
 
+
+
 if __name__ == "__main__":
     app = wx.App(False)
     frame = HearthstoneApp(None, title="Hearthstone Deck Manager", size=(650, 700))

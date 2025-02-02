@@ -32,11 +32,13 @@ import pyperclip
 from .db import session, Deck, DeckCard
 from datetime import datetime
 from .db import session, Card
+from utyls.logger import Logger
+#import pdb
 
 
 
 def parse_deck_metadata(deck_string):
-    """Estrae nome, classe e formato dal mazzo"""
+    """ Estrae nome, classe e formato dalla sringa grezza del mazzo copiato. """
 
     lines = deck_string.splitlines()[:3]
     metadata = {
