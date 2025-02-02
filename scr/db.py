@@ -35,7 +35,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import ForeignKey
-from utyls.logger import Logger
+#from utyls.logger import Logger
 #import pdb
 
 # Configurazione del database

@@ -25,7 +25,7 @@ from scr.models import DeckManager
 from scr.views import CardCollectionDialog, DeckStatsDialog
 from scr.db import session
 from utyls import enu_glob as eg
-from utyls.logger import Logger
+#from utyls.logger import Logger
 #import pdb
 
 
@@ -180,16 +180,6 @@ class HearthstoneApp(wx.Frame):
             index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
             self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
             self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-
-
-    def last_update_deck_list(self):
-        """Aggiorna la lista dei mazzi."""
-
-        # Svuota la lista
-        #self.deck_list.DeleteAllItems()
-        decks = session.query(Deck).all()
-        for deck in decks:
-            self.deck_list.Append(deck.name)
 
     def update_status(self, message):
         """Aggiorna la barra di stato."""
