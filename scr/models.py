@@ -47,9 +47,9 @@ import logging
 import re
 import wx
 import pyperclip
-from .db import session, Deck, DeckCard
 from datetime import datetime
-from .db import session, Card
+from sqlalchemy.exc import SQLAlchemyError
+from .db import session, Deck, DeckCard, Card
 from utyls import logger as log
 #import pdb
 
@@ -367,6 +367,7 @@ class DeckManager:
             "Creature": 0,
             "Magie": 0,
             "Armi": 0,
+            "Luoghi": 0,
             "Costo Mana Medio": 0.0
         }
 
@@ -381,6 +382,10 @@ class DeckManager:
                     stats["Magie"] += card["quantity"]
                 elif card_type == "arma":
                     stats["Armi"] += card["quantity"]
+                elif card_type == "luogo":
+                    stats["Luoghi"] += card["quantity"]
+
+                # Calcola il costo totale del mana
                 total_mana += db_card.mana_cost * card["quantity"]
 
         if stats["Numero Carte"] > 0:

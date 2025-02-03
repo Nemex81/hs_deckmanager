@@ -117,7 +117,7 @@ class CardEditDialog(wx.Dialog):
 class DeckStatsDialog(wx.Dialog):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
     def __init__(self, parent, stats):
-        super().__init__(parent, title="Statistiche Mazzo", size=(300, 333))
+        super().__init__(parent, title="Statistiche Mazzo", size=(300, 390))
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
