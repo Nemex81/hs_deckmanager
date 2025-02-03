@@ -93,13 +93,12 @@ from utyls import logger as log
 #import pdb
 
 # Configurazione del database
-DATABASE_PATH = "hearthstone_decks_storage.db"
-engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=True)
-Session = sessionmaker(bind=engine)
-session = Session()
+DATABASE_PATH = "hearthstone_decks_storage.db"                      # Percorso del database SQLite
+engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=True)     # Connessione al database SQLite
+Session = sessionmaker(bind=engine)                                 # Sessione del database per l'interazione con il database
+session = Session()                                                 # Sessione del database per l'interazione con il database
+Base = declarative_base()                                           # Base per i modelli SQLAlchemy
 
-# Base per i modelli SQLAlchemy
-Base = declarative_base()
 
 
 @contextmanager
@@ -119,6 +118,9 @@ def db_session():
         session.rollback()
         log.error(f"Errore imprevisto: {str(e)}")
         raise
+
+    finally:
+        session.close()
 
 
 
