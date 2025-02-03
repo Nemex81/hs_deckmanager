@@ -49,6 +49,7 @@ import wx
 import logging
 import pyperclip
 from scr.db import session, Deck, DeckCard, Card
+from sqlalchemy.exc import SQLAlchemyError
 from scr.models import Deck
 from scr.models import DeckManager
 from scr.views import CardCollectionDialog, DeckStatsDialog
@@ -80,12 +81,16 @@ class AppController:
 
     def delete_deck(self, deck_name):
         try:
-            self.deck_manager.delete_deck(deck_name)
-            self.app.update_deck_list()
-            self.app.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
-            wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+            if self.deck_manager.delete_deck(deck_name):
+                self.app.update_deck_list()
+                self.app.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
+                log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+                return True
+
+        except SQLAlchemyError as e:
+            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
+
         except Exception as e:
-            logging.error(f"Errore durante l'eliminazione del mazzo: {e}")
             wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
 
     def get_deck_statistics(self, deck_name):
@@ -204,6 +209,7 @@ class HearthstoneApp(wx.Frame):
 
     def update_deck_list(self):
         """Aggiorna la lista dei mazzi."""
+
         self.deck_list.DeleteAllItems()  # Pulisce la lista
 
         decks = session.query(Deck).all()
@@ -280,6 +286,7 @@ class HearthstoneApp(wx.Frame):
 
     def on_view_deck(self, event):
         """Mostra il mazzo selezionato."""
+
         deck_name = self.get_selected_deck()
         if deck_name:
             deck_content = self.deck_manager.get_deck(deck_name)
@@ -384,12 +391,37 @@ class HearthstoneApp(wx.Frame):
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
+                try:
+                    #success = self.deck_manager.delete_deck(deck_name)
+                    success = self.controller.delete_deck(deck_name)
+                    if success:
+                        self.update_deck_list()
+                        self.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
+                        wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+                    else:
+                        wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+
+                except SQLAlchemyError as e:
+                    wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
+
+                except Exception as e:
+                    wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+        else:
+            wx.MessageBox("Seleziona un mazzo prima di eliminarlo.", "Errore")
+
+    def last_on_delete_deck(self, event):
+        """Elimina il mazzo selezionato."""
+
+        deck_name = self.get_selected_deck()
+        if deck_name:
+            if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 self.controller.delete_deck(deck_name)
         else:
             wx.MessageBox("Seleziona un mazzo prima di eliminarlo.", "Errore")
 
     def on_search(self, event):
         """Filtra i mazzi in base alla ricerca."""
+
         search_term = self.search_bar.GetValue().lower()
         decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_term}%")).all()
         #self.deck_list.DeleteAllItems()

@@ -281,6 +281,7 @@ class DeckManager:
                 session.delete(deck)
 
             log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+            return True
 
 
         except SQLAlchemyError as e:
