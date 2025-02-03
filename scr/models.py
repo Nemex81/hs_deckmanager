@@ -47,7 +47,7 @@ import re
 import pyperclip
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
-from .db import session, Deck, DeckCard, Card
+from .db import session, db_session, Deck, DeckCard, Card
 from utyls import logger as log
 #import pdb
 
@@ -95,6 +95,7 @@ class DeckManager:
         try:
             deck_string = pyperclip.paste()
             if not self.is_valid_deck(deck_string):
+                log.error("Il mazzo copiato non è valido.")
                 raise ValueError("Il mazzo copiato non è valido.")
 
             metadata = parse_deck_metadata(deck_string)
@@ -124,6 +125,7 @@ class DeckManager:
                     if not card:
                         log.warning(f"Carta '{card_data['name']}' non trovata nel database.")
                         continue
+
                     deck_cards.append(DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"]))
                 
                 session.bulk_save_objects(deck_cards)
@@ -134,12 +136,15 @@ class DeckManager:
 
         except pyperclip.PyperclipException as e:
             log.error(f"Errore negli appunti: {str(e)}")
+            raise
 
         except ValueError as e:
             log.warning(f"Errore di validazione: {str(e)}")
+            raise
 
         except Exception as e:
             log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
+            raise
 
 
     def sync_cards_with_database(self, deck_string):
@@ -184,37 +189,6 @@ class DeckManager:
             log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}")
             raise
 
-    def last_sync_cards_with_database(self, deck_string):
-        """ Sincronizza le carte del mazzo con il database. """
-
-        cards = self.parse_cards_from_deck(deck_string)
-        card_names = [card["name"] for card in cards]
-
-        # Recupera tutte le carte esistenti in una singola query
-        existing_cards = session.query(Card.name).filter(Card.name.in_(card_names)).all()
-        existing_card_names = {card.name for card in existing_cards}
-
-        # Filtra le nuove carte
-        new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
-
-        # Crea una lista di oggetti Card per le nuove carte
-        new_cards = [
-            Card(
-                name=card_data["name"],
-                class_name="Unknown",
-                mana_cost=card_data["mana_cost"],
-                card_type="Unknown",
-                card_subtype="Unknown",
-                rarity="Unknown",
-                expansion="Unknown"
-            )
-            for card_data in new_cards_data
-        ]
-
-        # Inserisci tutte le nuove carte in una sola operazione
-        session.bulk_save_objects(new_cards)
-        session.commit()
-
 
     def parse_cards_from_deck(self, deck_string):
         cards = []
@@ -248,34 +222,6 @@ class DeckManager:
         
         return cards
 
-    def last_parse_cards_from_deck(self, deck_string):
-        """Estrae le carte da una stringa di mazzo con regex migliorata."""
-        cards = []
-        pattern = r'^#*\s*(\d+)x?\s*\((\d+)\)\s*(.+)$'
-        
-        for line in deck_string.splitlines():
-            match = re.match(pattern, line.strip())
-            if match and not line.startswith("###"):
-                try:
-                    quantity = int(match.group(1))
-                    mana_cost = int(match.group(2))
-                    name = match.group(3).strip()
-                    hero_class = name.split()[-1]  # Estrae la classe eroe dal nome
-                    
-                    # Pulizia nome per casi particolari
-                    name = re.sub(r'\s*\d+$', '', name)  # Rimuove numeri finali
-                    name = re.sub(r'^[#\s]*', '', name)  # Rimuove caratteri speciali iniziali
-                    
-                    cards.append({
-                        "name": name,
-                        "mana_cost": mana_cost,
-                        "quantity": quantity
-                    })
-                    
-                except (ValueError, IndexError) as e:
-                    log.warning(f"Errore parsing riga: {line} - {str(e)}")
-
-        return cards
 
     def is_card_in_database(self, card_name):
         """Verifica se una carta esiste nel database."""
@@ -326,7 +272,6 @@ class DeckManager:
                 deck = session.query(Deck).filter_by(name=deck_name).first()
                 if not deck:
                     log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
-
                     return
 
                 # Elimina le carte associate al mazzo
@@ -339,35 +284,11 @@ class DeckManager:
 
         except SQLAlchemyError as e:
             log.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
+            session.rollback() # Annulla le modifiche in caso di errore
 
         except Exception as e:
             log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
-
-
-    def last_delete_deck(self, deck_name):
-        try:
-            deck = session.query(Deck).filter_by(name=deck_name).first()
-            if not deck:
-                log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
-
-                return
-
-            # Elimina le carte associate al mazzo
-            session.query(DeckCard).filter_by(deck_id=deck.id).delete()
-            # Elimina il mazzo
-            session.delete(deck)
-            session.commit()
-
-            log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-
-
-        except SQLAlchemyError as e:
-            log.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
-            session.rollback()
-
-        except Exception as e:
-            log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
-
+            raise
 
 
     def get_deck_statistics(self, deck_name):
