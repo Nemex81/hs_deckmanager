@@ -16,8 +16,8 @@ Utilizzo:
     Importare le classi necessarie e utilizzarle nell'interfaccia principale.
 """
 
+# lib
 import wx
-import logging
 from .db import session, Card
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuHero, EnuRarity, EnuExpansion
 from utyls import logger as log
@@ -30,7 +30,7 @@ class CardEditDialog(wx.Dialog):
 
     def __init__(self, parent, card=None):
         title = "Modifica Carta" if card else "Aggiungi Carta"
-        super().__init__(parent, title=title, size=(400, 400))
+        super().__init__(parent, title=title, size=(400, 500))
         self.SetBackgroundColour('green')
         self.card = card
         self.init_ui()
@@ -42,7 +42,6 @@ class CardEditDialog(wx.Dialog):
         # Campi di input
         fields = [
             ("Nome:", wx.TextCtrl(panel)),
-            ("Classe:", wx.ComboBox(panel, choices=[h.value for h in EnuHero], style=wx.CB_READONLY)),
             ("Costo Mana:", wx.SpinCtrl(panel, min=0, max=20)),
             ("Tipo:", wx.ComboBox(panel, choices=[t.value for t in EnuCardType], style=wx.CB_READONLY)),
             ("Rarità:", wx.ComboBox(panel, choices=[r.value for r in EnuRarity], style=wx.CB_READONLY)),
@@ -56,6 +55,11 @@ class CardEditDialog(wx.Dialog):
             row.Add(control, proportion=1)
             sizer.Add(row, flag=wx.EXPAND | wx.ALL, border=5)
             setattr(self, label.lower().replace(" ", "_").replace(":", ""), control)
+
+        # Selezione multipla delle classi
+        self.classes_listbox = wx.CheckListBox(panel, choices=[h.value for h in EnuHero])
+        sizer.Add(wx.StaticText(panel, label="Classi:"), flag=wx.LEFT | wx.RIGHT, border=10)
+        sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsanti
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -75,32 +79,40 @@ class CardEditDialog(wx.Dialog):
         # Se è una modifica, pre-carica i dati della carta
         if self.card:
             self.nome.SetValue(self.card.name)
-            self.classe.SetValue(self.card.class_name)
             self.costo_mana.SetValue(self.card.mana_cost)
             self.tipo.SetValue(self.card.card_type)
             self.rarità.SetValue(self.card.rarity)
             self.espansione.SetValue(self.card.expansion)
+            # Seleziona le classi associate alla carta
+            if self.card.class_name:
+                selected_classes = self.card.class_name.split(", ")
+                for i, class_name in enumerate(self.classes_listbox.GetItems()):
+                    if class_name in selected_classes:
+                        self.classes_listbox.Check(i)
 
     def on_save(self, event):
         """Salva la carta nel database."""
         try:
             card_data = {
                 "name": self.nome.GetValue(),
-                "class_name": self.classe.GetValue(),
                 "mana_cost": self.costo_mana.GetValue(),
                 "card_type": self.tipo.GetValue(),
                 "rarity": self.rarità.GetValue(),
                 "expansion": self.espansione.GetValue()
             }
 
+            # Ottieni le classi selezionate
+            selected_classes = [self.classes_listbox.GetString(i) for i in self.classes_listbox.GetCheckedItems()]
+            card_data["class_name"] = ", ".join(selected_classes)  # Salva come stringa separata da virgole
+
             if self.card:
                 # Modifica la carta esistente
                 self.card.name = card_data["name"]
-                self.card.class_name = card_data["class_name"]
                 self.card.mana_cost = card_data["mana_cost"]
                 self.card.card_type = card_data["card_type"]
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
+                self.card.class_name = card_data["class_name"]
             else:
                 # Aggiungi una nuova carta
                 new_card = Card(**card_data)
@@ -190,7 +202,7 @@ class FilterDialog(wx.Dialog):
 
 class CardCollectionDialog(wx.Dialog):
     def __init__(self, parent, deck_manager):
-        super().__init__(parent, title="Collezione Carte", size=(800, 800))
+        super().__init__(parent, title="Collezione Carte", size=(900, 800))
         self.SetBackgroundColour('green')
         self.deck_manager = deck_manager
         self.current_filters = {}
@@ -214,7 +226,7 @@ class CardCollectionDialog(wx.Dialog):
             style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.BORDER_SUNKEN
         )
         self.card_list.AppendColumn("Nome", width=200)
-        self.card_list.AppendColumn("classe", width=150)
+        self.card_list.AppendColumn("Classi", width=350)
         self.card_list.AppendColumn("Mana", width=50)
         self.card_list.AppendColumn("Tipo", width=150)
         self.card_list.AppendColumn("Rarità", width=100)
@@ -267,7 +279,7 @@ class CardCollectionDialog(wx.Dialog):
         for card in query.order_by(Card.mana_cost, Card.name):
             self.card_list.Append([
                 card.name,
-                card.class_name,
+                card.class_name if card.class_name else "Nessuna classe",  # Mostra le classi come stringa
                 str(card.mana_cost),
                 card.card_type,
                 card.rarity,
@@ -328,12 +340,12 @@ class CardCollectionDialog(wx.Dialog):
                     session.commit()
                     self.card_list.DeleteAllItems() # Svuota la lista delle carte
                     self.load_cards(self.current_filters)
-                    logging.info(f"Carta '{name}' eliminata")
+                    log.info(f"Carta '{name}' eliminata")
                 else:
-                    logging.error(f"Carta '{name}' non trovata")
+                    log.error(f"Carta '{name}' non trovata")
                     wx.MessageBox("Carta non trovata nel database.", "Errore")
         else:
-                logging.error("Nessuna carta selezionata")
+                log.error("Nessuna carta selezionata")
                 wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
 
 
