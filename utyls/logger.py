@@ -18,6 +18,39 @@
 
 import logging
 
+# Configurazione del logging
+logging.basicConfig(
+    filename='hearthstone_manager.log',  # File di log
+    level=logging.INFO,                  # Livello di log
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del log
+    datefmt='%Y-%m-%d %H:%M:%S'         # Formato della data
+)
+
+
+
+def setup_logging(log_file='hearthstone_manager.log', console_output=False):
+    """ 
+        Configura il logging dell'applicazione.
+
+        Argomenti:
+                    log_file (str): Percorso del file di log.
+                    console_output (bool): Specifica se abilitare l'output su console.
+
+            Note:
+                    - Questa funzione deve essere chiamata all'inizio del programma per configurare il logging.
+    """
+
+    handlers = [logging.FileHandler(log_file)]
+    if console_output:
+        handlers.append(logging.StreamHandler())
+
+    logging.basicConfig(
+        handlers=handlers,
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
 
 
 #@@# funzioni per la gestione dei log #@@#
