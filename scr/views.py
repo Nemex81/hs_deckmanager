@@ -34,6 +34,7 @@ class CardEditDialog(wx.Dialog):
         super().__init__(parent, title=title, size=(400, 500))
         self.SetBackgroundColour('green')
         self.card = card
+        self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
         self.init_ui()
 
     def init_ui(self):
@@ -92,6 +93,12 @@ class CardEditDialog(wx.Dialog):
                     if class_name in selected_classes:
                         self.classes_listbox.Check(i)
 
+
+    def get_card_name(self):
+        """Restituisce il nome della carta modificata o aggiunta."""
+        return self.card_name
+
+
     def on_save(self, event):
         """Salva la carta nel database."""
         try:
@@ -115,10 +122,12 @@ class CardEditDialog(wx.Dialog):
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
                 self.card.class_name = card_data["class_name"]
+                self.card_name = self.card.name  # Aggiorna il nome della carta
             else:
                 # Aggiungi una nuova carta
                 new_card = Card(**card_data)
                 session.add(new_card)
+                self.card_name = new_card.name  # Memorizza il nome della nuova carta
 
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
@@ -291,8 +300,17 @@ class CardCollectionDialog(wx.Dialog):
                 card.expansion
             ])
 
+    def select_card_by_name(self, card_name):
+        """Seleziona una carta nella lista in base al nome."""
+        for i in range(self.card_list.GetItemCount()):
+            if self.card_list.GetItemText(i) == card_name:
+                self.card_list.Select(i)  # Seleziona la riga
+                self.card_list.Focus(i)   # Imposta il focus sulla riga
+                break
+
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
+
         self.current_filters["name"] = self.search_ctrl.GetValue()
         self.load_cards(self.current_filters)
     
@@ -311,13 +329,18 @@ class CardCollectionDialog(wx.Dialog):
 
     def on_add_card(self, event):
         """Apre la finestra per aggiungere una nuova carta."""
+
         dlg = CardEditDialog(self)
         if dlg.ShowModal() == wx.ID_OK:  # Se l'utente ha premuto "Salva"
             self.load_cards(self.current_filters)  # Ricarica la lista delle carte
+            card_name = dlg.get_card_name()  # Ottieni il nome della carta aggiunta/modificata
+            self.select_card_by_name(card_name)  # Seleziona la carta nella lista
+
         dlg.Destroy()
 
     def on_edit_card(self, event):
         """Apre la finestra per modificare una carta esistente."""
+
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             name = self.card_list.GetItemText(selected)
@@ -326,6 +349,9 @@ class CardCollectionDialog(wx.Dialog):
                 dlg = CardEditDialog(self, card)
                 if dlg.ShowModal() == wx.ID_OK:  # Se l'utente ha premuto "Salva"
                     self.load_cards(self.current_filters)  # Ricarica la lista delle carte
+                    card_name = dlg.get_card_name()  # Ottieni il nome della carta modificata
+                    self.select_card_by_name(self.card_name)  # Seleziona la carta nella lista
+
                 dlg.Destroy()
             else:
                 wx.MessageBox("Carta non trovata nel database.", "Errore")

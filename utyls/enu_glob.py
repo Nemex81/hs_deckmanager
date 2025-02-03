@@ -111,7 +111,8 @@ class EnuPetSubType(Enum):
 
 class EnuHero(Enum):
     """ eroi delle carte """
-    
+
+    ALLCLASS = "Tutte le classi"
     CACCIATORE = "Cacciatore"
     DRUIDO = "Druido"
     GUERRIERO = "Guerriero"
