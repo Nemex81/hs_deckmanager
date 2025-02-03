@@ -93,6 +93,60 @@ class DeckManager:
         )
 
     def add_deck_from_clipboard(self):
+        """ Aggiunge un mazzo dagli appunti. """
+
+        deck_string = pyperclip.paste()
+        if self.is_valid_deck(deck_string):
+            metadata = parse_deck_metadata(deck_string)
+            deck_name = metadata["name"]
+            cards = self.parse_cards_from_deck(deck_string)
+            card_names = [card["name"] for card in cards]
+
+            # Recupera tutte le carte esistenti in una singola query
+            existing_cards = session.query(Card.name).filter(Card.name.in_(card_names)).all()
+            existing_card_names = {card.name for card in existing_cards}
+
+            # Filtra le nuove carte
+            new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
+
+            # Crea una lista di oggetti Card per le nuove carte
+            new_cards = [
+                Card(
+                    name=card_data["name"],
+                    class_name="Unknown",
+                    mana_cost=card_data["mana_cost"],
+                    card_type="Unknown",
+                    card_subtype="Unknown",
+                    rarity="Unknown",
+                    expansion="Unknown"
+                )
+                for card_data in new_cards_data
+            ]
+
+            # Inserisci tutte le nuove carte in una sola operazione
+            session.bulk_save_objects(new_cards)
+            session.commit()
+
+            # Crea il nuovo mazzo
+            new_deck = Deck(
+                name=deck_name,
+                player_class=metadata["player_class"],
+                game_format=metadata["game_format"]
+            )
+            session.add(new_deck)
+            session.commit()
+
+            # Aggiungi le relazioni tra mazzo e carte
+            deck_cards = []
+            for card_data in cards:
+                card = session.query(Card).filter_by(name=card_data["name"]).first()
+                deck_cards.append(DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"]))
+            
+            # Inserisci tutte le relazioni in una sola operazione
+            session.bulk_save_objects(deck_cards)
+            session.commit()
+
+    def last_add_deck_from_clipboard(self):
         """Aggiunge un mazzo dagli appunti."""
         deck_string = pyperclip.paste()
         if self.is_valid_deck(deck_string):
@@ -156,6 +210,37 @@ class DeckManager:
 
 
     def sync_cards_with_database(self, deck_string):
+        """ Sincronizza le carte del mazzo con il database. """
+
+        cards = self.parse_cards_from_deck(deck_string)
+        card_names = [card["name"] for card in cards]
+
+        # Recupera tutte le carte esistenti in una singola query
+        existing_cards = session.query(Card.name).filter(Card.name.in_(card_names)).all()
+        existing_card_names = {card.name for card in existing_cards}
+
+        # Filtra le nuove carte
+        new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
+
+        # Crea una lista di oggetti Card per le nuove carte
+        new_cards = [
+            Card(
+                name=card_data["name"],
+                class_name="Unknown",
+                mana_cost=card_data["mana_cost"],
+                card_type="Unknown",
+                card_subtype="Unknown",
+                rarity="Unknown",
+                expansion="Unknown"
+            )
+            for card_data in new_cards_data
+        ]
+
+        # Inserisci tutte le nuove carte in una sola operazione
+        session.bulk_save_objects(new_cards)
+        session.commit()
+
+    def last_sync_cards_with_database(self, deck_string):
         """Sincronizza le carte del mazzo con il database."""
         cards = self.parse_cards_from_deck(deck_string)
 

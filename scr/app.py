@@ -107,7 +107,7 @@ class HearthstoneApp(wx.Frame):
         """ Inizializza l'interfaccia utente. """
 
         # Impostazioni finestra principale
-        self.SetBackgroundColour('black')
+        self.SetBackgroundColour('green')
         self.panel = wx.Panel(self)
 
         # Layout principale
@@ -116,8 +116,8 @@ class HearthstoneApp(wx.Frame):
         #self.deck_list = wx.ListBox(self.panel)
         self.deck_list = wx.ListCtrl(
             self.panel,
-            style=wx.LC_REPORT | wx.BORDER_SUNKEN
-            #style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.BORDER_SUNKEN
+            #style=wx.LC_REPORT | wx.BORDER_SUNKEN
+            style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.BORDER_SUNKEN
         )
 
         # aggiungiamo le righe e le colonne
