@@ -19,6 +19,7 @@ Utilizzo:
 # lib
 import wx
 from .db import session, Card
+from utyls.helper import disassemble_classes_string, assemble_classes_string
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuHero, EnuRarity, EnuExpansion
 from utyls import logger as log
 #import pdb
@@ -85,7 +86,8 @@ class CardEditDialog(wx.Dialog):
             self.espansione.SetValue(self.card.expansion)
             # Seleziona le classi associate alla carta
             if self.card.class_name:
-                selected_classes = self.card.class_name.split(", ")
+                #selected_classes = self.card.class_name.split(", ")
+                selected_classes= disassemble_classes_string(self.card.class_name)
                 for i, class_name in enumerate(self.classes_listbox.GetItems()):
                     if class_name in selected_classes:
                         self.classes_listbox.Check(i)
@@ -120,8 +122,10 @@ class CardEditDialog(wx.Dialog):
 
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
+            wx.MessageBox("Dati della carta salvati con successo!", "Successo")
 
         except Exception as e:
+            log.error(f"Errore durante il salvataggio: {str(e)}")
             wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore")
 
 
@@ -202,10 +206,11 @@ class FilterDialog(wx.Dialog):
 
 class CardCollectionDialog(wx.Dialog):
     def __init__(self, parent, deck_manager):
-        super().__init__(parent, title="Collezione Carte", size=(900, 800))
+        super().__init__(parent, title="Collezione Carte", size=(1200, 800))
         self.SetBackgroundColour('green')
         self.deck_manager = deck_manager
         self.current_filters = {}
+        self.Centre() # Centra la finestra
         self.init_ui()
         self.load_cards()
 
@@ -225,12 +230,12 @@ class CardCollectionDialog(wx.Dialog):
             panel, 
             style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.BORDER_SUNKEN
         )
-        self.card_list.AppendColumn("Nome", width=200)
-        self.card_list.AppendColumn("Classi", width=350)
+        self.card_list.AppendColumn("Nome", width=250)
+        self.card_list.AppendColumn("Classi", width=400)
         self.card_list.AppendColumn("Mana", width=50)
-        self.card_list.AppendColumn("Tipo", width=150)
-        self.card_list.AppendColumn("Rarità", width=100)
-        self.card_list.AppendColumn("Espansione", width=150)
+        self.card_list.AppendColumn("Tipo", width=120)
+        self.card_list.AppendColumn("Rarità", width=120)
+        self.card_list.AppendColumn("Espansione", width=500)
         
         # Pulsanti azione
         btn_panel = wx.Panel(panel)
