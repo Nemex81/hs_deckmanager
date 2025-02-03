@@ -177,7 +177,7 @@ class EnuExpansion(Enum):
     CORE_2024 = "Core 2024"                                           # Nuovo set base annuale per il 2024
     WHIZBANGS_WORKSHOP = "La Bottega di Whizbang"                    # Espansione che unisce creatività e tecnologia in un laboratorio unico
     PERILS_IN_PARADISE = "Pericoli nel Paradiso"                      # Espansione che mescola bellezze paradisiache e insidie
-    THE_GREAT_DARK_BEYOND = "Il Grande Oltre Oscuro"                 # Espansione che apre le porte a misteri e orrori oltre il conosciuto
+    THE_GREAT_DARK_BEYOND = "La Grande Oscurità"                 # Espansione che apre le porte a misteri e orrori oltre il conosciuto
 
 
 
