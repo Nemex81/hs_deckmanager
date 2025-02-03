@@ -132,6 +132,7 @@ class DeckManager:
 
             # Log di successo
             log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
+            return True  # Indica che l'operazione è riuscita
 
 
         except pyperclip.PyperclipException as e:

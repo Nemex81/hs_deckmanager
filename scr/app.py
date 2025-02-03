@@ -103,6 +103,7 @@ class HearthstoneApp(wx.Frame):
         self.controller = AppController(self.deck_manager, self)
         self.init_ui()
 
+
     def init_ui(self):
         """ Inizializza l'interfaccia utente. """
 
@@ -185,6 +186,7 @@ class HearthstoneApp(wx.Frame):
         btn_delete.Bind(wx.EVT_BUTTON, self.on_delete_deck)
         btn_exit.Bind(wx.EVT_BUTTON, self.on_exit)
 
+
     def load_decks(self):
         """Carica i mazzi ."""
 
@@ -210,9 +212,11 @@ class HearthstoneApp(wx.Frame):
             self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
             self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
 
+
     def update_status(self, message):
         """Aggiorna la barra di stato."""
         self.status_bar.SetStatusText(message)
+
 
     def get_selected_deck(self):
         """Restituisce il mazzo selezionato nella lista."""
@@ -222,20 +226,26 @@ class HearthstoneApp(wx.Frame):
             return self.deck_list.GetItemText(selection)
         return None
 
+
     def on_add_deck(self, event):
         """Aggiunge un mazzo dagli appunti."""
 
         try:
-            self.deck_manager.add_deck_from_clipboard()
-            self.update_deck_list()
-            self.update_status("Mazzo aggiunto con successo.")
+            success = self.deck_manager.add_deck_from_clipboard()
+            if success:
+                self.update_deck_list()
+                self.update_status("Mazzo aggiunto con successo.")
+                wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
 
         except ValueError as e:
             wx.MessageBox(str(e), "Errore")
 
+        except pyperclip.PyperclipException as e:
+            wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
+
         except Exception as e:
             logging.error(f"Errore durante l'aggiunta del mazzo: {e}")
-            wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
+            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
 
     def on_copy_deck(self, event):
         """Copia il mazzo selezionato negli appunti."""
