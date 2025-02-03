@@ -264,11 +264,12 @@ class HearthstoneApp(wx.Frame):
                 self,
                 confirm_message,
                 "Conferma Creazione Mazzo",
-                wx.YES_NO | wx.ICON_QUESTION
+                wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION
             )
 
-            # Se l'utente conferma, procedi con la creazione del mazzo
-            if confirm_dialog.ShowModal() == wx.ID_YES:
+            # Gestisce le risposte dell'utente
+            result = confirm_dialog.ShowModal()
+            if result == wx.ID_YES:
                 # Utilizza i dati estratti per creare il mazzo
                 success = self.deck_manager.add_deck_from_clipboard()
                 if success:
@@ -276,8 +277,8 @@ class HearthstoneApp(wx.Frame):
                     self.update_status("Mazzo aggiunto con successo.")
                     wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
 
-            # Se l'utente rifiuta, chiedi di inserire manualmente il nome del mazzo
-            else:
+            elif result == wx.ID_NO:
+                # Chiede di inserire manualmente il nome del mazzo
                 name_dialog = wx.TextEntryDialog(
                     self,
                     "Inserisci il nome per il nuovo mazzo:",
@@ -288,7 +289,6 @@ class HearthstoneApp(wx.Frame):
                 if name_dialog.ShowModal() == wx.ID_OK:
                     new_name = name_dialog.GetValue()
                     if new_name:
-                        # Crea il mazzo con il nome inserito manualmente
                         metadata["name"] = new_name
                         success = self.deck_manager.add_deck_from_clipboard()
                         if success:
@@ -297,6 +297,10 @@ class HearthstoneApp(wx.Frame):
                             wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
                     else:
                         wx.MessageBox("Il nome del mazzo non può essere vuoto.", "Errore")
+            elif result == wx.ID_CANCEL:
+                # L'utente ha scelto di annullare l'operazione
+                self.update_status("Operazione annullata.")
+                wx.MessageBox("Operazione annullata.", "Annullato")
 
         except pyperclip.PyperclipException as e:
             wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
@@ -305,28 +309,9 @@ class HearthstoneApp(wx.Frame):
             wx.MessageBox(str(e), "Errore")
 
         except Exception as e:
-            logging.error(f"Errore durante l'aggiunta del mazzo: {e}")
+            log.error(f"Errore durante l'aggiunta del mazzo: {e}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
 
-    def last_on_add_deck(self, event):
-        """Aggiunge un mazzo dagli appunti."""
-
-        try:
-            success = self.deck_manager.add_deck_from_clipboard()
-            if success:
-                self.update_deck_list()
-                self.update_status("Mazzo aggiunto con successo.")
-                wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
-
-        except ValueError as e:
-            wx.MessageBox(str(e), "Errore")
-
-        except pyperclip.PyperclipException as e:
-            wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
-
-        except Exception as e:
-            logging.error(f"Errore durante l'aggiunta del mazzo: {e}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
 
     def on_copy_deck(self, event):
         """Copia il mazzo selezionato negli appunti."""
@@ -484,28 +469,6 @@ class HearthstoneApp(wx.Frame):
         else:
             wx.MessageBox("Seleziona un mazzo prima di eliminarlo.", "Errore")
 
-    def last_on_delete_deck(self, event):
-        """Elimina il mazzo selezionato."""
-
-        deck_name = self.get_selected_deck()
-        if deck_name:
-            if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
-                self.controller.delete_deck(deck_name)
-        else:
-            wx.MessageBox("Seleziona un mazzo prima di eliminarlo.", "Errore")
-
-    def on_search(self, event):
-        """Filtra i mazzi in base alla ricerca."""
-
-        search_term = self.search_bar.GetValue().lower()
-        decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_term}%")).all()
-        #self.deck_list.DeleteAllItems()
-        for deck in decks:
-            self.deck_list.Append(deck.name)
-
-    def on_exit(self, event):
-        """Chiude l'applicazione."""
-        self.Close()
 
 
 
