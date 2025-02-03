@@ -55,31 +55,31 @@ def setup_logging(log_file='hearthstone_manager.log', console_output=False):
 
 #@@# funzioni per la gestione dei log #@@#
 
-def log_app_start():
+def app_start():
     logging.info('Applicazione avviata.')
 
-def log_app_end():
+def app_end():
     logging.info('Applicazione terminata.')
 
-def log_game_start():
+def game_start():
     logging.info('La partita è iniziata.')
 
-def log_game_end():
+def game_end():
     logging.info('La partita è terminata.')
 
-def log_player_action(player, action, details):
+def player_action(player, action, details):
     logging.info(f'Azione del giocatore {player}: {action} - Dettagli: {details}')
 
-def log_game_error(error):
+def error(error):
     logging.error(f'Errore: {error}')
 
-def log_game_warning(warning):
+def warning(warning):
     logging.warning(f'Attenzione: {warning}')
 
-def log_game_info(info):
+def info(info):
     logging.info(f" {info}")
 
-def log_game_debug(debug):
+def debug(debug):
     logging.debug(f'Debug: {debug}')
 
 

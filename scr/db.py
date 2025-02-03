@@ -83,9 +83,10 @@
 
 # lib
 import os
-import logging
+from contextlib import contextmanager
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import ForeignKey
 from utyls import logger as log
@@ -99,6 +100,25 @@ session = Session()
 
 # Base per i modelli SQLAlchemy
 Base = declarative_base()
+
+
+@contextmanager
+def db_session():
+    """ Gestisce la sessione del database e il commit/rollback automatico. """
+
+    try:
+        yield session
+        session.commit()
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        log.error(f"Errore del database: {str(e)}")
+        raise
+
+    except Exception as e:
+        session.rollback()
+        log.error(f"Errore imprevisto: {str(e)}")
+        raise
 
 
 
@@ -172,9 +192,9 @@ def setup_database():
 
     if not os.path.exists(DATABASE_PATH):
         Base.metadata.create_all(engine)
-        logging.info(f"Database creato: {DATABASE_PATH}")
+        log.info(f"Database creato: {DATABASE_PATH}")
     else:
-        logging.info(f"Database esistente trovato: {DATABASE_PATH}")
+        log.info(f"Database esistente trovato: {DATABASE_PATH}")
 
 
 

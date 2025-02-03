@@ -43,7 +43,6 @@
 #lib
 import os
 import shutil
-import logging
 import re
 import wx
 import pyperclip
@@ -57,6 +56,7 @@ from utyls import logger as log
 
 def parse_deck_metadata(deck_string):
     """ Estrae nome, classe e formato dalla stringa grezza del mazzo copiato. """
+
     lines = deck_string.splitlines()[:3]
     metadata = {
         "name": lines[0].replace("###", "").strip(),
@@ -93,6 +93,8 @@ class DeckManager:
         )
 
     def add_deck_from_clipboard(self):
+        """ Aggiunge un mazzo dagli appunti. """
+
 
         try:
             deck_string = pyperclip.paste()
@@ -104,7 +106,7 @@ class DeckManager:
             cards = self.parse_cards_from_deck(deck_string)
 
             # Log informativo
-            logging.info(f"Tentativo di aggiunta del mazzo '{deck_name}' dagli appunti.")
+            log.info(f"Tentativo di aggiunta del mazzo '{deck_name}' dagli appunti.")
 
             # Creazione del nuovo mazzo
             new_deck = Deck(
@@ -123,7 +125,7 @@ class DeckManager:
             for card_data in cards:
                 card = session.query(Card).filter_by(name=card_data["name"]).first()
                 if not card:
-                    logging.warning(f"Carta '{card_data['name']}' non trovata nel database.")
+                    log.warning(f"Carta '{card_data['name']}' non trovata nel database.")
                     continue
                 deck_cards.append(DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"]))
             
@@ -131,21 +133,21 @@ class DeckManager:
             session.commit()
 
             # Log di successo
-            logging.info(f"Mazzo '{deck_name}' aggiunto con successo.")
+            log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
             wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
 
         except pyperclip.PyperclipException as e:
-            logging.error(f"Errore negli appunti: {str(e)}")
+            log.error(f"Errore negli appunti: {str(e)}")
             wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
         except SQLAlchemyError as e:
-            logging.error(f"Errore del database durante l'aggiunta del mazzo: {str(e)}")
+            log.error(f"Errore del database durante l'aggiunta del mazzo: {str(e)}")
             session.rollback()
             wx.MessageBox("Errore del database. Riprova più tardi.", "Errore")
         except ValueError as e:
-            logging.warning(f"Errore di validazione: {str(e)}")
+            log.warning(f"Errore di validazione: {str(e)}")
             wx.MessageBox(str(e), "Errore")
         except Exception as e:
-            logging.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
+            log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
 
     def last_add_deck_from_clipboard(self):
@@ -201,10 +203,51 @@ class DeckManager:
             # Inserisci tutte le relazioni in una sola operazione
             session.bulk_save_objects(deck_cards)
             session.commit()
-            logging.info(f"Mazzo '{deck_name}' aggiunto con successo.")
-
+            log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
 
     def sync_cards_with_database(self, deck_string):
+        """ Sincronizza le carte del mazzo con il database. """
+
+        log.info("Inizio sincronizzazione delle carte con il database.")
+        try:
+            cards = self.parse_cards_from_deck(deck_string)
+            card_names = [card["name"] for card in cards]
+
+            # Recupera tutte le carte esistenti in una singola query
+            existing_cards = session.query(Card.name).filter(Card.name.in_(card_names)).all()
+            existing_card_names = {card.name for card in existing_cards}
+
+            # Filtra le nuove carte
+            new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
+
+            # Crea una lista di oggetti Card per le nuove carte
+            new_cards = [
+                Card(
+                    name=card_data["name"],
+                    class_name="Unknown",
+                    mana_cost=card_data["mana_cost"],
+                    card_type="Unknown",
+                    card_subtype="Unknown",
+                    rarity="Unknown",
+                    expansion="Unknown"
+                )
+                for card_data in new_cards_data
+            ]
+
+            # Inserisci tutte le nuove carte in una sola operazione
+            session.bulk_save_objects(new_cards)
+            session.commit()
+            log.info("Sincronizzazione delle carte completata con successo.")
+
+        except SQLAlchemyError as e:
+            log.error(f"Errore del database durante la sincronizzazione: {str(e)}")
+            session.rollback()
+            raise
+        except Exception as e:
+            log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}")
+            raise
+
+    def last_sync_cards_with_database(self, deck_string):
         """ Sincronizza le carte del mazzo con il database. """
 
         cards = self.parse_cards_from_deck(deck_string)
@@ -259,12 +302,12 @@ class DeckManager:
                     })
                     
             except (ValueError, IndexError) as e:
-                logging.warning(f"Errore durante il parsing della riga: {line}. Dettagli: {str(e)}")
+                log.warning(f"Errore durante il parsing della riga: {line}. Dettagli: {str(e)}")
             except Exception as e:
-                logging.error(f"Errore imprevisto durante il parsing della riga: {line}. Dettagli: {str(e)}")
+                log.error(f"Errore imprevisto durante il parsing della riga: {line}. Dettagli: {str(e)}")
 
         if not cards:
-            logging.warning("Nessuna carta valida trovata nel mazzo.")
+            log.warning("Nessuna carta valida trovata nel mazzo.")
         
         return cards
 
@@ -293,7 +336,7 @@ class DeckManager:
                     })
                     
                 except (ValueError, IndexError) as e:
-                    logging.warning(f"Errore parsing riga: {line} - {str(e)}")
+                    log.warning(f"Errore parsing riga: {line} - {str(e)}")
 
         return cards
 
@@ -314,7 +357,7 @@ class DeckManager:
         )
         session.add(new_card)
         session.commit()
-        logging.info(f"Carta '{card['name']}' aggiunta al database.")
+        log.info(f"Carta '{card['name']}' aggiunta al database.")
 
     def get_deck(self, deck_name):
         """Restituisce il contenuto di un mazzo dal database."""
@@ -342,7 +385,7 @@ class DeckManager:
         try:
             deck = session.query(Deck).filter_by(name=deck_name).first()
             if not deck:
-                logging.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
+                log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
                 wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
                 return
 
@@ -352,15 +395,15 @@ class DeckManager:
             session.delete(deck)
             session.commit()
 
-            logging.info(f"Mazzo '{deck_name}' eliminato con successo.")
+            log.info(f"Mazzo '{deck_name}' eliminato con successo.")
             wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
 
         except SQLAlchemyError as e:
-            logging.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
+            log.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
             session.rollback()
             wx.MessageBox("Errore del database. Riprova più tardi.", "Errore")
         except Exception as e:
-            logging.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
+            log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
 
     def last_delete_deck(self, deck_name):
@@ -372,9 +415,9 @@ class DeckManager:
             # Elimina il mazzo
             session.delete(deck)
             session.commit()
-            logging.info(f"Mazzo '{deck_name}' eliminato con successo.")
+            log.info(f"Mazzo '{deck_name}' eliminato con successo.")
         else:
-            logging.warning(f"Mazzo '{deck_name}' non trovato.")
+            log.warning(f"Mazzo '{deck_name}' non trovato.")
 
 
     def get_deck_statistics(self, deck_name):
