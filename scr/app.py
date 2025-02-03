@@ -481,17 +481,6 @@ class HearthstoneApp(wx.Frame):
             self.deck_list.SetItem(Index, 1, deck.player_class)
             self.deck_list.SetItem(Index, 2, deck.game_format)
 
-    def last_on_search(self, event):
-        """Filtra i mazzi in base al testo di ricerca."""
-
-        search_text = self.search_bar.GetValue().lower()
-        for i in range(self.deck_list.GetItemCount()):
-            deck_name = self.deck_list.GetItemText(i).lower()
-            if search_text in deck_name:
-                # svuotiamo la lista
-                self.deck_list.SetItemTextColour(i, wx.BLACK)
-            else:
-                self.deck_list.SetItemTextColour(i, wx.LIGHT_GREY)
 
     def on_exit(self, event):
         """Chiude l'applicazione."""
