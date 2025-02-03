@@ -320,6 +320,32 @@ class DeckManager:
         return None
 
     def delete_deck(self, deck_name):
+        """ Elimina un mazzo dal database. """
+
+        try:
+            with db_session():
+                deck = session.query(Deck).filter_by(name=deck_name).first()
+                if not deck:
+                    log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
+                    wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+                    return
+
+                # Elimina le carte associate al mazzo
+                session.query(DeckCard).filter_by(deck_id=deck.id).delete()
+                # Elimina il mazzo
+                session.delete(deck)
+
+            log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+            wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+
+        except SQLAlchemyError as e:
+            log.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
+            wx.MessageBox("Errore del database. Riprova più tardi.", "Errore")
+        except Exception as e:
+            log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
+            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+
+    def last_delete_deck(self, deck_name):
         try:
             deck = session.query(Deck).filter_by(name=deck_name).first()
             if not deck:
@@ -343,19 +369,6 @@ class DeckManager:
         except Exception as e:
             log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
-
-    def last_delete_deck(self, deck_name):
-        """Elimina un mazzo esistente dal database."""
-        deck = session.query(Deck).filter_by(name=deck_name).first()
-        if deck:
-            # Elimina le carte associate al mazzo
-            session.query(DeckCard).filter_by(deck_id=deck.id).delete()
-            # Elimina il mazzo
-            session.delete(deck)
-            session.commit()
-            log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-        else:
-            log.warning(f"Mazzo '{deck_name}' non trovato.")
 
 
     def get_deck_statistics(self, deck_name):
