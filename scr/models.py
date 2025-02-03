@@ -44,11 +44,10 @@
 import os
 import shutil
 import re
-import wx
 import pyperclip
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
-from .db import session, db_session, Deck, DeckCard, Card
+from .db import session, Deck, DeckCard, Card
 from utyls import logger as log
 #import pdb
 
@@ -131,17 +130,17 @@ class DeckManager:
 
             # Log di successo
             log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
-            wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
+
 
         except pyperclip.PyperclipException as e:
             log.error(f"Errore negli appunti: {str(e)}")
-            wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
+
         except ValueError as e:
             log.warning(f"Errore di validazione: {str(e)}")
-            wx.MessageBox(str(e), "Errore")
+
         except Exception as e:
             log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+
 
     def sync_cards_with_database(self, deck_string):
         """ Sincronizza le carte del mazzo con il database. """
@@ -327,7 +326,7 @@ class DeckManager:
                 deck = session.query(Deck).filter_by(name=deck_name).first()
                 if not deck:
                     log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
-                    wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+
                     return
 
                 # Elimina le carte associate al mazzo
@@ -336,21 +335,21 @@ class DeckManager:
                 session.delete(deck)
 
             log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-            wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+
 
         except SQLAlchemyError as e:
             log.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
-            wx.MessageBox("Errore del database. Riprova più tardi.", "Errore")
+
         except Exception as e:
             log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+
 
     def last_delete_deck(self, deck_name):
         try:
             deck = session.query(Deck).filter_by(name=deck_name).first()
             if not deck:
                 log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
-                wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+
                 return
 
             # Elimina le carte associate al mazzo
@@ -360,15 +359,15 @@ class DeckManager:
             session.commit()
 
             log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-            wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+
 
         except SQLAlchemyError as e:
             log.error(f"Errore del database durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
             session.rollback()
-            wx.MessageBox("Errore del database. Riprova più tardi.", "Errore")
+
         except Exception as e:
             log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+
 
 
     def get_deck_statistics(self, deck_name):
