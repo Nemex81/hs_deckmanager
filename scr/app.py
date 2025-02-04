@@ -350,8 +350,8 @@ class HearthstoneApp(wx.Frame):
             deck_content = self.deck_manager.get_deck(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                #deck_view_dialog = DeckViewDialog(self, self.deck_manager, deck_name)
-                deck_view_dialog = CardManagerDialog(self, self.deck_manager, mode="deck", deck_name=deck_name)
+                deck_view_dialog = DeckViewDialog(self, self.deck_manager, deck_name)
+                #deck_view_dialog = CardManagerDialog(self, self.deck_manager, mode="deck", deck_name=deck_name)
                 deck_view_dialog.ShowModal()
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
@@ -429,8 +429,8 @@ class HearthstoneApp(wx.Frame):
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
 
-        #collection_dialog = CardCollectionDialog(self, self.deck_manager)
-        collection_dialog = CardManagerDialog(self, self.deck_manager, mode="collection")
+        collection_dialog = CardCollectionDialog(self, self.deck_manager)
+        #collection_dialog = CardManagerDialog(self, self.deck_manager, mode="collection")
         collection_dialog.ShowModal()  # Mostra la finestra come modale
 
     def on_delete_deck(self, event):
