@@ -266,9 +266,6 @@ class CardManagerDialog(wx.Dialog):
                                 :param deck_name: Nome del mazzo (se la modalità è "deck")
     """
 
-class CardManagerDialog(wx.Dialog):
-    """Finestra madre per gestire le carte (collezione o mazzo)."""
-
     def __init__(self, parent, deck_manager, mode="collection", deck_name=None):
         title = "Collezione Carte" if mode == "collection" else f"Mazzo: {deck_name}"
         super().__init__(parent, title=title, size=(1200, 800))
@@ -328,7 +325,58 @@ class CardManagerDialog(wx.Dialog):
         panel.SetSizer(sizer)
         self.load_cards()
 
-    def load_cards(self):
+    def load_cards(self, filters=None):
+        """Carica le carte nella lista in base alla modalità e ai filtri."""
+        self.card_list.DeleteAllItems()
+        if self.mode == "collection":
+            # Carica tutte le carte della collezione
+            query = session.query(Card)
+            if filters:
+                if filters.get("name"):
+                    query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
+                if filters.get("mana_cost", 0) > 0:
+                    query = query.filter(Card.mana_cost == filters["mana_cost"])
+                if filters.get("card_type") not in [None, "Tutti"]:
+                    query = query.filter(Card.card_type == filters["card_type"])
+                if filters.get("rarity") not in [None, "Tutti"]:
+                    query = query.filter(Card.rarity == filters["rarity"])
+
+            cards = query.order_by(Card.mana_cost, Card.name).all()
+            for card in cards:
+                self.card_list.Append([
+                    card.name,
+                    str(card.mana_cost),
+                    "1",  # Quantità fissa per la collezione
+                    card.card_type,
+                    card.rarity,
+                    card.expansion
+                ])
+        elif self.mode == "deck":
+            # Carica le carte del mazzo
+            for card_data in self.deck_content["cards"]:
+                card = session.query(Card).filter_by(name=card_data["name"]).first()
+                if card:
+                    # Applica i filtri (se presenti)
+                    if filters:
+                        if filters.get("name") and filters["name"].lower() not in card.name.lower():
+                            continue
+                        if filters.get("mana_cost", 0) > 0 and card.mana_cost != filters["mana_cost"]:
+                            continue
+                        if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
+                            continue
+                        if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
+                            continue
+
+                    self.card_list.Append([
+                        card.name,
+                        str(card.mana_cost),
+                        str(card_data["quantity"]),
+                        card.card_type,
+                        card.rarity,
+                        card.expansion
+                    ])
+
+    def last_load_cards(self):
         """Carica le carte nella lista in base alla modalità."""
 
         self.card_list.DeleteAllItems()
