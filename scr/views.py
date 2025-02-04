@@ -177,6 +177,149 @@ class CardEditDialog(wx.Dialog):
 
 
 
+class DeckViewDialog(wx.Dialog):
+    """Finestra di dialogo per visualizzare e gestire le carte di un mazzo."""
+
+    def __init__(self, parent, deck_manager, deck_name):
+        super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 700))
+        self.parent = parent
+        self.SetBackgroundColour('green')
+        self.deck_manager = deck_manager
+        self.deck_name = deck_name
+        self.deck_content = self.deck_manager.get_deck(deck_name)
+        self.Centre()  # Centra la finestra
+        self.init_ui()
+
+    def init_ui(self):
+        """ Inizializza l'interfaccia utente della finestra di dialogo. """
+
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Informazioni generali del mazzo
+        info_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        info_sizer.Add(wx.StaticText(panel, label=f"Nome: {self.deck_content['name']}"), flag=wx.LEFT | wx.RIGHT, border=10)
+        info_sizer.Add(wx.StaticText(panel, label=f"Classe: {self.deck_content['player_class']}"), flag=wx.LEFT | wx.RIGHT, border=10)
+        info_sizer.Add(wx.StaticText(panel, label=f"Formato: {self.deck_content['game_format']}"), flag=wx.LEFT | wx.RIGHT, border=10)
+        info_sizer.Add(wx.StaticText(panel, label=f"Carte: {len(self.deck_content['cards'])}"), flag=wx.LEFT | wx.RIGHT, border=10)
+        #sizer.Add(info_sizer, flag=wx.EXPAND | wx.ALL, border=10) # Aggiungi le informazioni al sizer
+
+        # Lista delle carte
+        self.card_list = wx.ListCtrl(
+            panel,
+            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
+        )
+        self.card_list.AppendColumn("Nome", width=250)
+        self.card_list.AppendColumn("Mana", width=50)
+        self.card_list.AppendColumn("Quantità", width=80)
+        self.card_list.AppendColumn("Tipo", width=120)
+        self.card_list.AppendColumn("Rarità", width=120)
+        self.card_list.AppendColumn("Espansione", width=500)
+
+        # Pulsanti azione
+        btn_panel = wx.Panel(panel)
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        for label in ["Aggiungi Carta", "Modifica Carta", "Elimina Carta", "Chiudi"]:
+            btn = wx.Button(btn_panel, label=label)
+            btn_sizer.Add(btn, flag=wx.RIGHT, border=5)
+            if label == "Aggiungi Carta":
+                btn.Bind(wx.EVT_BUTTON, self.on_add_card)
+            elif label == "Modifica Carta":
+                btn.Bind(wx.EVT_BUTTON, self.on_edit_card)
+            elif label == "Elimina Carta":
+                btn.Bind(wx.EVT_BUTTON, self.on_delete_card)
+            else:
+                btn.Bind(wx.EVT_BUTTON, lambda e: self.Close())
+
+        # Assemblaggio finale
+        sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10) # Aggiungi la lista delle carte al sizer
+        sizer.Add(info_sizer, flag=wx.EXPAND | wx.ALL, border=10)                           # Aggiungi le informazioni al sizer
+        sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT|wx.ALL, border=10)                         # Aggiungi i pulsanti al sizer
+        btn_panel.SetSizer(btn_sizer)                                                       # Imposta il sizer dei pulsanti
+        panel.SetSizer(sizer)                                                               # Imposta il sizer del pannello
+        self.Centre()                                                                       # Centra la finestra
+        self.load_cards()                                                                   # Carica le carte del mazzo
+
+    def load_cards(self):
+        """Carica le carte del mazzo nella lista."""
+
+        self.card_list.DeleteAllItems()
+        for card_data in self.deck_content["cards"]:
+            card = session.query(Card).filter_by(name=card_data["name"]).first()
+            if card:
+                self.card_list.Append([
+                    card.name,
+                    str(card.mana_cost),
+                    str(card_data["quantity"]),
+                    card.card_type,
+                    card.rarity,
+                    card.expansion
+                ])
+
+    def on_add_card(self, event):
+        """Aggiunge una nuova carta al mazzo."""
+
+        dlg = CardEditDialog(self)
+        if dlg.ShowModal() == wx.ID_OK:
+            card_name = dlg.get_card_name()
+            if card_name:
+                # Verifica se la carta è già presente nel mazzo
+                for card_data in self.deck_content["cards"]:
+                    if card_data["name"] == card_name:
+                        wx.MessageBox("La carta è già presente nel mazzo.", "Errore")
+                        return
+
+                # Aggiungi la carta al mazzo
+                card = session.query(Card).filter_by(name=card_name).first()
+                if card:
+                    self.deck_content["cards"].append({
+                        "name": card.name,
+                        "mana_cost": card.mana_cost,
+                        "quantity": 1
+                    })
+                    self.load_cards()
+                    wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
+                else:
+                    wx.MessageBox("Carta non trovata nel database.", "Errore")
+        dlg.Destroy()
+
+    def on_edit_card(self, event):
+        """Modifica la carta selezionata nel mazzo."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            card = session.query(Card).filter_by(name=card_name).first()
+            if card:
+                dlg = CardEditDialog(self, card)
+                if dlg.ShowModal() == wx.ID_OK:
+                    self.load_cards()
+                    wx.MessageBox(f"Carta '{card_name}' modificata.", "Successo")
+                dlg.Destroy()
+            else:
+                wx.MessageBox("Carta non trovata nel database.", "Errore")
+        else:
+            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
+
+    def on_delete_card(self, event):
+        """Elimina la carta selezionata dal mazzo."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            if wx.MessageBox(f"Eliminare la carta '{card_name}' dal mazzo?", "Conferma", wx.YES_NO) == wx.YES:
+                # Rimuovi la carta dal mazzo
+                self.deck_content["cards"] = [
+                    card_data for card_data in self.deck_content["cards"]
+                    if card_data["name"] != card_name
+                ]
+                self.load_cards()
+                wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
+        else:
+            wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
+
+
+
 class DeckStatsDialog(wx.Dialog):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
     def __init__(self, parent, stats):
@@ -277,7 +420,7 @@ class CardCollectionDialog(wx.Dialog):
         self.btn_filters = wx.Button(panel, label="Filtri Avanzati")
         toolbar.Add(self.search_ctrl, proportion=1, flag=wx.EXPAND)
         toolbar.Add(self.btn_filters, flag=wx.LEFT, border=10)
-        
+
         # Lista carte
         self.card_list = wx.ListCtrl(
             panel, 
@@ -317,7 +460,7 @@ class CardCollectionDialog(wx.Dialog):
         
         panel.SetSizer(sizer)
         self.Centre()
-    
+
     def load_cards(self, filters=None):
         """Carica le carte dal database applicando i filtri."""
 

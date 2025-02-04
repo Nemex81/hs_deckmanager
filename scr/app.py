@@ -45,7 +45,7 @@ from scr.db import session, Deck, DeckCard, Card
 from sqlalchemy.exc import SQLAlchemyError
 from scr.models import Deck
 from scr.models import DeckManager, parse_deck_metadata
-from scr.views import CardCollectionDialog, DeckStatsDialog
+from scr.views import CardCollectionDialog, DeckStatsDialog, DeckViewDialog
 from scr.db import session
 from utyls import enu_glob as eg
 from utyls import logger as log
@@ -343,22 +343,15 @@ class HearthstoneApp(wx.Frame):
 
 
     def on_view_deck(self, event):
-        """Mostra il mazzo selezionato."""
+        """Mostra il mazzo selezionato in una finestra dettagliata."""
 
         deck_name = self.get_selected_deck()
         if deck_name:
             deck_content = self.deck_manager.get_deck(deck_name)
             if deck_content:
-                # Formatta il contenuto del mazzo in una stringa leggibile
-                deck_info = f"Mazzo: {deck_content['name']}\n"
-                deck_info += f"Classe: {deck_content['player_class']}\n"
-                deck_info += f"Formato: {deck_content['game_format']}\n\n"
-                deck_info += "Carte:\n"
-                for card in deck_content["cards"]:
-                    deck_info += f"{card['quantity']}x {card['name']} (Mana: {card['mana_cost']})\n"
-                
-                # Mostra il contenuto del mazzo
-                wx.MessageBox(deck_info, f"Mazzo: {deck_name}")
+                # Apri la finestra di visualizzazione del mazzo
+                deck_view_dialog = DeckViewDialog(self, self.deck_manager, deck_name)
+                deck_view_dialog.ShowModal()
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
         else:
