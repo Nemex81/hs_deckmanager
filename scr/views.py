@@ -23,7 +23,7 @@
 import wx
 from .db import session, Card
 from utyls.helper import disassemble_classes_string, assemble_classes_string
-from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuHero, EnuRarity, EnuExpansion
+from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import logger as log
 #import pdb
 
@@ -50,6 +50,7 @@ class CardEditDialog(wx.Dialog):
             ("Nome:", wx.TextCtrl(panel)),
             ("Costo Mana:", wx.SpinCtrl(panel, min=0, max=20)),
             ("Tipo:", wx.ComboBox(panel, choices=[t.value for t in EnuCardType], style=wx.CB_READONLY)),
+            ("Sottotipo:", wx.ComboBox(panel, style=wx.CB_READONLY)),  # Sottotipo dinamico
             ("Rarità:", wx.ComboBox(panel, choices=[r.value for r in EnuRarity], style=wx.CB_READONLY)),
             ("Espansione:", wx.ComboBox(panel, choices=[e.value for e in EnuExpansion], style=wx.CB_READONLY))
         ]
@@ -87,8 +88,10 @@ class CardEditDialog(wx.Dialog):
             self.nome.SetValue(self.card.name)
             self.costo_mana.SetValue(self.card.mana_cost)
             self.tipo.SetValue(self.card.card_type)
+            self.sottotipo.SetValue(self.card.card_subtype if self.card.card_subtype else "")
             self.rarità.SetValue(self.card.rarity)
             self.espansione.SetValue(self.card.expansion)
+
             # Seleziona le classi associate alla carta
             if self.card.class_name:
                 #selected_classes = self.card.class_name.split(", ")
@@ -97,11 +100,29 @@ class CardEditDialog(wx.Dialog):
                     if class_name in selected_classes:
                         self.classes_listbox.Check(i)
 
+        # Aggiorna i sottotipi in base al tipo selezionato
+        self.update_subtypes()
+
+    def update_subtypes(self):
+        """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+        card_type = self.tipo.GetValue()
+        if card_type == EnuCardType.MAGIA.value:
+            subtypes = [st.value for st in EnuSpellSubType]
+        elif card_type == EnuCardType.CREATURA.value:
+            subtypes = [st.value for st in EnuPetSubType]
+        else:
+            subtypes = []
+
+        self.sottotipo.Clear()
+        self.sottotipo.AppendItems(subtypes)
 
     def get_card_name(self):
         """Restituisce il nome della carta modificata o aggiunta."""
         return self.card_name
 
+    def on_type_change(self, event):
+        """Gestisce il cambio del tipo di carta."""
+        self.update_subtypes()
 
     def on_save(self, event):
         """Salva la carta nel database."""
@@ -112,6 +133,7 @@ class CardEditDialog(wx.Dialog):
                 "name": self.nome.GetValue(),
                 "mana_cost": self.costo_mana.GetValue(),
                 "card_type": self.tipo.GetValue(),
+                "card_subtype": self.sottotipo.GetValue(),
                 "rarity": self.rarità.GetValue(),
                 "expansion": self.espansione.GetValue()
             }
@@ -125,6 +147,7 @@ class CardEditDialog(wx.Dialog):
                 self.card.name = card_data["name"]
                 self.card.mana_cost = card_data["mana_cost"]
                 self.card.card_type = card_data["card_type"]
+                self.card.card_subtype = card_data["card_subtype"]
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
                 self.card.class_name = card_data["class_name"]
@@ -151,6 +174,7 @@ class CardEditDialog(wx.Dialog):
         self.EndModal(wx.ID_CANCEL)
         self.parent.select_card_by_name(self.card_name)
         self.Destroy()
+
 
 
 class DeckStatsDialog(wx.Dialog):
