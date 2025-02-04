@@ -24,7 +24,7 @@ EMAIL = "nemex1981@gmail.com"
 
 # configurazioni di sistema
 SOUNDS_PATH = "sounds"
-IMG_POATH = "img"
+IMG_PATH = "img"
 
 # configurazioni del database
 DATABASE_PATH = "hearthstone_decks_storage.db"

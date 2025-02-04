@@ -1,19 +1,22 @@
 """
-views.py
+    views.py
 
-Modulo per le finestre di dialogo dell'interfaccia utente.
+    Modulo per le finestre di dialogo dell'interfaccia utente.
 
-path:
-    scr/views.py
+    path:
+        scr/views.py
 
-Descrizione:
-    Contiene le classi per:
-    - DeckStatsDialog: Visualizza le statistiche di un mazzo
-    - FilterDialog: Gestisce i filtri di ricerca
-    - CardCollectionDialog: Mostra la collezione di carte
+    Descrizione:
+        Contiene le classi per:
+        - DeckStatsDialog: Visualizza le statistiche di un mazzo
+        - FilterDialog: Gestisce i filtri di ricerca
+        - CardCollectionDialog: Mostra la collezione di carte
+        - CardEditDialog: Finestra di dialogo per aggiungere o modificare una carta
 
-Utilizzo:
-    Importare le classi necessarie e utilizzarle nell'interfaccia principale.
+    Note:
+        Le finestre di dialogo sono implementate con wxPython.
+        Per installare wxPython, eseguire il comando `pip install wxPython`.
+
 """
 
 # lib
