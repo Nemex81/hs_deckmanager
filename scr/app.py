@@ -212,6 +212,26 @@ class HearthstoneApp(wx.Frame):
             self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
 
 
+    def select_and_focus_deck(self, deck_name):
+        """
+        Seleziona un mazzo nella lista e imposta il focus su di esso.
+        
+        :param deck_name: Il nome del mazzo da selezionare.
+        """
+        if not deck_name:
+            return
+
+        # Trova l'indice del mazzo nella lista
+        for i in range(self.deck_list.GetItemCount()):
+            if self.deck_list.GetItemText(i) == deck_name:
+                self.deck_list.Select(i)  # Seleziona il mazzo
+                self.deck_list.Focus(i)   # Imposta il focus sul mazzo
+                self.deck_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
+                break
+
+            self.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
+
+
     def update_status(self, message):
         """Aggiorna la barra di stato."""
         self.status_bar.SetStatusText(message)
@@ -228,28 +248,21 @@ class HearthstoneApp(wx.Frame):
 
     def on_add_deck(self, event):
         """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
-
         try:
-            # Recupera la stringa del mazzo dagli appunti
             deck_string = pyperclip.paste()
-
-            # Verifica se la stringa è un mazzo valido
             if not self.deck_manager.is_valid_deck(deck_string):
                 wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
                 return
 
-            # Estrae i metadati (nome, classe, formato) dalla stringa del mazzo
             metadata = parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
-            player_class = metadata["player_class"]
-            game_format = metadata["game_format"]
 
             # Mostra una finestra di conferma con i dati estratti
             confirm_message = (
                 f"È stato rilevato un mazzo valido negli appunti.\n\n"
                 f"Nome: {deck_name}\n"
-                f"Classe: {player_class}\n"
-                f"Formato: {game_format}\n\n"
+                f"Classe: {metadata['player_class']}\n"
+                f"Formato: {metadata['game_format']}\n\n"
                 f"Vuoi utilizzare questi dati per creare il mazzo?"
             )
 
@@ -260,23 +273,20 @@ class HearthstoneApp(wx.Frame):
                 wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION
             )
 
-            # Gestisce le risposte dell'utente
             result = confirm_dialog.ShowModal()
             if result == wx.ID_YES:
-                # Utilizza i dati estratti per creare il mazzo
                 success = self.deck_manager.add_deck_from_clipboard()
                 if success:
                     self.update_deck_list()
-                    self.update_status("Mazzo aggiunto con successo.")
-                    wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
-
+                    self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
+                    wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
+                    self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
             elif result == wx.ID_NO:
-                # Chiede di inserire manualmente il nome del mazzo
                 name_dialog = wx.TextEntryDialog(
                     self,
                     "Inserisci il nome per il nuovo mazzo:",
                     "Nome del Mazzo",
-                    deck_name  # Suggerisci il nome estratto come valore predefinito
+                    deck_name
                 )
 
                 if name_dialog.ShowModal() == wx.ID_OK:
@@ -288,19 +298,15 @@ class HearthstoneApp(wx.Frame):
                             self.update_deck_list()
                             self.update_status("Mazzo aggiunto con successo.")
                             wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
+                            self.select_and_focus_deck(new_name)  # Seleziona e mette a fuoco il mazzo
                     else:
                         wx.MessageBox("Il nome del mazzo non può essere vuoto.", "Errore")
             elif result == wx.ID_CANCEL:
-                # L'utente ha scelto di annullare l'operazione
                 self.update_status("Operazione annullata.")
                 wx.MessageBox("Operazione annullata.", "Annullato")
 
         except pyperclip.PyperclipException as e:
             wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
-
-        except ValueError as e:
-            wx.MessageBox(str(e), "Errore")
-
         except Exception as e:
             log.error(f"Errore durante l'aggiunta del mazzo: {e}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
@@ -317,25 +323,24 @@ class HearthstoneApp(wx.Frame):
                 deck_info = f"### {deck_content['name']}\n"
                 deck_info += f"# Classe: {deck_content['player_class']}\n"
                 deck_info += f"# Formato: {deck_content['game_format']}\n"
-                deck_info += "# Anno del Pegaso\n"  # Espansione (puoi personalizzarla)
+                deck_info += "# Anno del Pegaso\n"
                 deck_info += "#\n"
                 
-                # Aggiungi le carte
                 for card in deck_content["cards"]:
                     deck_info += f"# {card['quantity']}x ({card['mana_cost']}) {card['name']}\n"
 
-            # Aggiungi il codice del mazzo alla fine
                 deck_info += "#\n"
                 deck_info += "AAECAeSKBwaU1ATj+AXpngbSsAb3wAbO8QYMg58E0p8E7KAEx7AG7eoGn/EGwvEG3vEG4/EG5fEGqPcGiPgGAAA=\n#\n# Per utilizzare questo mazzo, copialo negli appunti e crea un nuovo mazzo in Hearthstone\n"
 
-                # Copia il contenuto del mazzo negli appunti
                 pyperclip.copy(deck_info)
                 self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
                 wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
+                self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
         else:
             wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
+
 
     def on_view_deck(self, event):
         """Mostra il mazzo selezionato."""
@@ -359,9 +364,9 @@ class HearthstoneApp(wx.Frame):
         else:
             wx.MessageBox("Seleziona un mazzo prima di visualizzarlo.", "Errore")
 
+
     def on_update_deck(self, event):
         """Aggiorna il mazzo selezionato con il contenuto degli appunti."""
-
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(
@@ -372,23 +377,17 @@ class HearthstoneApp(wx.Frame):
                 try:
                     deck_string = pyperclip.paste()
                     if self.deck_manager.is_valid_deck(deck_string):
-                        # Trova il mazzo nel database
                         deck = session.query(Deck).filter_by(name=deck_name).first()
                         if deck:
-                            # Elimina le vecchie relazioni mazzo-carta
                             session.query(DeckCard).filter_by(deck_id=deck.id).delete()
                             session.commit()
 
-                            # Sincronizza le nuove carte con il database
                             self.deck_manager.sync_cards_with_database(deck_string)
 
-                            # Aggiungi le nuove carte al mazzo
                             cards = self.deck_manager.parse_cards_from_deck(deck_string)
                             for card_data in cards:
-                                # Verifica se la carta esiste già nel database
                                 card = session.query(Card).filter_by(name=card_data["name"]).first()
                                 if not card:
-                                    # Se la carta non esiste, creala
                                     card = Card(
                                         name=card_data["name"],
                                         class_name="Unknown",
@@ -401,7 +400,6 @@ class HearthstoneApp(wx.Frame):
                                     session.add(card)
                                     session.commit()
 
-                                # Aggiungi la relazione tra il mazzo e la carta
                                 deck_card = DeckCard(deck_id=deck.id, card_id=card.id, quantity=card_data["quantity"])
                                 session.add(deck_card)
                                 session.commit()
@@ -409,6 +407,7 @@ class HearthstoneApp(wx.Frame):
                             self.update_deck_list()
                             self.update_status(f"Mazzo '{deck_name}' aggiornato con successo.")
                             wx.MessageBox(f"Mazzo '{deck_name}' aggiornato con successo.", "Successo")
+                            self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
                         else:
                             wx.MessageBox("Errore: Mazzo non trovato nel database.", "Errore")
                     else:
@@ -418,6 +417,7 @@ class HearthstoneApp(wx.Frame):
                     wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
         else:
             wx.MessageBox("Seleziona un mazzo prima di aggiornarlo.", "Errore")
+
 
     def on_view_stats(self, event):
         """Mostra le statistiche del mazzo selezionato."""
