@@ -32,6 +32,7 @@ class CardEditDialog(wx.Dialog):
     def __init__(self, parent, card=None):
         title = "Modifica Carta" if card else "Aggiungi Carta"
         super().__init__(parent, title=title, size=(400, 500))
+        self.parent = parent
         self.SetBackgroundColour('green')
         self.card = card
         self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
@@ -72,7 +73,7 @@ class CardEditDialog(wx.Dialog):
 
         # Eventi
         btn_save.Bind(wx.EVT_BUTTON, self.on_save)
-        btn_close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
+        btn_close.Bind(wx.EVT_BUTTON, self.on_close)
 
         sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
         panel.SetSizer(sizer)
@@ -101,6 +102,8 @@ class CardEditDialog(wx.Dialog):
 
     def on_save(self, event):
         """Salva la carta nel database."""
+
+        self.card_name = None
         try:
             card_data = {
                 "name": self.nome.GetValue(),
@@ -132,17 +135,26 @@ class CardEditDialog(wx.Dialog):
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
             wx.MessageBox("Dati della carta salvati con successo!", "Successo")
+            self.parent.select_card_by_name(self.card_name)
+            self.Destroy()
 
         except Exception as e:
             log.error(f"Errore durante il salvataggio: {str(e)}")
-            wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore")
+            raise
 
+    def on_close(self, event):
+        """Chiude la finestra di dialogo."""
+
+        self.EndModal(wx.ID_CANCEL)
+        self.parent.select_card_by_name(self.card_name)
+        self.Destroy()
 
 
 class DeckStatsDialog(wx.Dialog):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
     def __init__(self, parent, stats):
         super().__init__(parent, title="Statistiche Mazzo", size=(300, 390))
+        self.parent = parent
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -173,6 +185,7 @@ class DeckStatsDialog(wx.Dialog):
 class FilterDialog(wx.Dialog):
     def __init__(self, parent):
         super().__init__(parent, title="Filtri di Ricerca", size=(300, 300))
+        self.parent = parent
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -214,11 +227,15 @@ class FilterDialog(wx.Dialog):
 
 
 class CardCollectionDialog(wx.Dialog):
+    """ Finestra di dialogo per la gestione della collezione di carte. """
+
     def __init__(self, parent, deck_manager):
         super().__init__(parent, title="Collezione Carte", size=(1200, 800))
+        self.parent = parent
         self.SetBackgroundColour('green')
         self.deck_manager = deck_manager
         self.current_filters = {}
+        self.card_name = None
         self.Centre() # Centra la finestra
         self.init_ui()
         self.load_cards()
@@ -276,6 +293,7 @@ class CardCollectionDialog(wx.Dialog):
     
     def load_cards(self, filters=None):
         """Carica le carte dal database applicando i filtri."""
+
         self.card_list.DeleteAllItems()
         query = session.query(Card)
         
@@ -302,6 +320,8 @@ class CardCollectionDialog(wx.Dialog):
 
     def select_card_by_name(self, card_name):
         """Seleziona una carta nella lista in base al nome."""
+
+        self.card_list.SetFocus()  # Imposta il focus sulla lista
         for i in range(self.card_list.GetItemCount()):
             if self.card_list.GetItemText(i) == card_name:
                 self.card_list.Select(i)  # Seleziona la riga
@@ -336,7 +356,7 @@ class CardCollectionDialog(wx.Dialog):
             card_name = dlg.get_card_name()  # Ottieni il nome della carta aggiunta/modificata
             self.select_card_by_name(card_name)  # Seleziona la carta nella lista
 
-        dlg.Destroy()
+        dlg.Destroy() # Chiudi la finestra di dialogo
 
     def on_edit_card(self, event):
         """Apre la finestra per modificare una carta esistente."""
@@ -350,7 +370,7 @@ class CardCollectionDialog(wx.Dialog):
                 if dlg.ShowModal() == wx.ID_OK:  # Se l'utente ha premuto "Salva"
                     self.load_cards(self.current_filters)  # Ricarica la lista delle carte
                     card_name = dlg.get_card_name()  # Ottieni il nome della carta modificata
-                    self.select_card_by_name(self.card_name)  # Seleziona la carta nella lista
+                    self.select_card_by_name(card_name)  # Seleziona la carta nella lista
 
                 dlg.Destroy()
             else:
@@ -378,6 +398,7 @@ class CardCollectionDialog(wx.Dialog):
         else:
                 log.error("Nessuna carta selezionata")
                 wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
+
 
 
 
