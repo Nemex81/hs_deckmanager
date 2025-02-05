@@ -31,26 +31,60 @@ from utyls import logger as log
 
 #@@@# sezione funzioni helper specifiche per wx
 
+def create_control(panel, label, control_class, **kwargs):
+    """
+    Crea un controllo UI con una label associata.
+    
+    :param panel: Il pannello a cui aggiungere il controllo.
+    :param label: La label del controllo.
+    :param control_class: La classe del controllo da creare.
+    :param kwargs: Argomenti aggiuntivi per il controllo.
+    :return: Il controllo creato e la riga contenente la label e il controllo.
+    """
+    row = wx.BoxSizer(wx.HORIZONTAL)
+    row.Add(wx.StaticText(panel, label=label), flag=wx.RIGHT, border=10)
+    control = control_class(panel, **kwargs)
+    row.Add(control, proportion=1, flag=wx.EXPAND)
+    return control, row
+
+
+def create_button(panel, label, event_handler=None):
+    """
+    Crea un pulsante e collega un gestore di eventi.
+    
+    :param panel: Il pannello a cui aggiungere il pulsante.
+    :param label: La label del pulsante.
+    :param event_handler: Il gestore di eventi da collegare.
+    :return: Il pulsante creato.
+    """
+    btn = wx.Button(panel, label=label)
+    btn.Bind(wx.EVT_BUTTON, event_handler)
+    return btn
+
+
 def create_ui_controls(panel, controls):
     """
-    Crea i controlli UI e li aggiunge a un sizer.
+    Crea e posiziona i controlli UI in un pannello.
     
     :param panel: Il pannello a cui aggiungere i controlli.
-    :param controls: Una lista di tuple (label, control).
-    :return: Una tupla contenente il sizer e un dizionario con i controlli.
+    :param controls: Lista di tuple (label, control_class, kwargs) per i controlli.
+    :return: Il sizer contenente i controlli e un dizionario con i controlli creati.
     """
 
     sizer = wx.BoxSizer(wx.VERTICAL)
-    control_dict = {}  # Dizionario per memorizzare i controlli
+    control_dict = {}
+    for control_info in controls:
+        if len(control_info) == 2:
+            label, control_class = control_info
+            kwargs = {}
+        elif len(control_info) == 3:
+            label, control_class, kwargs = control_info
+        else:
+            raise ValueError("Ogni controllo deve essere una tupla di 2 o 3 elementi: (label, control_class[, kwargs])")
 
-    for label, control in controls:
-        row = wx.BoxSizer(wx.HORIZONTAL)
-        row.Add(wx.StaticText(panel, label=label), flag=wx.LEFT | wx.RIGHT, border=10)
-        row.Add(control, proportion=1)
+        control, row = create_control(panel=panel, label=label, control_class=control_class, **kwargs)
         sizer.Add(row, flag=wx.EXPAND | wx.ALL, border=5)
-        
-        # Aggiungi il controllo al dizionario usando la label come chiave
-        control_dict[label.lower().replace(" ", "_").replace(":", "")] = control
+        control_dict[label.lower().replace(" ", "_")] = control
 
     return sizer, control_dict
 
@@ -68,21 +102,26 @@ class FilterDialog(wx.Dialog):
         self.parent = parent
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
-        #sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Elementi UI
-        self.search_ctrl = wx.SearchCtrl(panel)
-        self.mana_cost = wx.SpinCtrl(panel, min=0, max=20)
-        self.card_type = wx.ComboBox(panel, choices=["Tutti"] + [t.value for t in EnuCardType], style=wx.CB_READONLY)  # Usa EnuCardType
-        self.rarity = wx.ComboBox(panel, choices=["Tutti"] + [r.value for r in EnuRarity], style=wx.CB_READONLY)  # Usa EnuRarity
 
         controls = [
-            ("Nome:", self.search_ctrl),
-            ("Costo Mana:", self.mana_cost),
-            ("Tipo:", self.card_type),
-            ("Rarità:", self.rarity)
+            ("nome", wx.TextCtrl),
+            ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuSpellSubType], "style": wx.CB_READONLY}),
+            ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY})
         ]
-        sizer = create_ui_controls(panel, controls)
+
+        #sizer = create_ui_controls(panel, controls)
+        sizer, control_dict = create_ui_controls(panel, controls)
+
+        self.search_ctrl = control_dict ["nome"]
+        self.mana_cost = control_dict["costo_mana"]
+        self.card_type = control_dict["tipo"]
+        self.card_subtype = control_dict["sottotipo"]
+        self.rarity = control_dict["rarita"]
+
+        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
+        self.card_type.Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
         # Pulsanti
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -98,6 +137,49 @@ class FilterDialog(wx.Dialog):
         sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT|wx.ALL, border=10)
         panel.SetSizer(sizer)
         self.Centre()
+        # Aggiorna i sottotipi in base al tipo selezionato
+        self.update_subtypes()
+        # reset dei filtri
+        self.reset_filters()
+
+
+    def reset_filters(self):
+        """ Resetta i filtri ai valori predefiniti. """
+
+        self.search_ctrl.SetValue("")
+        self.mana_cost.SetValue("")
+        self.card_type.SetValue("Tutti")
+        self.card_subtype.SetValue("Tutti")
+        self.rarity.SetValue("Tutti")
+
+
+    def update_subtypes(self):
+        """ Aggiorna i sottotipi in base al tipo di carta selezionato. """
+
+        card_type = self.card_type.GetValue()
+        if card_type == EnuCardType.MAGIA.value:
+            subtypes = [st.value for st in EnuSpellSubType]
+
+        elif card_type == EnuCardType.CREATURA.value:
+            subtypes = [st.value for st in EnuPetSubType]
+        else:
+            subtypes = []
+
+        current_subtype = self.card_subtype.GetValue()
+        self.card_subtype.Clear()
+        self.card_subtype.AppendItems(subtypes)
+        if current_subtype not in subtypes:
+            self.card_subtype.SetValue("")  # Resetta il sottotipo se non è valido
+
+
+    def on_type_change(self, event):
+        """Gestisce il cambio del tipo di carta."""
+        self.update_subtypes()
+
+
+    def on_save(self, event):
+        """Salva i filtri e chiude la finestra di dialogo."""
+        self.EndModal(wx.ID_OK)
 
 
 
@@ -152,12 +234,12 @@ class CardEditDialog(wx.Dialog):
 
         # Campi di input
         fields = [
-            ("Nome:", wx.TextCtrl(panel)),
-            ("Costo Mana:", wx.SpinCtrl(panel, min=0, max=20)),
-            ("Tipo:", wx.ComboBox(panel, choices=[t.value for t in EnuCardType], style=wx.CB_READONLY)),
-            ("Sottotipo:", wx.ComboBox(panel, style=wx.CB_READONLY)),  # Sottotipo dinamico
-            ("Rarità:", wx.ComboBox(panel, choices=[r.value for r in EnuRarity], style=wx.CB_READONLY)),
-            ("Espansione:", wx.ComboBox(panel, choices=[e.value for e in EnuExpansion], style=wx.CB_READONLY))
+            ("nome", wx.TextCtrl),  # Passa la classe wx.TextCtrl
+            ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),  # Passa la classe wx.SpinCtrl e i kwargs
+            ("tipo", wx.ComboBox, {"choices": [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),  # Inizialmente vuoto
+            ("rarita", wx.ComboBox, {"choices": [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", wx.ComboBox, {"choices": [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
 
         # Crea i controlli UI e ottieni il sizer e il dizionario dei controlli
@@ -168,7 +250,7 @@ class CardEditDialog(wx.Dialog):
         self.costo_mana = control_dict["costo_mana"]
         self.tipo = control_dict["tipo"]
         self.sottotipo = control_dict["sottotipo"]
-        self.rarità = control_dict["rarità"]
+        self.rarità = control_dict["rarita"]
         self.espansione = control_dict["espansione"]
 
         # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
@@ -199,7 +281,13 @@ class CardEditDialog(wx.Dialog):
             self.nome.SetValue(self.card.name)
             self.costo_mana.SetValue(self.card.mana_cost)
             self.tipo.SetValue(self.card.card_type)
+
+            # Aggiorna i sottotipi in base al tipo di carta selezionato
+            self.update_subtypes()
+
+            # Imposta il valore corrente del sottotipo
             self.sottotipo.SetValue(self.card.card_subtype)
+
             self.rarità.SetValue(self.card.rarity)
             self.espansione.SetValue(self.card.expansion)
 
@@ -210,12 +298,9 @@ class CardEditDialog(wx.Dialog):
                     if class_name in selected_classes:
                         self.classes_listbox.Check(i)
 
-        # Aggiorna i sottotipi in base al tipo selezionato
-        self.update_subtypes()
-
 
     def update_subtypes(self):
-        """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+        """ Aggiorna i sottotipi in base al tipo di carta selezionato. """
 
         card_type = self.tipo.GetValue()
         if card_type == EnuCardType.MAGIA.value:
@@ -225,8 +310,15 @@ class CardEditDialog(wx.Dialog):
         else:
             subtypes = []
 
+        current_subtype = self.sottotipo.GetValue()
         self.sottotipo.Clear()
         self.sottotipo.AppendItems(subtypes)
+        
+        # Se il sottotipo corrente è valido per il nuovo tipo di carta, mantienilo
+        if current_subtype in subtypes:
+            self.sottotipo.SetValue(current_subtype)
+        else:
+            self.sottotipo.SetValue("")  # Resetta il sottotipo se non è valido
 
     def get_card_name(self):
         """Restituisce il nome della carta modificata o aggiunta."""
@@ -274,50 +366,6 @@ class CardEditDialog(wx.Dialog):
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
             self.parent.load_cards()  # Ricarica la lista delle carte
             self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
-            self.Destroy()
-
-        except Exception as e:
-            log.error(f"Errore durante il salvataggio: {str(e)}")
-            raise
-
-    def last_on_save(self, event):
-        """Salva la carta nel database."""
-
-        self.card_name = None
-        try:
-            card_data = {
-                "name": self.nome.GetValue(),
-                "mana_cost": self.costo_mana.GetValue(),
-                "card_type": self.tipo.GetValue(),
-                "card_subtype": self.sottotipo.GetValue(),
-                "rarity": self.rarità.GetValue(),
-                "expansion": self.espansione.GetValue()
-            }
-
-            # Ottieni le classi selezionate
-            selected_classes = [self.classes_listbox.GetString(i) for i in self.classes_listbox.GetCheckedItems()]
-            card_data["class_name"] = ", ".join(selected_classes)  # Salva come stringa separata da virgole
-
-            if self.card:
-                # Modifica la carta esistente
-                self.card.name = card_data["name"]
-                self.card.mana_cost = card_data["mana_cost"]
-                self.card.card_type = card_data["card_type"]
-                self.card.card_subtype = card_data["card_subtype"]
-                self.card.rarity = card_data["rarity"]
-                self.card.expansion = card_data["expansion"]
-                self.card.class_name = card_data["class_name"]
-                self.card_name = self.card.name  # Aggiorna il nome della carta
-            else:
-                # Aggiungi una nuova carta
-                new_card = Card(**card_data)
-                session.add(new_card)
-                self.card_name = new_card.name  # Memorizza il nome della nuova carta
-
-            session.commit()
-            self.EndModal(wx.ID_OK)                          # Chiudi la finestra e notifica che i dati sono stati salvati
-            self.parent.load_cards()                         # Aggiorna la lista delle carte
-            self.parent.select_card_by_name(self.card_name)  # Seleziona la carta
             self.Destroy()
 
         except Exception as e:
@@ -379,6 +427,7 @@ class CardManagerDialog(wx.Dialog):
         self.card_list.AppendColumn("Mana", width=50)
         self.card_list.AppendColumn("Quantità", width=80)
         self.card_list.AppendColumn("Tipo", width=120)
+        self.card_list.AppendColumn("Sottotipo", width=120)
         self.card_list.AppendColumn("Rarità", width=120)
         self.card_list.AppendColumn("Espansione", width=500)
         sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -423,22 +472,6 @@ class CardManagerDialog(wx.Dialog):
                 self.card_list.SetFocus()  # Imposta il focus sulla lista
                 break
 
-    def last_select_card_by_name(self, card_name):
-            """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga
-
-            :param card_name: Nome della carta da selezionare
-            """
-
-            for i in range(self.card_list.GetItemCount()):
-                if self.card_list.GetItemText(i) == card_name:
-                    self.card_list.Select(i)                    # Seleziona la riga     
-                    self.card_list.Focus(i)                     # Sposta il focus alla riga selezionata
-                    self.card_list.EnsureVisible(i)             # Assicurati che il mazzo sia visibile
-                    self.card_list.RefreshItems(i, i)           # Aggiorna la riga selezionata
-                    break
-
-                self.card_list.set_focus()              # Sposta il focus alla lista
-
 
     def load_cards(self, filters=None):
         """Carica le carte nella lista in base alla modalità e ai filtri."""
@@ -453,6 +486,8 @@ class CardManagerDialog(wx.Dialog):
                     query = query.filter(Card.mana_cost == filters["mana_cost"])
                 if filters.get("card_type") not in [None, "Tutti"]:
                     query = query.filter(Card.card_type == filters["card_type"])
+                if filters.get("card_subtype") not in [None, "Tutti"]:
+                    query = query.filter(Card.card_subtype == filters["card_subtype"])
                 if filters.get("rarity") not in [None, "Tutti"]:
                     query = query.filter(Card.rarity == filters["rarity"])
 
@@ -463,6 +498,7 @@ class CardManagerDialog(wx.Dialog):
                     str(card.mana_cost),
                     "1",  # Quantità fissa per la collezione
                     card.card_type,
+                    card.card_subtype,
                     card.rarity,
                     card.expansion
                 ])
@@ -479,6 +515,8 @@ class CardManagerDialog(wx.Dialog):
                             continue
                         if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
                             continue
+                        if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
+                            continue
                         if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
                             continue
 
@@ -487,6 +525,7 @@ class CardManagerDialog(wx.Dialog):
                         str(card.mana_cost),
                         str(card_data["quantity"]),
                         card.card_type,
+                        card.card_subtype,
                         card.rarity,
                         card.expansion
                     ])
@@ -545,29 +584,6 @@ class CardManagerDialog(wx.Dialog):
                 dlg.Destroy()
             else:
                 wx.MessageBox("Carta non trovata nel database.", "Errore")
-        else:
-            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
-
-    def last_on_edit_card(self, event):
-        """Modifica la carta selezionata."""
-
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            card = session.query(Card).filter_by(name=card_name).first()
-            if card:
-                dlg = CardEditDialog(self, card)
-                if dlg.ShowModal() == wx.ID_OK:
-                    self.load_cards()
-                    wx.MessageBox(f"Carta '{card_name}' modificata con successo")
-
-                dlg.Destroy()
-                self.select_card_by_name(card_name)
-                self.card_list.set_focus()
-
-            else:
-                wx.MessageBox("Carta non trovata nel database.", "Errore")
-
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
 
@@ -655,6 +671,10 @@ class CardCollectionDialog(CardManagerDialog):
 
         # Aggiungi la barra di ricerca e i filtri al layout
         sizer.Insert(0, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+
+    def reset_filters(self):
+        self.search_ctrl.SetValue("")
+        self.load_cards()  # Ricarica la lista delle carte senza filtri
 
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
