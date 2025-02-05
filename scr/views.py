@@ -29,13 +29,46 @@ from utyls import logger as log
 
 
 
+#@@@# sezione funzioni helper specifiche per wx
+
+def create_ui_controls(panel, controls):
+    """
+    Crea i controlli UI e li aggiunge a un sizer.
+    
+    :param panel: Il pannello a cui aggiungere i controlli.
+    :param controls: Una lista di tuple (label, control).
+    :return: Una tupla contenente il sizer e un dizionario con i controlli.
+    """
+
+    sizer = wx.BoxSizer(wx.VERTICAL)
+    control_dict = {}  # Dizionario per memorizzare i controlli
+
+    for label, control in controls:
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.Add(wx.StaticText(panel, label=label), flag=wx.LEFT | wx.RIGHT, border=10)
+        row.Add(control, proportion=1)
+        sizer.Add(row, flag=wx.EXPAND | wx.ALL, border=5)
+        
+        # Aggiungi il controllo al dizionario usando la label come chiave
+        control_dict[label.lower().replace(" ", "_").replace(":", "")] = control
+
+    return sizer, control_dict
+
+
+
+#@@@# sezione gestione delle finestre di dialogo
+
+
+
 class FilterDialog(wx.Dialog):
+    """ Finestra di dialogo per i filtri di ricerca. """
+
     def __init__(self, parent):
         super().__init__(parent, title="Filtri di Ricerca", size=(300, 300))
         self.parent = parent
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        #sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Elementi UI
         self.search_ctrl = wx.SearchCtrl(panel)
@@ -43,18 +76,13 @@ class FilterDialog(wx.Dialog):
         self.card_type = wx.ComboBox(panel, choices=["Tutti"] + [t.value for t in EnuCardType], style=wx.CB_READONLY)  # Usa EnuCardType
         self.rarity = wx.ComboBox(panel, choices=["Tutti"] + [r.value for r in EnuRarity], style=wx.CB_READONLY)  # Usa EnuRarity
 
-        # Layout
         controls = [
             ("Nome:", self.search_ctrl),
             ("Costo Mana:", self.mana_cost),
             ("Tipo:", self.card_type),
             ("Rarità:", self.rarity)
         ]
-        for label, control in controls:
-            row = wx.BoxSizer(wx.HORIZONTAL)
-            row.Add(wx.StaticText(panel, label=label), flag=wx.LEFT|wx.RIGHT, border=10)
-            row.Add(control, proportion=1)
-            sizer.Add(row, flag=wx.EXPAND|wx.ALL, border=5)
+        sizer = create_ui_controls(panel, controls)
 
         # Pulsanti
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -121,7 +149,6 @@ class CardEditDialog(wx.Dialog):
 
     def init_ui(self):
         panel = wx.Panel(self)
-        sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Campi di input
         fields = [
@@ -133,13 +160,19 @@ class CardEditDialog(wx.Dialog):
             ("Espansione:", wx.ComboBox(panel, choices=[e.value for e in EnuExpansion], style=wx.CB_READONLY))
         ]
 
-        # Aggiungi i campi alla finestra
-        for label, control in fields:
-            row = wx.BoxSizer(wx.HORIZONTAL)
-            row.Add(wx.StaticText(panel, label=label), flag=wx.LEFT | wx.RIGHT, border=10)
-            row.Add(control, proportion=1)
-            sizer.Add(row, flag=wx.EXPAND | wx.ALL, border=5)
-            setattr(self, label.lower().replace(" ", "_").replace(":", ""), control)
+        # Crea i controlli UI e ottieni il sizer e il dizionario dei controlli
+        sizer, control_dict = create_ui_controls(panel, fields)
+
+        # Assegna i controlli agli attributi della classe
+        self.nome = control_dict["nome"]
+        self.costo_mana = control_dict["costo_mana"]
+        self.tipo = control_dict["tipo"]
+        self.sottotipo = control_dict["sottotipo"]
+        self.rarità = control_dict["rarità"]
+        self.espansione = control_dict["espansione"]
+
+        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
+        self.tipo.Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
         # Selezione multipla delle classi
         self.classes_listbox = wx.CheckListBox(panel, choices=[h.value for h in EnuHero])
@@ -166,14 +199,13 @@ class CardEditDialog(wx.Dialog):
             self.nome.SetValue(self.card.name)
             self.costo_mana.SetValue(self.card.mana_cost)
             self.tipo.SetValue(self.card.card_type)
-            self.sottotipo.SetValue(self.card.card_subtype if self.card.card_subtype else "")
+            self.sottotipo.SetValue(self.card.card_subtype)
             self.rarità.SetValue(self.card.rarity)
             self.espansione.SetValue(self.card.expansion)
 
             # Seleziona le classi associate alla carta
             if self.card.class_name:
-                #selected_classes = self.card.class_name.split(", ")
-                selected_classes= disassemble_classes_string(self.card.class_name)
+                selected_classes = disassemble_classes_string(self.card.class_name)
                 for i, class_name in enumerate(self.classes_listbox.GetItems()):
                     if class_name in selected_classes:
                         self.classes_listbox.Check(i)
@@ -181,8 +213,10 @@ class CardEditDialog(wx.Dialog):
         # Aggiorna i sottotipi in base al tipo selezionato
         self.update_subtypes()
 
+
     def update_subtypes(self):
         """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+
         card_type = self.tipo.GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
@@ -202,7 +236,51 @@ class CardEditDialog(wx.Dialog):
         """Gestisce il cambio del tipo di carta."""
         self.update_subtypes()
 
+
     def on_save(self, event):
+        """Salva la carta nel database."""
+        self.card_name = None
+        try:
+            card_data = {
+                "name": self.nome.GetValue(),
+                "mana_cost": self.costo_mana.GetValue(),
+                "card_type": self.tipo.GetValue(),
+                "card_subtype": self.sottotipo.GetValue(),
+                "rarity": self.rarità.GetValue(),
+                "expansion": self.espansione.GetValue()
+            }
+
+            # Ottieni le classi selezionate
+            selected_classes = [self.classes_listbox.GetString(i) for i in self.classes_listbox.GetCheckedItems()]
+            card_data["class_name"] = ", ".join(selected_classes)  # Salva come stringa separata da virgole
+
+            if self.card:
+                # Modifica la carta esistente
+                self.card.name = card_data["name"]
+                self.card.mana_cost = card_data["mana_cost"]
+                self.card.card_type = card_data["card_type"]
+                self.card.card_subtype = card_data["card_subtype"]
+                self.card.rarity = card_data["rarity"]
+                self.card.expansion = card_data["expansion"]
+                self.card.class_name = card_data["class_name"]
+                self.card_name = self.card.name  # Aggiorna il nome della carta
+            else:
+                # Aggiungi una nuova carta
+                new_card = Card(**card_data)
+                session.add(new_card)
+                self.card_name = new_card.name  # Memorizza il nome della nuova carta
+
+            session.commit()
+            self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
+            self.parent.load_cards()  # Ricarica la lista delle carte
+            self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
+            self.Destroy()
+
+        except Exception as e:
+            log.error(f"Errore durante il salvataggio: {str(e)}")
+            raise
+
+    def last_on_save(self, event):
         """Salva la carta nel database."""
 
         self.card_name = None
@@ -237,14 +315,15 @@ class CardEditDialog(wx.Dialog):
                 self.card_name = new_card.name  # Memorizza il nome della nuova carta
 
             session.commit()
-            self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
-            wx.MessageBox("Dati della carta salvati con successo!", "Successo")
-            self.parent.select_card_by_name(self.card_name)
+            self.EndModal(wx.ID_OK)                          # Chiudi la finestra e notifica che i dati sono stati salvati
+            self.parent.load_cards()                         # Aggiorna la lista delle carte
+            self.parent.select_card_by_name(self.card_name)  # Seleziona la carta
             self.Destroy()
 
         except Exception as e:
             log.error(f"Errore durante il salvataggio: {str(e)}")
             raise
+
 
     def on_close(self, event):
         """Chiude la finestra di dialogo."""
@@ -325,6 +404,42 @@ class CardManagerDialog(wx.Dialog):
         panel.SetSizer(sizer)
         self.load_cards()
 
+
+    def select_card_by_name(self, card_name):
+        """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga.
+
+        :param card_name: Nome della carta da selezionare
+        """
+
+        if not card_name:
+            return
+
+        # Trova l'indice della carta nella lista
+        for i in range(self.card_list.GetItemCount()):
+            if self.card_list.GetItemText(i) == card_name:
+                self.card_list.Select(i)  # Seleziona la riga
+                self.card_list.Focus(i)   # Sposta il focus alla riga selezionata
+                self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
+                self.card_list.SetFocus()  # Imposta il focus sulla lista
+                break
+
+    def last_select_card_by_name(self, card_name):
+            """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga
+
+            :param card_name: Nome della carta da selezionare
+            """
+
+            for i in range(self.card_list.GetItemCount()):
+                if self.card_list.GetItemText(i) == card_name:
+                    self.card_list.Select(i)                    # Seleziona la riga     
+                    self.card_list.Focus(i)                     # Sposta il focus alla riga selezionata
+                    self.card_list.EnsureVisible(i)             # Assicurati che il mazzo sia visibile
+                    self.card_list.RefreshItems(i, i)           # Aggiorna la riga selezionata
+                    break
+
+                self.card_list.set_focus()              # Sposta il focus alla lista
+
+
     def load_cards(self, filters=None):
         """Carica le carte nella lista in base alla modalità e ai filtri."""
         self.card_list.DeleteAllItems()
@@ -376,36 +491,6 @@ class CardManagerDialog(wx.Dialog):
                         card.expansion
                     ])
 
-    def last_load_cards(self):
-        """Carica le carte nella lista in base alla modalità."""
-
-        self.card_list.DeleteAllItems()
-        if self.mode == "collection":
-            # Carica tutte le carte della collezione
-            cards = session.query(Card).all()
-            for card in cards:
-                self.card_list.Append([
-                    card.name,
-                    str(card.mana_cost),
-                    "1",  # Quantità fissa per la collezione
-                    card.card_type,
-                    card.rarity,
-                    card.expansion
-                ])
-
-        elif self.mode == "deck":
-            # Carica le carte del mazzo
-            for card_data in self.deck_content["cards"]:
-                card = session.query(Card).filter_by(name=card_data["name"]).first()
-                if card:
-                    self.card_list.Append([
-                        card.name,
-                        str(card.mana_cost),
-                        str(card_data["quantity"]),
-                        card.card_type,
-                        card.rarity,
-                        card.expansion
-                    ])
 
     def on_add_card(self, event):
         """Aggiunge una nuova carta (alla collezione o al mazzo)."""
@@ -421,6 +506,7 @@ class CardManagerDialog(wx.Dialog):
                     else:
                         self.load_cards()
                         wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
+
                 elif self.mode == "deck":
                     # Aggiungi la carta al mazzo (se non è già presente)
                     for card_data in self.deck_content["cards"]:
@@ -439,10 +525,32 @@ class CardManagerDialog(wx.Dialog):
                         wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
                     else:
                         wx.MessageBox("Carta non trovata nel database.", "Errore")
+
         dlg.Destroy()
+
 
     def on_edit_card(self, event):
         """Modifica la carta selezionata."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            card = session.query(Card).filter_by(name=card_name).first()
+            if card:
+                dlg = CardEditDialog(self, card)
+                if dlg.ShowModal() == wx.ID_OK:
+                    self.load_cards()  # Ricarica la lista delle carte
+                    wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
+                    self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
+                dlg.Destroy()
+            else:
+                wx.MessageBox("Carta non trovata nel database.", "Errore")
+        else:
+            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
+
+    def last_on_edit_card(self, event):
+        """Modifica la carta selezionata."""
+
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             card_name = self.card_list.GetItemText(selected)
@@ -451,12 +559,18 @@ class CardManagerDialog(wx.Dialog):
                 dlg = CardEditDialog(self, card)
                 if dlg.ShowModal() == wx.ID_OK:
                     self.load_cards()
-                    wx.MessageBox(f"Carta '{card_name}' modificata.", "Successo")
+                    wx.MessageBox(f"Carta '{card_name}' modificata con successo")
+
                 dlg.Destroy()
+                self.select_card_by_name(card_name)
+                self.card_list.set_focus()
+
             else:
                 wx.MessageBox("Carta non trovata nel database.", "Errore")
+
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
+
 
     def on_delete_card(self, event):
         """Elimina la carta selezionata (dalla collezione o dal mazzo)."""
@@ -515,12 +629,12 @@ class DeckViewDialog(CardManagerDialog):
 
 
 
-#class CardCollectionDialog(wx.Dialog):
 class CardCollectionDialog(CardManagerDialog):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, deck_manager):
         super().__init__(parent, deck_manager, mode="collection")
+        self.parent = parent
         self.init_search_and_filters()
 
     def init_search_and_filters(self):
@@ -558,6 +672,8 @@ class CardCollectionDialog(CardManagerDialog):
                 "rarity": dlg.rarity.GetValue()
             }
             self.load_cards(filters=filters)
+
+
         dlg.Destroy()
 
 

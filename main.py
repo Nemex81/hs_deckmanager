@@ -234,7 +234,7 @@
     Note:
         - Il modulo sfrutta il pattern MVC in maniera semplificata, con HearthstoneApp che rappresenta la vista e AppController che gestisce la logica applicativa.
         - La gestione dei mazzi si avvale di DeckManager, il quale si occupa anche di importare mazzi dagli appunti, effettuare parsing dei dati e interfacciarsi con il database.
-		- La classe AppController si occupa di coordinare le operazioni tra l'interfaccia utente e il DeckManager, gestendo eventi e operazioni CRUD sui mazzi.
+        - La classe AppController si occupa di coordinare le operazioni tra l'interfaccia utente e il DeckManager, gestendo eventi e operazioni CRUD sui mazzi.
 
 """
 

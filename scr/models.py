@@ -65,6 +65,23 @@ class DeckManager:
         #self.load_decks()
         pass
 
+    @staticmethod
+    def parse_deck_metadata(deck_string):
+        lines = deck_string.splitlines()[:3]
+        metadata = {
+            "name": lines[0].replace("###", "").strip(),
+            "player_class": "Neutrale",
+            "game_format": "Standard"
+        }
+        
+        for line in lines[1:]:
+            if "Classe:" in line:
+                metadata["player_class"] = line.split(":")[1].strip()
+            elif "Formato:" in line:
+                metadata["game_format"] = line.split(":")[1].strip()
+        
+        return metadata
+
     def is_valid_deck(self, deck_string):
         """Verifica se una stringa rappresenta un mazzo valido."""
         return bool(
@@ -73,6 +90,26 @@ class DeckManager:
             len(deck_string.splitlines()) >= 10
         )
 
+    def copy_deck_to_clipboard(self, deck_name):
+        deck_content = self.get_deck(deck_name)
+        if deck_content:
+            deck_info = f"### {deck_content['name']}\n"
+            deck_info += f"# Classe: {deck_content['player_class']}\n"
+            deck_info += f"# Formato: {deck_content['game_format']}\n"
+            deck_info += "# Anno del Pegaso\n"
+            deck_info += "#\n"
+            
+            for card in deck_content["cards"]:
+                deck_info += f"# {card['quantity']}x ({card['mana_cost']}) {card['name']}\n"
+
+            deck_info += "#\n"
+            deck_info += "AAECAeSKBwaU1ATj+AXpngbSsAb3wAbO8QYMg58E0p8E7KAEx7AG7eoGn/EGwvEG3vEG4/EG5fEGqPcGiPgGAAA=\n#\n# Per utilizzare questo mazzo, copialo negli appunti e crea un nuovo mazzo in Hearthstone\n"
+
+            pyperclip.copy(deck_info)
+            return True
+        return False
+
+
     def add_deck_from_clipboard(self):
         try:
             deck_string = pyperclip.paste()
@@ -80,7 +117,8 @@ class DeckManager:
                 log.error("Il mazzo copiato non è valido.")
                 raise ValueError("Il mazzo copiato non è valido.")
 
-            metadata = parse_deck_metadata(deck_string)
+            #metadata = parse_deck_metadata(deck_string)
+            metadata = DeckManager.parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
             cards = self.parse_cards_from_deck(deck_string)
 
