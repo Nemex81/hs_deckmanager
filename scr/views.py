@@ -384,13 +384,12 @@ class CardEditDialog(wx.Dialog):
 
 class CardManagerDialog(wx.Dialog):
     """
-        Finestra generica per gestire le carte (collezione o mazzo).
+    Finestra generica per gestire le carte (collezione o mazzo).
 
-        :param parent:
-                                Finestra principale (frame), genitore della finestra di dialogo
-                                :param deck_manager: Gestore dei mazzi
-                                :param mode: Modalità della finestra ("collection" o "deck")
-                                :param deck_name: Nome del mazzo (se la modalità è "deck")
+    :param parent: Finestra principale (frame), genitore della finestra di dialogo
+    :param deck_manager: Gestore dei mazzi
+    :param mode: Modalità della finestra ("collection" o "deck")
+    :param deck_name: Nome del mazzo (se la modalità è "deck")
     """
 
     def __init__(self, parent, deck_manager, mode="collection", deck_name=None):
@@ -425,7 +424,13 @@ class CardManagerDialog(wx.Dialog):
         )
         self.card_list.AppendColumn("Nome", width=250)
         self.card_list.AppendColumn("Mana", width=50)
-        self.card_list.AppendColumn("Quantità", width=80)
+        
+        # Aggiungi la colonna "Quantità" o "Classe" in base alla modalità
+        if self.mode == "deck":
+            self.card_list.AppendColumn("Quantità", width=80)
+        else:
+            self.card_list.AppendColumn("Classe", width=120)
+            
         self.card_list.AppendColumn("Tipo", width=120)
         self.card_list.AppendColumn("Sottotipo", width=120)
         self.card_list.AppendColumn("Rarità", width=120)
@@ -453,26 +458,6 @@ class CardManagerDialog(wx.Dialog):
         panel.SetSizer(sizer)
         self.load_cards()
 
-
-    def select_card_by_name(self, card_name):
-        """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga.
-
-        :param card_name: Nome della carta da selezionare
-        """
-
-        if not card_name:
-            return
-
-        # Trova l'indice della carta nella lista
-        for i in range(self.card_list.GetItemCount()):
-            if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)  # Seleziona la riga
-                self.card_list.Focus(i)   # Sposta il focus alla riga selezionata
-                self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
-                self.card_list.SetFocus()  # Imposta il focus sulla lista
-                break
-
-
     def load_cards(self, filters=None):
         """Carica le carte nella lista in base alla modalità e ai filtri."""
         self.card_list.DeleteAllItems()
@@ -496,7 +481,7 @@ class CardManagerDialog(wx.Dialog):
                 self.card_list.Append([
                     card.name,
                     str(card.mana_cost),
-                    "1",  # Quantità fissa per la collezione
+                    card.class_name if card.class_name else "Nessuna",  # Mostra la classe eroe
                     card.card_type,
                     card.card_subtype,
                     card.rarity,
@@ -523,12 +508,31 @@ class CardManagerDialog(wx.Dialog):
                     self.card_list.Append([
                         card.name,
                         str(card.mana_cost),
-                        str(card_data["quantity"]),
+                        str(card_data["quantity"]),  # Mostra la quantità nel mazzo
                         card.card_type,
                         card.card_subtype,
                         card.rarity,
                         card.expansion
                     ])
+
+
+    def select_card_by_name(self, card_name):
+        """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga.
+
+        :param card_name: Nome della carta da selezionare
+        """
+
+        if not card_name:
+            return
+
+        # Trova l'indice della carta nella lista
+        for i in range(self.card_list.GetItemCount()):
+            if self.card_list.GetItemText(i) == card_name:
+                self.card_list.Select(i)  # Seleziona la riga
+                self.card_list.Focus(i)   # Sposta il focus alla riga selezionata
+                self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
+                self.card_list.SetFocus()  # Imposta il focus sulla lista
+                break
 
 
     def on_add_card(self, event):
