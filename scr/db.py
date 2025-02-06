@@ -23,7 +23,7 @@
 # lib
 import os
 from contextlib import contextmanager
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
@@ -93,6 +93,11 @@ class Card(Base):
     durability = Column(Integer)
     rarity = Column(String)
     expansion = Column(String)
+
+    # Aggiungi un indice sul campo `name`
+    __table_args__ = (
+        Index('idx_card_name', 'name'),
+    )
 
     def __repr__(self):
         return f"<Card(name='{self.name}', mana_cost={self.mana_cost}, type='{self.card_type}')>"
