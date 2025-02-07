@@ -491,15 +491,15 @@ class CardManagerDialog(wx.Dialog):
                 # Applica i filtri in modo combinato
                 if filters.get("name"):
                     query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
+                if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
                     query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-                if filters.get("card_type") not in [None, "Tutti"]:
+                if filters.get("card_type") not in [None, "Tutti", "tutti", "", " "]:
                     query = query.filter(Card.card_type == filters["card_type"])
-                if filters.get("card_subtype") not in [None, "Tutti"]:
+                if filters.get("card_subtype") not in [None, "Tutti", "tutti", "", " "]:
                     query = query.filter(Card.card_subtype == filters["card_subtype"])
-                if filters.get("rarity") not in [None, "Tutti"]:
+                if filters.get("rarity") not in [None, "Tutti", "tutti", "", " "]:
                     query = query.filter(Card.rarity == filters["rarity"])
-                if filters.get("expansion") not in [None, "Tutti"]:
+                if filters.get("expansion") not in [None, "Tutti", "tutti", "", " "]:
                     query = query.filter(Card.expansion == filters["expansion"])
 
 
