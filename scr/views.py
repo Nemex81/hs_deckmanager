@@ -502,9 +502,12 @@ class CardManagerDialog(wx.Dialog):
                 if filters.get("expansion") not in [None, "Tutti"]:
                     query = query.filter(Card.expansion == filters["expansion"])
 
+
+            log.info(f"Carte trovate: {query.count()}")
             cards = query.order_by(Card.mana_cost, Card.name).all()
             for card in cards:
                 self.card_list.Append([
+                    #card.id,
                     card.name,
                     str(card.mana_cost),
                     card.class_name if card.class_name else "Nessuna",  # Mostra la classe eroe
@@ -538,6 +541,7 @@ class CardManagerDialog(wx.Dialog):
                             continue
 
                     self.card_list.Append([
+                        #card.id,
                         card.name,
                         str(card.mana_cost),
                         str(deck_card.quantity),  # Mostra la quantità nel mazzo
