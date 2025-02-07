@@ -84,6 +84,9 @@ class EnuSpellSubType(Enum):
     MORTE = "Morte"
     DEMONIACO = "Demoniaco"
     ANGELICO = "Angelico"
+    protos = "Protos"
+    TERRAN = "Terran"
+    ZERL = "Zerl"
 
 class EnuPetSubType(Enum):
     """ sottotipi delle carte Creatura """
@@ -107,6 +110,10 @@ class EnuPetSubType(Enum):
     TROLL = "Troll"
     GOBLIN = "Goblin"
     NANO = "Nano"
+    ANGELO = "Angelo"
+    protos = "Protos"
+    ZERL = "Zerl"
+    TERRAN = "Terran"
 
 
 class EnuHero(Enum):
