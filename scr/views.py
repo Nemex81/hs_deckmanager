@@ -405,6 +405,8 @@ class CardManagerDialog(wx.Dialog):
         self.mode = mode  # "collection" o "deck"
         self.deck_name = deck_name
         self.deck_content = self.deck_manager.get_deck(deck_name) if mode == "deck" else None
+        if self.mode == "deck" and not self.deck_content:
+            raise ValueError(f"Mazzo non trovato: {deck_name}")
         self.Centre()  # Centra la finestra
         self.init_ui()
 
@@ -481,6 +483,73 @@ class CardManagerDialog(wx.Dialog):
 
     def load_cards(self, filters=None):
         """Carica le carte nella lista in base alla modalità e ai filtri."""
+        self.card_list.DeleteAllItems()
+        if self.mode == "collection":
+            # Carica tutte le carte della collezione
+            query = session.query(Card)
+            if filters:
+                # Applica i filtri in modo combinato
+                if filters.get("name"):
+                    query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
+                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
+                    query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
+                if filters.get("card_type") not in [None, "Tutti"]:
+                    query = query.filter(Card.card_type == filters["card_type"])
+                if filters.get("card_subtype") not in [None, "Tutti"]:
+                    query = query.filter(Card.card_subtype == filters["card_subtype"])
+                if filters.get("rarity") not in [None, "Tutti"]:
+                    query = query.filter(Card.rarity == filters["rarity"])
+                if filters.get("expansion") not in [None, "Tutti"]:
+                    query = query.filter(Card.expansion == filters["expansion"])
+
+            cards = query.order_by(Card.mana_cost, Card.name).all()
+            for card in cards:
+                self.card_list.Append([
+                    card.name,
+                    str(card.mana_cost),
+                    card.class_name if card.class_name else "Nessuna",  # Mostra la classe eroe
+                    card.card_type,
+                    card.card_subtype,
+                    card.rarity,
+                    card.expansion
+                ])
+        elif self.mode == "deck":
+            if not self.deck_content:
+                raise ValueError("Deck content non è stato inizializzato correttamente.")
+            
+            # Carica le carte del mazzo
+            deck_cards = session.query(DeckCard).filter_by(deck_id=self.deck_content["id"]).all()
+            for deck_card in deck_cards:
+                card = session.query(Card).filter_by(id=deck_card.card_id).first()
+                if card:
+                    # Applica i filtri (se presenti)
+                    if filters:
+                        if filters.get("name") and filters["name"].lower() not in card.name.lower():
+                            continue
+                        if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
+                            continue
+                        if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
+                            continue
+                        if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
+                            continue
+                        if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
+                            continue
+                        if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
+                            continue
+
+                    self.card_list.Append([
+                        card.name,
+                        str(card.mana_cost),
+                        str(deck_card.quantity),  # Mostra la quantità nel mazzo
+                        card.card_type,
+                        card.card_subtype,
+                        card.rarity,
+                        card.expansion
+                    ])
+
+    def last_veri_load_cards(self, filters=None):
+        """Carica le carte nella lista in base alla modalità e ai filtri."""
+
         self.card_list.DeleteAllItems()
         if self.mode == "collection":
             # Carica tutte le carte della collezione
