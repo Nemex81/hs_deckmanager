@@ -705,7 +705,7 @@ class CardManagerDialog(wx.Dialog):
         search_text = self.search_ctrl.GetValue().strip().lower()
         #self.load_cards(filters={"name": search_text})
         # Se la casella di ricerca è vuota o contiene "tutti" o "all", ripristina la visualizzazione
-        if search_text is None or search_text == "\n" or search_text in ["tutti", "all"]:
+        if search_text is None or search_text == "" or search_text in ["tutti", "tutto", "all"]:
             self.on_reset(event)
         else:
             # Altrimenti, applica la ricerca
