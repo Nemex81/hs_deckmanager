@@ -241,19 +241,21 @@ class HearthstoneApp(wx.Frame):
         if not deck_name:
             return
 
+        log.info(f"Tentativo di selezione e focus sul mazzo: {deck_name}")
         # Trova l'indice del mazzo nella lista
         for i in range(self.deck_list.GetItemCount()):
             if self.deck_list.GetItemText(i) == deck_name:
+                log.info(f"Mazzo trovato all'indice: {i}")
                 self.deck_list.Select(i)  # Seleziona il mazzo
                 self.deck_list.Focus(i)   # Imposta il focus sul mazzo
                 self.deck_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
+                self.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
                 break
-
-            self.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
 
 
     def on_add_deck(self, event):
         """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
+ 
         try:
             deck_string = pyperclip.paste()
             if not self.deck_manager.is_valid_deck(deck_string):
@@ -288,6 +290,7 @@ class HearthstoneApp(wx.Frame):
                     self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
                     wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
                     self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
+
             elif result == wx.ID_NO:
                 name_dialog = wx.TextEntryDialog(
                     self,
@@ -308,12 +311,15 @@ class HearthstoneApp(wx.Frame):
                             self.select_and_focus_deck(new_name)  # Seleziona e mette a fuoco il mazzo
                     else:
                         wx.MessageBox("Il nome del mazzo non può essere vuoto.", "Errore")
+
             elif result == wx.ID_CANCEL:
                 self.update_status("Operazione annullata.")
                 wx.MessageBox("Operazione annullata.", "Annullato")
+                self.update_deck_list()
 
         except pyperclip.PyperclipException as e:
             wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
+
         except Exception as e:
             log.error(f"Errore durante l'aggiunta del mazzo: {e}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")

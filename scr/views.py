@@ -410,6 +410,7 @@ class CardManagerDialog(wx.Dialog):
         self.Centre()  # Centra la finestra
         self.init_ui()
 
+
     def init_ui(self):
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -551,133 +552,10 @@ class CardManagerDialog(wx.Dialog):
                         card.expansion
                     ])
 
-    def last_veri_load_cards(self, filters=None):
-        """Carica le carte nella lista in base alla modalità e ai filtri."""
-
-        self.card_list.DeleteAllItems()
-        if self.mode == "collection":
-            # Carica tutte le carte della collezione
-            query = session.query(Card)
-            if filters:
-                # Applica i filtri in modo combinato
-                if filters.get("name"):
-                    query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
-                    query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-                if filters.get("card_type") not in [None, "Tutti"]:
-                    query = query.filter(Card.card_type == filters["card_type"])
-                if filters.get("card_subtype") not in [None, "Tutti"]:
-                    query = query.filter(Card.card_subtype == filters["card_subtype"])
-                if filters.get("rarity") not in [None, "Tutti"]:
-                    query = query.filter(Card.rarity == filters["rarity"])
-                if filters.get("expansion") not in [None, "Tutti"]:
-                    query = query.filter(Card.expansion == filters["expansion"])
-
-            cards = query.order_by(Card.mana_cost, Card.name).all()
-            for card in cards:
-                self.card_list.Append([
-                    card.name,
-                    str(card.mana_cost),
-                    card.class_name if card.class_name else "Nessuna",  # Mostra la classe eroe
-                    card.card_type,
-                    card.card_subtype,
-                    card.rarity,
-                    card.expansion
-                ])
-        elif self.mode == "deck":
-            # Carica le carte del mazzo
-            deck_cards = session.query(DeckCard).filter_by(deck_id=self.deck_content["id"]).all()
-            deck_cards = session.query(DeckCard).filter_by(deck_id=self.deck_content["id"]).all()
-            for deck_card in deck_cards:
-                card = session.query(Card).filter_by(id=deck_card.card_id).first()
-                if card:
-                    # Applica i filtri (se presenti)
-                    if filters:
-                        if filters.get("name") and filters["name"].lower() not in card.name.lower():
-                            continue
-                        if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
-                            continue
-                        if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
-                            continue
-                        if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
-                            continue
-                        if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
-                            continue
-                        if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
-                            continue
-
-                    self.card_list.Append([
-                        card.name,
-                        str(card.mana_cost),
-                        str(deck_card.quantity),  # Mostra la quantità nel mazzo
-                        card.card_type,
-                        card.card_subtype,
-                        card.rarity,
-                        card.expansion
-                    ])
-
-    def last_load_cards(self, filters=None):
-        """Carica le carte nella lista in base alla modalità e ai filtri."""
-        self.card_list.DeleteAllItems()
-        if self.mode == "collection":
-            # Carica tutte le carte della collezione
-            query = session.query(Card)
-            if filters:
-                # Applica i filtri in modo combinato
-                if filters.get("name"):
-                    query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
-                    query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-                if filters.get("card_type") not in [None, "Tutti"]:
-                    query = query.filter(Card.card_type == filters["card_type"])
-                if filters.get("card_subtype") not in [None, "Tutti"]:
-                    query = query.filter(Card.card_subtype == filters["card_subtype"])
-                if filters.get("rarity") not in [None, "Tutti"]:
-                    query = query.filter(Card.rarity == filters["rarity"])
-                if filters.get("expansion") not in [None, "Tutti"]:
-                    query = query.filter(Card.expansion == filters["expansion"])
-
-            cards = query.order_by(Card.mana_cost, Card.name).all()
-            for card in cards:
-                self.card_list.Append([
-                    card.name,
-                    str(card.mana_cost),
-                    card.class_name if card.class_name else "Nessuna",  # Mostra la classe eroe
-                    card.card_type,
-                    card.card_subtype,
-                    card.rarity,
-                    card.expansion
-                ])
-        elif self.mode == "deck":
-            # Carica le carte del mazzo
-            for card_data in self.deck_content["cards"]:
-                card = session.query(Card).filter_by(name=card_data["name"]).first()
-                if card:
-                    # Applica i filtri (se presenti)
-                    if filters:
-                        if filters.get("name") and filters["name"].lower() not in card.name.lower():
-                            continue
-                        if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
-                            continue
-                        if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
-                            continue
-                        if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
-                            continue
-                        if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
-                            continue
-                        if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
-                            continue
-
-                    self.card_list.Append([
-                        card.name,
-                        str(card.mana_cost),
-                        str(card_data["quantity"]),  # Mostra la quantità nel mazzo
-                        card.card_type,
-                        card.card_subtype,
-                        card.rarity,
-                        card.expansion
-                    ])
-
+    def on_column_click(self, event):
+        """Gestisce il clic sulle intestazioni delle colonne per ordinare le carte."""
+        col = event.GetColumn()
+        self.sort_cards(col)
 
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
@@ -732,29 +610,6 @@ class CardManagerDialog(wx.Dialog):
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
-        self.card_list.SetFocus()
-        self.card_list.Select(0)
-        self.card_list.Focus(0)
-        self.card_list.EnsureVisible(0)
-
-    def last_on_reset(self, event):
-        """Ripristina la visualizzazione originale, rimuovendo i filtri e riordinando le colonne."""
-
-        # Rimuovi i filtri
-        if hasattr(self, "search_ctrl"):
-            self.search_ctrl.SetValue("")  # Resetta la barra di ricerca
-        if hasattr(self, "filters"):
-            self.filters = None  # Resetta i filtri avanzati
-
-        # Ricarica le carte senza filtri
-        self.load_cards()
-
-        # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
-        self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
-        #self.sort_cards(0)  # Ordina per "Nome" (colonna 0)
-
-        #wx.MessageBox("Visualizzazione ripristinata con successo.", "Aggiornamento completato")
-        # spostiamo il cursore sull'elenco delle carte, al primo indice
         self.card_list.SetFocus()
         self.card_list.Select(0)
         self.card_list.Focus(0)
@@ -848,33 +703,6 @@ class CardManagerDialog(wx.Dialog):
                     wx.MessageBox(f"Errore durante l'eliminazione della carta: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore", wx.OK | wx.ICON_ERROR)
-
-    def last_on_delete_card(self, event):
-        """Elimina la carta selezionata (dalla collezione o dal mazzo)."""
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            if wx.MessageBox(f"Eliminare la carta '{card_name}'?", "Conferma", wx.YES_NO) == wx.YES:
-                if self.mode == "collection":
-                    # Elimina la carta dalla collezione
-                    card = session.query(Card).filter_by(name=card_name).first()
-                    if card:
-                        session.delete(card)
-                        session.commit()
-                        self.load_cards()
-                        wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo")
-                    else:
-                        wx.MessageBox("Carta non trovata nel database.", "Errore")
-                elif self.mode == "deck":
-                    # Rimuovi la carta dal mazzo
-                    self.deck_content["cards"] = [
-                        card_data for card_data in self.deck_content["cards"]
-                        if card_data["name"] != card_name
-                    ]
-                    self.load_cards()
-                    wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
-        else:
-            wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
 
 
     def on_column_click(self, event):
