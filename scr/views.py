@@ -458,6 +458,13 @@ class CardManagerDialog(wx.Dialog):
         panel.SetSizer(sizer)
         self.load_cards()
 
+        # Aggiungi l'evento per il clic sulle intestazioni delle colonne
+        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
+
+        # Aggiungi l'evento per i tasti premuti
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+
+
     def load_cards(self, filters=None):
         """Carica le carte nella lista in base alla modalità e ai filtri."""
         self.card_list.DeleteAllItems()
@@ -514,6 +521,26 @@ class CardManagerDialog(wx.Dialog):
                         card.rarity,
                         card.expansion
                     ])
+
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata."""
+        # Ottieni i dati dalla lista
+        items = []
+        for i in range(self.card_list.GetItemCount()):
+            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+            items.append(item)
+
+        # Ordina i dati in base alla colonna selezionata
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        # Aggiorna la lista con i dati ordinati
+        self.card_list.DeleteAllItems()
+        for item in items:
+            self.card_list.Append(item)
 
 
     def select_card_by_name(self, card_name):
@@ -618,6 +645,21 @@ class CardManagerDialog(wx.Dialog):
                     wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
+
+
+    def on_column_click(self, event):
+        """Gestisce il clic sulle intestazioni delle colonne per ordinare la lista."""
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+    def on_key_press(self, event):
+        """Gestisce i tasti premuti per ordinare la lista."""
+        key_code = event.GetKeyCode()
+        if key_code >= ord('1') and key_code <= ord('9'):
+            col = key_code - ord('1')  # Converti il tasto premuto in un indice di colonna (0-8)
+            if col < self.card_list.GetColumnCount():
+                self.sort_cards(col)
+        event.Skip()
 
 
 
