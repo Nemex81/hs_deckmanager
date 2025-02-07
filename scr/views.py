@@ -8,14 +8,15 @@
 
     Descrizione:
         Contiene le classi per:
+        - CardManagerDialog: Finestra madre di dialogo per la gestione delle carte (collezione o mazzo)
         - DeckStatsDialog: Visualizza le statistiche di un mazzo
         - FilterDialog: Gestisce i filtri di ricerca
         - CardCollectionDialog: Mostra la collezione di carte
         - CardEditDialog: Finestra di dialogo per aggiungere o modificare una carta
+        - DeckViewDialog: Visualizza i dettagli per un mazzo di carte selezionato
 
     Note:
-        Le finestre di dialogo sono implementate con wxPython.
-        Per installare wxPython, eseguire il comando `pip install wxPython`.
+        Questo modulo utilizza CardManagerDialog per la gestione delle carte, che può essere utilizzato per visualizzare la collezione di carte o i dettagli di un mazzo.
 
 """
 
@@ -103,22 +104,29 @@ class FilterDialog(wx.Dialog):
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
 
+        # Aggiungi "Qualsiasi" come prima opzione per il costo mana
+        mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
+
         controls = [
             ("nome", wx.TextCtrl),
-            ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("costo_mana", wx.ComboBox, {"choices": mana_choices, "style": wx.CB_READONLY}),
             ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
             ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuSpellSubType], "style": wx.CB_READONLY}),
-            ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY})
+            ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
 
-        #sizer = create_ui_controls(panel, controls)
         sizer, control_dict = create_ui_controls(panel, controls)
 
-        self.search_ctrl = control_dict ["nome"]
+        self.search_ctrl = control_dict["nome"]
         self.mana_cost = control_dict["costo_mana"]
         self.card_type = control_dict["tipo"]
         self.card_subtype = control_dict["sottotipo"]
         self.rarity = control_dict["rarita"]
+        self.expansion = control_dict["espansione"]
+
+        # Imposta i valori predefiniti
+        self.reset_filters()
 
         # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
         self.card_type.Bind(wx.EVT_COMBOBOX, self.on_type_change)
@@ -139,27 +147,21 @@ class FilterDialog(wx.Dialog):
         self.Centre()
         # Aggiorna i sottotipi in base al tipo selezionato
         self.update_subtypes()
-        # reset dei filtri
-        self.reset_filters()
-
 
     def reset_filters(self):
         """ Resetta i filtri ai valori predefiniti. """
-
         self.search_ctrl.SetValue("")
-        self.mana_cost.SetValue("")
+        self.mana_cost.SetValue("Qualsiasi")  # Imposta "Qualsiasi" come valore predefinito
         self.card_type.SetValue("Tutti")
         self.card_subtype.SetValue("Tutti")
         self.rarity.SetValue("Tutti")
-
+        self.expansion.SetValue("Tutti")
 
     def update_subtypes(self):
         """ Aggiorna i sottotipi in base al tipo di carta selezionato. """
-
         card_type = self.card_type.GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
-
         elif card_type == EnuCardType.CREATURA.value:
             subtypes = [st.value for st in EnuPetSubType]
         else:
@@ -171,11 +173,13 @@ class FilterDialog(wx.Dialog):
         if current_subtype not in subtypes:
             self.card_subtype.SetValue("")  # Resetta il sottotipo se non è valido
 
-
     def on_type_change(self, event):
         """Gestisce il cambio del tipo di carta."""
         self.update_subtypes()
 
+    def on_save(self, event):
+        """Salva i filtri e chiude la finestra di dialogo."""
+        self.EndModal(wx.ID_OK)
 
     def on_save(self, event):
         """Salva i filtri e chiude la finestra di dialogo."""
@@ -482,16 +486,19 @@ class CardManagerDialog(wx.Dialog):
             # Carica tutte le carte della collezione
             query = session.query(Card)
             if filters:
+                # Applica i filtri in modo combinato
                 if filters.get("name"):
                     query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-                if filters.get("mana_cost", 0) > 0:
-                    query = query.filter(Card.mana_cost == filters["mana_cost"])
+                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
+                    query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
                 if filters.get("card_type") not in [None, "Tutti"]:
                     query = query.filter(Card.card_type == filters["card_type"])
                 if filters.get("card_subtype") not in [None, "Tutti"]:
                     query = query.filter(Card.card_subtype == filters["card_subtype"])
                 if filters.get("rarity") not in [None, "Tutti"]:
                     query = query.filter(Card.rarity == filters["rarity"])
+                if filters.get("expansion") not in [None, "Tutti"]:
+                    query = query.filter(Card.expansion == filters["expansion"])
 
             cards = query.order_by(Card.mana_cost, Card.name).all()
             for card in cards:
@@ -513,13 +520,15 @@ class CardManagerDialog(wx.Dialog):
                     if filters:
                         if filters.get("name") and filters["name"].lower() not in card.name.lower():
                             continue
-                        if filters.get("mana_cost", 0) > 0 and card.mana_cost != filters["mana_cost"]:
+                        if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
                             continue
                         if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
                             continue
                         if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
                             continue
                         if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
+                            continue
+                        if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
                             continue
 
                     self.card_list.Append([
@@ -768,20 +777,23 @@ class CardCollectionDialog(CardManagerDialog):
         self.load_cards()  # Ricarica la lista delle carte senza filtri
 
 
-
     def on_show_filters(self, event):
         """Mostra la finestra dei filtri avanzati."""
         dlg = FilterDialog(self)
         if dlg.ShowModal() == wx.ID_OK:
+            # Applica i nuovi filtri
             filters = {
                 "name": dlg.search_ctrl.GetValue(),
                 "mana_cost": dlg.mana_cost.GetValue(),
                 "card_type": dlg.card_type.GetValue(),
-                "rarity": dlg.rarity.GetValue()
+                "card_subtype": dlg.card_subtype.GetValue(),
+                "rarity": dlg.rarity.GetValue(),
+                "expansion": dlg.expansion.GetValue()
             }
             self.load_cards(filters=filters)
-
-
+        else:
+            # Se l'utente annulla, resetta i filtri
+            self.load_cards(filters=None)
         dlg.Destroy()
 
 
