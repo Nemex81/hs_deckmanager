@@ -440,10 +440,19 @@ class CardManagerDialog(wx.Dialog):
         # Pulsanti azione
         btn_panel = wx.Panel(panel)
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        for label in ["Aggiungi Carta", "Modifica Carta", "Elimina Carta", "Chiudi"]:
+
+        # Aggiungi il pulsante "Aggiorna"
+        #btn_reset = wx.Button(btn_panel, label="Aggiorna")
+        #btn_reset.Bind(wx.EVT_BUTTON, self.on_reset)
+        #btn_sizer.Add(btn_reset, flag=wx.RIGHT, border=5)
+
+        # Aggiungo gli altri pulsanti
+        for label in ["Aggiorna", "Aggiungi Carta", "Modifica Carta", "Elimina Carta", "Chiudi"]:
             btn = wx.Button(btn_panel, label=label)
             btn_sizer.Add(btn, flag=wx.RIGHT, border=5)
-            if label == "Aggiungi Carta":
+            if label == "Aggiorna":
+                btn.Bind(wx.EVT_BUTTON, self.on_reset)
+            elif label == "Aggiungi Carta":
                 btn.Bind(wx.EVT_BUTTON, self.on_add_card)
             elif label == "Modifica Carta":
                 btn.Bind(wx.EVT_BUTTON, self.on_edit_card)
@@ -452,6 +461,7 @@ class CardManagerDialog(wx.Dialog):
             else:
                 btn.Bind(wx.EVT_BUTTON, lambda e: self.Close())
         
+        # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
         sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
@@ -560,6 +570,30 @@ class CardManagerDialog(wx.Dialog):
                 self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
                 self.card_list.SetFocus()  # Imposta il focus sulla lista
                 break
+
+
+    def on_reset(self, event):
+        """Ripristina la visualizzazione originale, rimuovendo i filtri e riordinando le colonne."""
+        # Rimuovi i filtri
+        if hasattr(self, "search_ctrl"):
+            self.search_ctrl.SetValue("")  # Resetta la barra di ricerca
+        if hasattr(self, "filters"):
+            self.filters = None  # Resetta i filtri avanzati
+
+        # Ricarica le carte senza filtri
+        self.load_cards()
+
+        # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
+        self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
+        #self.sort_cards(0)  # Ordina per "Nome" (colonna 0)
+
+        #wx.MessageBox("Visualizzazione ripristinata con successo.", "Aggiornamento completato")
+        # spostiamo il cursore sull'elenco delle carte, al primo indice
+        self.card_list.SetFocus()
+        self.card_list.Select(0)
+        self.card_list.Focus(0)
+        self.card_list.EnsureVisible(0)
+
 
 
     def on_add_card(self, event):
