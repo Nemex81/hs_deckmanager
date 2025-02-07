@@ -535,6 +535,7 @@ class CardManagerDialog(wx.Dialog):
 
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
+
         # Ottieni i dati dalla lista
         items = []
         for i in range(self.card_list.GetItemCount()):
@@ -574,6 +575,7 @@ class CardManagerDialog(wx.Dialog):
 
     def on_reset(self, event):
         """Ripristina la visualizzazione originale, rimuovendo i filtri e riordinando le colonne."""
+
         # Rimuovi i filtri
         if hasattr(self, "search_ctrl"):
             self.search_ctrl.SetValue("")  # Resetta la barra di ricerca
@@ -593,7 +595,6 @@ class CardManagerDialog(wx.Dialog):
         self.card_list.Select(0)
         self.card_list.Focus(0)
         self.card_list.EnsureVisible(0)
-
 
 
     def on_add_card(self, event):
@@ -686,14 +687,29 @@ class CardManagerDialog(wx.Dialog):
         col = event.GetColumn()
         self.sort_cards(col)
 
+
     def on_key_press(self, event):
         """Gestisce i tasti premuti per ordinare la lista."""
+
         key_code = event.GetKeyCode()
         if key_code >= ord('1') and key_code <= ord('9'):
             col = key_code - ord('1')  # Converti il tasto premuto in un indice di colonna (0-8)
             if col < self.card_list.GetColumnCount():
                 self.sort_cards(col)
         event.Skip()
+
+
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        #self.load_cards(filters={"name": search_text})
+        # Se la casella di ricerca è vuota o contiene "tutti" o "all", ripristina la visualizzazione
+        if search_text is None or search_text == "\n" or search_text in ["tutti", "all"]:
+            self.on_reset(event)
+        else:
+            # Altrimenti, applica la ricerca
+            self.load_cards(filters={"name": search_text})
 
 
 
@@ -717,11 +733,6 @@ class DeckViewDialog(CardManagerDialog):
 
         # Aggiungi la barra di ricerca al layout
         sizer.Insert(0, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
-
-    def on_search(self, event):
-        """Gestisce la ricerca testuale."""
-        search_text = self.search_ctrl.GetValue()
-        self.load_cards(filters={"name": search_text})
 
 
 
@@ -756,10 +767,7 @@ class CardCollectionDialog(CardManagerDialog):
         self.search_ctrl.SetValue("")
         self.load_cards()  # Ricarica la lista delle carte senza filtri
 
-    def on_search(self, event):
-        """Gestisce la ricerca testuale."""
-        search_text = self.search_ctrl.GetValue()
-        self.load_cards(filters={"name": search_text})
+
 
     def on_show_filters(self, event):
         """Mostra la finestra dei filtri avanzati."""
