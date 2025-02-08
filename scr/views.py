@@ -1,4 +1,5 @@
 """
+
     views.py
 
     Modulo per le finestre di dialogo dell'interfaccia utente.
@@ -25,11 +26,9 @@ from utyls import logger as log
 
 
 
-def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
-    """Carica le carte nella lista."""
+def load_cards_from_db(filters=None):
+        """ Carica le carte dal database e le restituisce. """
 
-    card_list.DeleteAllItems()
-    if mode == "collection":
         query = session.query(Card)
         if filters:
             # Applica i filtri in modo combinato
@@ -53,48 +52,66 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
 
         log.info(f"Carte trovate: {query.count()}")
         cards = query.order_by(Card.mana_cost, Card.name).all()
+        if cards:
+            return cards
+
+
+def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
+    if not deck_content:
+        raise ValueError("Deck content non è stato inizializzato correttamente.")
+    
+    # Carica le carte del mazzo
+    deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
+    for deck_card in deck_cards:
+        card = session.query(Card).filter_by(id=deck_card.card_id).first()
+        if card:
+            # Applica i filtri (se presenti)
+            if filters:
+                if filters.get("name") and filters["name"].lower() not in card.name.lower():
+                    continue
+
+                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
+                    continue
+
+                if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
+                    continue
+
+                if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
+                    continue
+
+                if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
+                    continue
+
+                if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
+                    continue
+
+            # aggiungi la carta alla lista
+            card_list.Append([
+                #card.id,
+                card.name,
+                str(card.mana_cost),
+                str(deck_card.quantity),  # Mostra la quantità nel mazzo
+                card.card_type,
+                card.card_subtype,
+                card.rarity,
+                card.expansion
+            ])
+
+
+
+
+def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
+    """Carica le carte nella lista."""
+
+    card_list.DeleteAllItems()
+    if mode == "collection":
+        cards = load_cards_from_db(filters)
         for card in cards:
             card_list.Append([card.name, str(card.mana_cost), card.class_name, card.card_type, card.card_subtype, card.rarity, card.expansion])
+
     elif mode == "deck":
-        if not deck_content:
-            raise ValueError("Deck content non è stato inizializzato correttamente.")
-        
         # Carica le carte del mazzo
-        deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
-        for deck_card in deck_cards:
-            card = session.query(Card).filter_by(id=deck_card.card_id).first()
-            if card:
-                # Applica i filtri (se presenti)
-                if filters:
-                    if filters.get("name") and filters["name"].lower() not in card.name.lower():
-                        continue
-
-                    if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
-                        continue
-
-                    if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
-                        continue
-
-                    if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
-                        continue
-
-                    if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
-                        continue
-
-                    if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
-                        continue
-
-                # aggiungi la carta alla lista
-                card_list.Append([
-                    #card.id,
-                    card.name,
-                    str(card.mana_cost),
-                    str(deck_card.quantity),  # Mostra la quantità nel mazzo
-                    card.card_type,
-                    card.card_subtype,
-                    card.rarity,
-                    card.expansion
-                ])
+        load_deck_from_db(deck_content=deck_content, filters=filters, card_list=card_list)
 
 
 
@@ -390,7 +407,6 @@ class CardEditDialog(wx.Dialog):
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
             self.parent.load_cards()  # Ricarica la lista delle carte
-            #load_cards(self.parent.card_list, self.parent.deck_content, self.parent.mode)
             self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
             self.Destroy()
 
@@ -499,7 +515,6 @@ class CardManagerDialog(wx.Dialog):
 
         panel.SetSizer(sizer)
         self.load_cards()
-        #load_cards(self.card_list, self.deck_content, self.mode)
 
         # Aggiungi l'evento per il clic sulle intestazioni delle colonne
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
@@ -598,7 +613,6 @@ class CardManagerDialog(wx.Dialog):
 
                     else:
                         self.load_cards()
-                        #load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
 
                 elif self.mode == "deck":
@@ -617,7 +631,6 @@ class CardManagerDialog(wx.Dialog):
                             "quantity": 1
                         })
                         self.load_cards()
-                        #load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
                     else:
                         wx.MessageBox("Carta non trovata nel database.", "Errore")
@@ -636,7 +649,6 @@ class CardManagerDialog(wx.Dialog):
                 dlg = CardEditDialog(self, card)
                 if dlg.ShowModal() == wx.ID_OK:
                     self.load_cards()  # Ricarica la lista delle carte
-                    #load_cards(self.card_list, self.deck_content, self.mode)
                     wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                     self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
 
@@ -664,7 +676,6 @@ class CardManagerDialog(wx.Dialog):
                             session.delete(card)
                             session.commit()
                             self.load_cards()
-                            #load_cards(self.card_list, self.deck_content, self.mode)
                             wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
 
                         else:
@@ -679,7 +690,6 @@ class CardManagerDialog(wx.Dialog):
 
                         # Aggiorna il mazzo nel database
                         self.load_cards()
-                        #load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo", wx.OK | wx.ICON_INFORMATION)
 
                 except Exception as e:
@@ -719,7 +729,6 @@ class CardManagerDialog(wx.Dialog):
         else:
             # Altrimenti, applica la ricerca
             self.load_cards(filters={"name": search_text})
-            #load_cards(self.card_list, self.deck_content, self.mode, filters={"name": search_text})\
 
 
 
@@ -781,7 +790,6 @@ class CardCollectionDialog(CardManagerDialog):
     def reset_filters(self):
         self.search_ctrl.SetValue("")
         self.load_cards()  # Ricarica la lista delle carte senza filtri
-        #load_cards(self.card_list, self.deck_content, self.mode)
 
 
     def on_show_filters(self, event):
@@ -799,12 +807,10 @@ class CardCollectionDialog(CardManagerDialog):
                 "expansion": dlg.expansion.GetValue()
             }
             self.load_cards(filters=filters)
-            #load_cards(self.card_list, self.deck_content, self.mode, filters=filters)
 
         else:
             # Se l'utente annulla, resetta i filtri
             self.load_cards(filters=None)
-            #load_cards(self.card_list, self.deck_content, self.mode)
 
         dlg.Destroy()
 
