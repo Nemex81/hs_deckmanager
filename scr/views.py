@@ -259,7 +259,6 @@ class CardEditDialog(wx.Dialog):
         self.card = card
         self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
         self.Center()
-        self.maximize()
         self.init_ui()
 
 
