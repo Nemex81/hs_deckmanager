@@ -31,12 +31,9 @@ from datetime import datetime
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from .db import session, db_session, Deck, DeckCard, Card
+from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
-
-
-
-
 
 
 
@@ -347,6 +344,54 @@ class DbManager:
                 stats[key] = round(value, 2)
 
         return stats
+
+
+
+class AppController:
+    """ Controller per la gestione delle operazioni dell'applicazione. """
+
+    def __init__(self, db_manager, app):
+        self.db_manager = db_manager
+        self.app = app
+
+
+    def add_deck(self, deck_name):
+        """ Aggiunge un mazzo al database. """
+
+        try:
+            self.db_manager.add_deck_from_clipboard(deck_name)
+            self.app.update_deck_list()
+            self.app.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
+            return True
+
+        except ValueError as e:
+            raise
+
+        except Exception as e:
+            log.error(f"Errore durante l'aggiunta del mazzo: {e}")
+            raise
+
+
+    def delete_deck(self, deck_name):
+        """ Elimina un mazzo dal database. """
+
+        try:
+            if self.db_manager.delete_deck(deck_name):
+                self.app.update_deck_list()
+                self.app.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
+                log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+                return True
+
+        except SQLAlchemyError as e:
+            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
+
+        except Exception as e:
+            wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
+
+
+    def get_deck_statistics(self, deck_name):
+        """Restituisce le statistiche del mazzo."""
+        return self.db_manager.get_deck_statistics(deck_name)
 
 
 
