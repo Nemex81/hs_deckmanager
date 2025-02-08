@@ -63,7 +63,7 @@ from scr.views import DecksManagerDialog
 
 def start_app():
     app = wx.App(False)
-    frame = HearthstoneAppDialog(None, "Hearthstone Deck Manager")
+    frame = HearthstoneAppDialog(None, title="Hearthstone Deck Manager, by Nemex81")
     frame.Show()
     app.MainLoop()
 

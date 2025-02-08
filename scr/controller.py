@@ -53,13 +53,14 @@ class HearthstoneAppDialog(wx.Frame):
     """ Finestra principale dell'applicazione. """
 
     def __init__(self, parent, title):
-        super(HearthstoneAppDialog, self).__init__(parent, title=title)
+        super(HearthstoneAppDialog, self).__init__(parent, title=title, size=(900, 700))
         self.db_manager = DbManager()
         self.app_controller = AppController(self.db_manager, self)
         # inizializzo l'istanza del giocatore
-        font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-        self.SetBackgroundColour(wx.BLACK)  # Imposta il colore di sfondo della finestra principale
-        self.Maximize()
+        font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
+        self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
+        self.Maximize()                                                                         # Massimizza la finestra principale
+        #self.Center()                                                                           # Centra la finestra principale nello schermo
 
         self.panel = wx.Panel(self)
 
