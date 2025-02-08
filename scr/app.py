@@ -100,7 +100,7 @@ class AppController:
 
 
 
-class HearthstoneApp(wx.Frame):
+class HearthstoneAppDialog(wx.Frame):
     """ Finestra principale dell'applicazione. """
 
     def __init__(self, *args, **kwargs):

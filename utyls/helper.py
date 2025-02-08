@@ -51,16 +51,7 @@ def create_speech_mp3():
     print(f"File MP3 {filename}.mp3 creato con successo!")
 
 
-# funzione per ricavare il numero di key totali presenti in un dizionario
-def dlen(diz):
-	if not diz:
-		return 0
 
-	i = 0
-	for k in diz:
-	    i += 1
-
-	return i
 
 
 #@@@# Start del modulo

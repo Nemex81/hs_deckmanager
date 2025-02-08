@@ -28,6 +28,7 @@ import shutil
 import re
 import pyperclip
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from .db import session, db_session, Deck, DeckCard, Card
 from utyls import logger as log
@@ -42,15 +43,13 @@ from utyls import logger as log
 class DbManager:
     """ Classe per la gestione dei mazzi di Hearthstone. """
 
-    def __init__(self, file_path="decks.json"):
-        #self.file_path = file_path
-        #self.decks = {}
-        #self.loaded = False
-        #self.load_decks()
+    def __init__(self):
         pass
 
     @staticmethod
     def parse_deck_metadata(deck_string):
+
+        """ Estrae le informazioni di metadata da un mazzo. """
         lines = deck_string.splitlines()[:3]
         metadata = {
             "name": lines[0].replace("###", "").strip(),
@@ -77,6 +76,8 @@ class DbManager:
 
 
     def copy_deck_to_clipboard(self, deck_name):
+        """ Copia un mazzo dal database negli appunti. """
+
         deck_content = self.get_deck(deck_name)
         if deck_content:
             deck_info = f"### {deck_content['name']}\n"
@@ -97,6 +98,8 @@ class DbManager:
 
 
     def add_deck_from_clipboard(self):
+        """ Aggiunge un mazzo copiato dagli appunti al database. """
+
         try:
             deck_string = pyperclip.paste()
             if not self.is_valid_deck(deck_string):
@@ -131,6 +134,7 @@ class DbManager:
                     deck_cards.append(DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"]))
                 
                 session.bulk_save_objects(deck_cards)
+                session.commit()
 
             log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
             return True
@@ -192,45 +196,44 @@ class DbManager:
             raise
 
 
-    def parse_cards_from_deck(self, deck_string):
-        cards = []
-        pattern = r'^#*\s*(\d+)x?\s*\((\d+)\)\s*(.+)$'
-        
-        for line in deck_string.splitlines():
-            try:
-                match = re.match(pattern, line.strip())
-                if match and not line.startswith("###"):
-                    quantity = int(match.group(1))
-                    mana_cost = int(match.group(2))
-                    name = match.group(3).strip()
-                    
-                    # Pulizia nome per casi particolari
-                    name = re.sub(r'\s*\d+$', '', name)  # Rimuove numeri finali
-                    name = re.sub(r'^[#\s]*', '', name)  # Rimuove caratteri speciali iniziali
-                    
-                    cards.append({
-                        "name": name,
-                        "mana_cost": mana_cost,
-                        "quantity": quantity
-                    })
-                    
-            except (ValueError, IndexError) as e:
-                log.warning(f"Errore durante il parsing della riga: {line}. Dettagli: {str(e)}")
-            except Exception as e:
-                log.error(f"Errore imprevisto durante il parsing della riga: {line}. Dettagli: {str(e)}")
+    def parse_card_line(self, line):
+        """ Estrae le informazioni da una riga di testo rappresentante una carta. """
 
-        if not cards:
-            log.warning("Nessuna carta valida trovata nel mazzo.")
-        
-        return cards
+        pattern = r'^#*\s*(\d+)x?\s*\((\d+)\)\s*(.+)$'
+        match = re.match(pattern, line.strip())
+        if match:
+            return {
+                "quantity": int(match.group(1)),
+                "mana_cost": int(match.group(2)),
+                "name": match.group(3).strip()
+            }
+        return None
+
+
+    def parse_cards_from_deck(self, deck_string):
+        """ Estrae le informazioni delle carte da un mazzo. """
+
+        cards = []
+        try:
+            for line in deck_string.splitlines():
+                card_data = self.parse_card_line(line)
+                if card_data:
+                    cards.append(card_data)
+            return cards
+
+        except Exception as e:
+            log.error(f"Errore durante il parsing delle carte: {str(e)}")
+            raise
 
 
     def is_card_in_database(self, card_name):
         """Verifica se una carta esiste nel database."""
         return session.query(Card).filter_by(name=card_name).first() is not None
 
+
     def add_card_to_database(self, card):
         """Aggiunge una nuova carta al database."""
+
         new_card = Card(
             name=card["name"],
             class_name="Unknown",
@@ -240,9 +243,11 @@ class DbManager:
             rarity="Unknown",
             expansion="Unknown"
         )
+
         session.add(new_card)
         session.commit()
         log.info(f"Carta '{card['name']}' aggiunta al database.")
+
 
     def get_deck(self, deck_name):
         """Restituisce il contenuto di un mazzo dal database."""
@@ -268,6 +273,7 @@ class DbManager:
                 "cards": cards
             }
         return None
+
 
     def delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """
@@ -299,6 +305,7 @@ class DbManager:
 
     def get_deck_statistics(self, deck_name):
         """Calcola statistiche dettagliate per un mazzo."""
+
         deck = self.get_deck(deck_name)
         if not deck:
             return None
