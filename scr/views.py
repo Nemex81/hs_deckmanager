@@ -241,6 +241,8 @@ class CardEditDialog(wx.Dialog):
         self.SetBackgroundColour('green')
         self.card = card
         self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
+        self.Center()
+        self.maximize()
         self.init_ui()
 
 
@@ -387,8 +389,8 @@ class CardEditDialog(wx.Dialog):
 
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
-            #self.parent.load_cards()  # Ricarica la lista delle carte
-            load_cards(self.parent.card_list, self.parent.deck_content, self.parent.mode)
+            self.parent.load_cards()  # Ricarica la lista delle carte
+            #load_cards(self.parent.card_list, self.parent.deck_content, self.parent.mode)
             self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
             self.Destroy()
 
@@ -416,7 +418,7 @@ class CardManagerDialog(wx.Dialog):
     :param deck_name: Nome del mazzo (se la modalità è "deck")
     """
 
-    def __init__(self, parent, deck_manager, mode="collection", deck_name=None):
+    def __init__(self, parent, deck_manager=None, mode="collection", deck_name=None):
         title = "Collezione Carte" if mode == "collection" else f"Mazzo: {deck_name}"
         super().__init__(parent, title=title, size=(1200, 800))
         self.parent = parent
@@ -427,7 +429,9 @@ class CardManagerDialog(wx.Dialog):
         self.deck_content = self.deck_manager.get_deck(deck_name) if mode == "deck" else None
         if self.mode == "deck" and not self.deck_content:
             raise ValueError(f"Mazzo non trovato: {deck_name}")
+
         self.Centre()  # Centra la finestra
+        self.Maximize()  # Massimizza la finestra
         self.init_ui()
 
 
@@ -494,8 +498,8 @@ class CardManagerDialog(wx.Dialog):
         sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
         panel.SetSizer(sizer)
-        #self.load_cards()
-        load_cards(self.card_list, self.deck_content, self.mode)
+        self.load_cards()
+        #load_cards(self.card_list, self.deck_content, self.mode)
 
         # Aggiungi l'evento per il clic sulle intestazioni delle colonne
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
@@ -505,6 +509,12 @@ class CardManagerDialog(wx.Dialog):
 
 
     def load_cards(self, filters=None):
+        """ carica le carte utilizzando le funzionihelper sopra definite"""
+
+        load_cards(self.card_list, self.deck_content, self.mode, filters)
+
+
+    def last_load_cards(self, filters=None):
         """Carica le carte nella lista in base alla modalità e ai filtri."""
 
         self.card_list.DeleteAllItems()
@@ -668,8 +678,8 @@ class CardManagerDialog(wx.Dialog):
                         wx.MessageBox("La carta non esiste nel database.", "Errore")
 
                     else:
-                        #self.load_cards()
-                        load_cards(self.card_list, self.deck_content, self.mode)
+                        self.load_cards()
+                        #load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
 
                 elif self.mode == "deck":
@@ -687,8 +697,8 @@ class CardManagerDialog(wx.Dialog):
                             "mana_cost": card.mana_cost,
                             "quantity": 1
                         })
-                        #self.load_cards()
-                        load_cards(self.card_list, self.deck_content, self.mode)
+                        self.load_cards()
+                        #load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
                     else:
                         wx.MessageBox("Carta non trovata nel database.", "Errore")
@@ -706,8 +716,8 @@ class CardManagerDialog(wx.Dialog):
             if card:
                 dlg = CardEditDialog(self, card)
                 if dlg.ShowModal() == wx.ID_OK:
-                    #self.load_cards()  # Ricarica la lista delle carte
-                    load_cards(self.card_list, self.deck_content, self.mode)
+                    self.load_cards()  # Ricarica la lista delle carte
+                    #load_cards(self.card_list, self.deck_content, self.mode)
                     wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                     self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
 
@@ -734,8 +744,8 @@ class CardManagerDialog(wx.Dialog):
                         if card:
                             session.delete(card)
                             session.commit()
-                            #self.load_cards()
-                            load_cards(self.card_list, self.deck_content, self.mode)
+                            self.load_cards()
+                            #load_cards(self.card_list, self.deck_content, self.mode)
                             wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
 
                         else:
@@ -749,8 +759,8 @@ class CardManagerDialog(wx.Dialog):
                         ]
 
                         # Aggiorna il mazzo nel database
-                        #self.load_cards()
-                        load_cards(self.card_list, self.deck_content, self.mode)
+                        self.load_cards()
+                        #load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo", wx.OK | wx.ICON_INFORMATION)
 
                 except Exception as e:
@@ -789,8 +799,8 @@ class CardManagerDialog(wx.Dialog):
 
         else:
             # Altrimenti, applica la ricerca
-            #self.load_cards(filters={"name": search_text})
-            load_cards(self.card_list, self.deck_content, self.mode, filters={"name": search_text})\
+            self.load_cards(filters={"name": search_text})
+            #load_cards(self.card_list, self.deck_content, self.mode, filters={"name": search_text})\
 
 
 
@@ -851,8 +861,8 @@ class CardCollectionDialog(CardManagerDialog):
 
     def reset_filters(self):
         self.search_ctrl.SetValue("")
-        #self.load_cards()  # Ricarica la lista delle carte senza filtri
-        load_cards(self.card_list, self.deck_content, self.mode)
+        self.load_cards()  # Ricarica la lista delle carte senza filtri
+        #load_cards(self.card_list, self.deck_content, self.mode)
 
 
     def on_show_filters(self, event):
@@ -869,13 +879,13 @@ class CardCollectionDialog(CardManagerDialog):
                 "rarity": dlg.rarity.GetValue(),
                 "expansion": dlg.expansion.GetValue()
             }
-            #self.load_cards(filters=filters)
-            load_cards(self.card_list, self.deck_content, self.mode, filters=filters)
+            self.load_cards(filters=filters)
+            #load_cards(self.card_list, self.deck_content, self.mode, filters=filters)
 
         else:
             # Se l'utente annulla, resetta i filtri
-            #self.load_cards(filters=None)
-            load_cards(self.card_list, self.deck_content, self.mode)
+            self.load_cards(filters=None)
+            #load_cards(self.card_list, self.deck_content, self.mode)
 
         dlg.Destroy()
 
