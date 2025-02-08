@@ -43,8 +43,7 @@ import logging
 import pyperclip
 from scr.db import session, Deck, DeckCard, Card
 from sqlalchemy.exc import SQLAlchemyError
-from scr.models import Deck
-from scr.models import DeckManager, parse_deck_metadata
+from scr.models import DbManager#, parse_deck_metadata
 from scr.views import CardManagerDialog, CardCollectionDialog, DeckStatsDialog, DeckViewDialog
 from scr.db import session
 from utyls import enu_glob as eg
@@ -56,14 +55,16 @@ from utyls import logger as log
 class AppController:
     """ Controller per la gestione delle operazioni dell'applicazione. """
 
-    def __init__(self, deck_manager, app):
-        self.deck_manager = deck_manager
+    def __init__(self, db_manager, app):
+        self.db_manager = db_manager
         self.app = app
 
 
     def add_deck(self, deck_name):
+        """ Aggiunge un mazzo al database. """
+
         try:
-            self.deck_manager.add_deck_from_clipboard(deck_name)
+            self.db_manager.add_deck_from_clipboard(deck_name)
             self.app.update_deck_list()
             self.app.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
             wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
@@ -77,8 +78,10 @@ class AppController:
 
 
     def delete_deck(self, deck_name):
+        """ Elimina un mazzo dal database. """
+
         try:
-            if self.deck_manager.delete_deck(deck_name):
+            if self.db_manager.delete_deck(deck_name):
                 self.app.update_deck_list()
                 self.app.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
                 log.info(f"Mazzo '{deck_name}' eliminato con successo.")
@@ -93,7 +96,7 @@ class AppController:
 
     def get_deck_statistics(self, deck_name):
         """Restituisce le statistiche del mazzo."""
-        return self.deck_manager.get_deck_statistics(deck_name)
+        return self.db_manager.get_deck_statistics(deck_name)
 
 
 
@@ -102,8 +105,8 @@ class HearthstoneApp(wx.Frame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.deck_manager = DeckManager()
-        self.controller = AppController(self.deck_manager, self)
+        self.db_manager = DbManager()
+        self.controller = AppController(self.db_manager, self)
         self.init_ui()
 
 
@@ -193,9 +196,6 @@ class HearthstoneApp(wx.Frame):
     def load_decks(self):
         """Carica i mazzi ."""
 
-        # svuotiamo la
-        #self.deck_list.DeleteAllItems()
-
         # carichiamo i mazzi
         decks = session.query(Deck).all()
         # utilizzando insert
@@ -209,7 +209,6 @@ class HearthstoneApp(wx.Frame):
         """Aggiorna la lista dei mazzi."""
 
         self.deck_list.DeleteAllItems()  # Pulisce la lista
-
         decks = session.query(Deck).all()
         for deck in decks:
             index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
@@ -224,7 +223,6 @@ class HearthstoneApp(wx.Frame):
 
     def get_selected_deck(self):
         """Restituisce il mazzo selezionato nella lista."""
-
         selection = self.deck_list.GetFirstSelected()
         if selection != wx.NOT_FOUND:
             return self.deck_list.GetItemText(selection)
@@ -258,12 +256,12 @@ class HearthstoneApp(wx.Frame):
  
         try:
             deck_string = pyperclip.paste()
-            if not self.deck_manager.is_valid_deck(deck_string):
+            if not self.db_manager.is_valid_deck(deck_string):
                 wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
                 return
 
             #metadata = parse_deck_metadata(deck_string)
-            metadata = DeckManager.parse_deck_metadata(deck_string)
+            metadata = DbManager.parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
 
             # Mostra una finestra di conferma con i dati estratti
@@ -275,6 +273,7 @@ class HearthstoneApp(wx.Frame):
                 f"Vuoi utilizzare questi dati per creare il mazzo?"
             )
 
+            # Mostra una finestra di conferma con i dati estratti
             confirm_dialog = wx.MessageDialog(
                 self,
                 confirm_message,
@@ -282,9 +281,10 @@ class HearthstoneApp(wx.Frame):
                 wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION
             )
 
+            # Gestione della risposta
             result = confirm_dialog.ShowModal()
             if result == wx.ID_YES:
-                success = self.deck_manager.add_deck_from_clipboard()
+                success = self.db_manager.add_deck_from_clipboard()
                 if success:
                     self.update_deck_list()
                     self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
@@ -303,7 +303,7 @@ class HearthstoneApp(wx.Frame):
                     new_name = name_dialog.GetValue()
                     if new_name:
                         metadata["name"] = new_name
-                        success = self.deck_manager.add_deck_from_clipboard()
+                        success = self.db_manager.add_deck_from_clipboard()
                         if success:
                             self.update_deck_list()
                             self.update_status("Mazzo aggiunto con successo.")
@@ -330,7 +330,7 @@ class HearthstoneApp(wx.Frame):
 
         deck_name = self.get_selected_deck()
         if deck_name:
-            if self.deck_manager.copy_deck_to_clipboard(deck_name):
+            if self.db_manager.copy_deck_to_clipboard(deck_name):
                 self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
                 wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
                 self.select_and_focus_deck(deck_name)
@@ -347,11 +347,11 @@ class HearthstoneApp(wx.Frame):
 
         deck_name = self.get_selected_deck()
         if deck_name:
-            deck_content = self.deck_manager.get_deck(deck_name)
+            deck_content = self.db_manager.get_deck(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                deck_view_dialog = DeckViewDialog(self, self.deck_manager, deck_name)
-                #deck_view_dialog = CardManagerDialog(self, self.deck_manager, mode="deck", deck_name=deck_name)
+                deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name)
+                #deck_view_dialog = CardManagerDialog(self, self.db_manager, mode="deck", deck_name=deck_name)
                 deck_view_dialog.ShowModal()
 
             else:
@@ -373,15 +373,15 @@ class HearthstoneApp(wx.Frame):
             ) == wx.YES:
                 try:
                     deck_string = pyperclip.paste()
-                    if self.deck_manager.is_valid_deck(deck_string):
+                    if self.db_manager.is_valid_deck(deck_string):
                         deck = session.query(Deck).filter_by(name=deck_name).first()
                         if deck:
                             session.query(DeckCard).filter_by(deck_id=deck.id).delete()
                             session.commit()
 
-                            self.deck_manager.sync_cards_with_database(deck_string)
+                            self.db_manager.sync_cards_with_database(deck_string)
 
-                            cards = self.deck_manager.parse_cards_from_deck(deck_string)
+                            cards = self.db_manager.parse_cards_from_deck(deck_string)
                             for card_data in cards:
                                 card = session.query(Card).filter_by(name=card_data["name"]).first()
                                 if not card:
@@ -436,9 +436,8 @@ class HearthstoneApp(wx.Frame):
 
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
-
-        collection_dialog = CardCollectionDialog(self, self.deck_manager)
-        #collection_dialog = CardManagerDialog(self, self.deck_manager, mode="collection")
+        collection_dialog = CardCollectionDialog(self, self.db_manager)
+        #collection_dialog = CardManagerDialog(self, self.db_manager, mode="collection")
         collection_dialog.ShowModal()  # Mostra la finestra come modale
 
 
@@ -449,7 +448,7 @@ class HearthstoneApp(wx.Frame):
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 try:
-                    #success = self.deck_manager.delete_deck(deck_name)
+                    #success = self.db_manager.delete_deck(deck_name)
                     success = self.controller.delete_deck(deck_name)
                     if success:
                         self.update_deck_list()
@@ -470,7 +469,7 @@ class HearthstoneApp(wx.Frame):
     def on_search(self, event):
         """Filtra i mazzi in base al testo di ricerca."""
 
-            # cerchiamo la parola richeista dall0utente sia nei nomi dei mazzi sia nella classe
+        # cerchiamo la parola richeista dall0utente sia nei nomi dei mazzi sia nella classe
         search_text = self.search_bar.GetValue()
         self.deck_list.DeleteAllItems()
         decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()

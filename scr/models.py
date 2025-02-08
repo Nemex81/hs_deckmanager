@@ -35,27 +35,11 @@ from utyls import logger as log
 
 
 
-def parse_deck_metadata(deck_string):
-    """ Estrae nome, classe e formato dalla stringa grezza del mazzo copiato. """
-
-    lines = deck_string.splitlines()[:3]
-    metadata = {
-        "name": lines[0].replace("###", "").strip(),
-        "player_class": "Neutrale",
-        "game_format": "Standard"
-    }
-    
-    for line in lines[1:]:
-        if "Classe:" in line:
-            metadata["player_class"] = line.split(":")[1].strip()
-        elif "Formato:" in line:
-            metadata["game_format"] = line.split(":")[1].strip()
-    
-    return metadata
 
 
 
-class DeckManager:
+
+class DbManager:
     """ Classe per la gestione dei mazzi di Hearthstone. """
 
     def __init__(self, file_path="decks.json"):
@@ -82,6 +66,7 @@ class DeckManager:
         
         return metadata
 
+
     def is_valid_deck(self, deck_string):
         """Verifica se una stringa rappresenta un mazzo valido."""
         return bool(
@@ -89,6 +74,7 @@ class DeckManager:
             deck_string.startswith("###") and 
             len(deck_string.splitlines()) >= 10
         )
+
 
     def copy_deck_to_clipboard(self, deck_name):
         deck_content = self.get_deck(deck_name)
@@ -117,7 +103,7 @@ class DeckManager:
                 log.error("Il mazzo copiato non è valido.")
                 return
 
-            metadata = DeckManager.parse_deck_metadata(deck_string)
+            metadata = self.parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
             cards = self.parse_cards_from_deck(deck_string)
 
