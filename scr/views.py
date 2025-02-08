@@ -831,6 +831,8 @@ class CardCollectionDialog(CardManagerDialog):
 
         panel = self.GetChildren()[0]  # Ottieni il pannello principale
         sizer = panel.GetSizer()
+        self.Center()
+        self.Maximize()
 
         # Barra di ricerca
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -895,6 +897,7 @@ class DecksManagerDialog(wx.Frame):
 
         # Layout principale
         self.Centre()
+        self.Maximize()
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
         #self.deck_list = wx.ListBox(self.panel)
         self.deck_list = wx.ListCtrl(
@@ -923,7 +926,7 @@ class DecksManagerDialog(wx.Frame):
         btn_update = wx.Button(self.panel, label="Aggiorna Mazzo")
         btn_delete = wx.Button(self.panel, label="Elimina Mazzo")
         btn_collection = wx.Button(self.panel, label="Collezione Carte")
-        btn_exit = wx.Button(self.panel, label="Esci")
+        btn_exit = wx.Button(self.panel, label="Chiudi")
 
         # Layout principale
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -966,7 +969,7 @@ class DecksManagerDialog(wx.Frame):
         btn_stats.Bind(wx.EVT_BUTTON, self.on_view_stats)
         btn_collection.Bind(wx.EVT_BUTTON, self.on_view_collection)
         btn_delete.Bind(wx.EVT_BUTTON, self.on_delete_deck)
-        btn_exit.Bind(wx.EVT_BUTTON, self.on_exit)
+        btn_exit.Bind(wx.EVT_BUTTON, self.on_close)
 
 
     def load_decks(self):
@@ -1255,7 +1258,7 @@ class DecksManagerDialog(wx.Frame):
             self.deck_list.SetItem(Index, 2, deck.game_format)
 
 
-    def on_exit(self, event):
+    def on_close(self, event):
         """Chiude l'applicazione."""
         self.Close()
 
