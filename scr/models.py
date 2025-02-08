@@ -65,10 +65,11 @@ class DbManager:
 
     def is_valid_deck(self, deck_string):
         """Verifica se una stringa rappresenta un mazzo valido."""
+        last_verify = "# Per utilizzare questo mazzo, copialo negli appunti e crea un nuovo mazzo in Hearthstone"
         return bool(
             deck_string and 
             deck_string.startswith("###") and 
-            len(deck_string.splitlines()) >= 10
+            deck_string.splitlines()[-1].startswith(last_verify)
         )
 
 
