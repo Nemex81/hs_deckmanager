@@ -32,11 +32,26 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
     if mode == "collection":
         query = session.query(Card)
         if filters:
+            # Applica i filtri in modo combinato
             if filters.get("name"):
                 query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
+
             if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-            # Aggiungi altri filtri...
+
+            if filters.get("card_type") not in [None, "Tutti", "tutti", "", " "]:
+                query = query.filter(Card.card_type == filters["card_type"])
+
+            if filters.get("card_subtype") not in [None, "Tutti", "tutti", "", " "]:
+                query = query.filter(Card.card_subtype == filters["card_subtype"])
+
+            if filters.get("rarity") not in [None, "Tutti", "tutti", "", " "]:
+                query = query.filter(Card.rarity == filters["rarity"])
+
+            if filters.get("expansion") not in [None, "Tutti", "tutti", "", " "]:
+                query = query.filter(Card.expansion == filters["expansion"])
+
+        log.info(f"Carte trovate: {query.count()}")
         cards = query.order_by(Card.mana_cost, Card.name).all()
         for card in cards:
             card_list.Append([card.name, str(card.mana_cost), card.class_name, card.card_type, card.card_subtype, card.rarity, card.expansion])

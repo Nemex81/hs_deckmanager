@@ -11,6 +11,7 @@
 import wx
 import sys, random
 from gtts import gTTS
+from utyls import logger as log
 #import pdb
 
 
