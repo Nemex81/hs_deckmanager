@@ -6,17 +6,8 @@
     path:
         scr/views.py
 
-    Descrizione:
-        Contiene le classi per:
-        - CardManagerDialog: Finestra madre di dialogo per la gestione delle carte (collezione o mazzo)
-        - DeckStatsDialog: Visualizza le statistiche di un mazzo
-        - FilterDialog: Gestisce i filtri di ricerca
-        - CardCollectionDialog: Mostra la collezione di carte
-        - CardEditDialog: Finestra di dialogo per aggiungere o modificare una carta
-        - DeckViewDialog: Visualizza i dettagli per un mazzo di carte selezionato
-
     Note:
-        Questo modulo utilizza CardManagerDialog per la gestione delle carte, che può essere utilizzato per visualizzare la collezione di carte o i dettagli di un mazzo.
+        Questo modulo utilizza la libreria wxPython per la creazione delle finestre di dialogo dell'interfaccia utente.
 
 """
 
@@ -27,78 +18,68 @@ from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
 from .models import DbManager, AppController
-from utyls.helper import disassemble_classes_string, assemble_classes_string
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 
 
 
-#@@@# sezione funzioni helper specifiche per wx
+def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
+    """Carica le carte nella lista."""
 
-def create_control(panel, label, control_class, **kwargs):
-    """
-    Crea un controllo UI con una label associata.
-    
-    :param panel: Il pannello a cui aggiungere il controllo.
-    :param label: La label del controllo.
-    :param control_class: La classe del controllo da creare.
-    :param kwargs: Argomenti aggiuntivi per il controllo.
-    :return: Il controllo creato e la riga contenente la label e il controllo.
-    """
-    row = wx.BoxSizer(wx.HORIZONTAL)
-    row.Add(wx.StaticText(panel, label=label), flag=wx.RIGHT, border=10)
-    control = control_class(panel, **kwargs)
-    row.Add(control, proportion=1, flag=wx.EXPAND)
-    return control, row
+    card_list.DeleteAllItems()
+    if mode == "collection":
+        query = session.query(Card)
+        if filters:
+            if filters.get("name"):
+                query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
+            if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
+                query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
+            # Aggiungi altri filtri...
+        cards = query.order_by(Card.mana_cost, Card.name).all()
+        for card in cards:
+            card_list.Append([card.name, str(card.mana_cost), card.class_name, card.card_type, card.card_subtype, card.rarity, card.expansion])
+    elif mode == "deck":
+        if not deck_content:
+            raise ValueError("Deck content non è stato inizializzato correttamente.")
+        
+        # Carica le carte del mazzo
+        deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
+        for deck_card in deck_cards:
+            card = session.query(Card).filter_by(id=deck_card.card_id).first()
+            if card:
+                # Applica i filtri (se presenti)
+                if filters:
+                    if filters.get("name") and filters["name"].lower() not in card.name.lower():
+                        continue
 
+                    if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
+                        continue
 
-def create_button(panel, label, event_handler=None):
-    """
-    Crea un pulsante e collega un gestore di eventi.
-    
-    :param panel: Il pannello a cui aggiungere il pulsante.
-    :param label: La label del pulsante.
-    :param event_handler: Il gestore di eventi da collegare.
-    :return: Il pulsante creato.
-    """
-    btn = wx.Button(panel, label=label)
-    btn.Bind(wx.EVT_BUTTON, event_handler)
-    return btn
+                    if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
+                        continue
 
+                    if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
+                        continue
 
-def create_ui_controls(panel, controls):
-    """
-    Crea e posiziona i controlli UI in un pannello.
-    
-    :param panel: Il pannello a cui aggiungere i controlli.
-    :param controls: Lista di tuple (label, control_class, kwargs) per i controlli.
-    :return: Il sizer contenente i controlli e un dizionario con i controlli creati.
-    """
+                    if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
+                        continue
 
-    sizer = wx.BoxSizer(wx.VERTICAL)
-    control_dict = {}
-    for control_info in controls:
-        if len(control_info) == 2:
-            label, control_class = control_info
-            kwargs = {}
+                    if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
+                        continue
 
-        elif len(control_info) == 3:
-            label, control_class, kwargs = control_info
-
-        else:
-            raise ValueError("Ogni controllo deve essere una tupla di 2 o 3 elementi: (label, control_class[, kwargs])")
-
-        # Crea il controllo e la riga
-        control, row = create_control(panel=panel, label=label, control_class=control_class, **kwargs)
-        sizer.Add(row, flag=wx.EXPAND | wx.ALL, border=5)
-        control_dict[label.lower().replace(" ", "_")] = control
-
-    return sizer, control_dict
-
-
-
-#@@@# sezione gestione delle finestre di dialogo
+                # aggiungi la carta alla lista
+                card_list.Append([
+                    #card.id,
+                    card.name,
+                    str(card.mana_cost),
+                    str(deck_card.quantity),  # Mostra la quantità nel mazzo
+                    card.card_type,
+                    card.card_subtype,
+                    card.rarity,
+                    card.expansion
+                ])
 
 
 
@@ -123,7 +104,7 @@ class FilterDialog(wx.Dialog):
             ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
 
-        sizer, control_dict = create_ui_controls(panel, controls)
+        sizer, control_dict = hp.create_ui_controls(panel, controls)
 
         self.search_ctrl = control_dict["nome"]
         self.mana_cost = control_dict["costo_mana"]
@@ -199,11 +180,6 @@ class FilterDialog(wx.Dialog):
         self.EndModal(wx.ID_OK)
 
 
-    def on_save(self, event):
-        """Salva i filtri e chiude la finestra di dialogo."""
-        self.EndModal(wx.ID_OK)
-
-
 
 class DeckStatsDialog(wx.Dialog):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
@@ -269,7 +245,7 @@ class CardEditDialog(wx.Dialog):
         ]
 
         # Crea i controlli UI e ottieni il sizer e il dizionario dei controlli
-        sizer, control_dict = create_ui_controls(panel, fields)
+        sizer, control_dict = hp.create_ui_controls(panel, fields)
 
         # Assegna i controlli agli attributi della classe
         self.nome = control_dict["nome"]
@@ -319,7 +295,7 @@ class CardEditDialog(wx.Dialog):
 
             # Seleziona le classi associate alla carta
             if self.card.class_name:
-                selected_classes = disassemble_classes_string(self.card.class_name)
+                selected_classes = hp.disassemble_classes_string(self.card.class_name)
                 for i, class_name in enumerate(self.classes_listbox.GetItems()):
                     if class_name in selected_classes:
                         self.classes_listbox.Check(i)
@@ -396,7 +372,8 @@ class CardEditDialog(wx.Dialog):
 
             session.commit()
             self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
-            self.parent.load_cards()  # Ricarica la lista delle carte
+            #self.parent.load_cards()  # Ricarica la lista delle carte
+            load_cards(self.parent.card_list, self.parent.deck_content, self.parent.mode)
             self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
             self.Destroy()
 
@@ -502,7 +479,8 @@ class CardManagerDialog(wx.Dialog):
         sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
         panel.SetSizer(sizer)
-        self.load_cards()
+        #self.load_cards()
+        load_cards(self.card_list, self.deck_content, self.mode)
 
         # Aggiungi l'evento per il clic sulle intestazioni delle colonne
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
@@ -650,7 +628,8 @@ class CardManagerDialog(wx.Dialog):
             del self.filters  # Libera la memoria occupata dai filtri precedenti
 
         # Ricarica le carte senza filtri
-        self.load_cards()
+        #self.load_cards()
+        load_cards(self.card_list, self.deck_content, self.mode)
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
@@ -674,7 +653,8 @@ class CardManagerDialog(wx.Dialog):
                         wx.MessageBox("La carta non esiste nel database.", "Errore")
 
                     else:
-                        self.load_cards()
+                        #self.load_cards()
+                        load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
 
                 elif self.mode == "deck":
@@ -692,7 +672,8 @@ class CardManagerDialog(wx.Dialog):
                             "mana_cost": card.mana_cost,
                             "quantity": 1
                         })
-                        self.load_cards()
+                        #self.load_cards()
+                        load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
                     else:
                         wx.MessageBox("Carta non trovata nel database.", "Errore")
@@ -710,7 +691,8 @@ class CardManagerDialog(wx.Dialog):
             if card:
                 dlg = CardEditDialog(self, card)
                 if dlg.ShowModal() == wx.ID_OK:
-                    self.load_cards()  # Ricarica la lista delle carte
+                    #self.load_cards()  # Ricarica la lista delle carte
+                    load_cards(self.card_list, self.deck_content, self.mode)
                     wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                     self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
 
@@ -737,7 +719,8 @@ class CardManagerDialog(wx.Dialog):
                         if card:
                             session.delete(card)
                             session.commit()
-                            self.load_cards()
+                            #self.load_cards()
+                            load_cards(self.card_list, self.deck_content, self.mode)
                             wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
 
                         else:
@@ -751,7 +734,8 @@ class CardManagerDialog(wx.Dialog):
                         ]
 
                         # Aggiorna il mazzo nel database
-                        self.load_cards()
+                        #self.load_cards()
+                        load_cards(self.card_list, self.deck_content, self.mode)
                         wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo", wx.OK | wx.ICON_INFORMATION)
 
                 except Exception as e:
@@ -790,7 +774,8 @@ class CardManagerDialog(wx.Dialog):
 
         else:
             # Altrimenti, applica la ricerca
-            self.load_cards(filters={"name": search_text})
+            #self.load_cards(filters={"name": search_text})
+            load_cards(self.card_list, self.deck_content, self.mode, filters={"name": search_text})\
 
 
 
@@ -851,7 +836,8 @@ class CardCollectionDialog(CardManagerDialog):
 
     def reset_filters(self):
         self.search_ctrl.SetValue("")
-        self.load_cards()  # Ricarica la lista delle carte senza filtri
+        #self.load_cards()  # Ricarica la lista delle carte senza filtri
+        load_cards(self.card_list, self.deck_content, self.mode)
 
 
     def on_show_filters(self, event):
@@ -868,11 +854,13 @@ class CardCollectionDialog(CardManagerDialog):
                 "rarity": dlg.rarity.GetValue(),
                 "expansion": dlg.expansion.GetValue()
             }
-            self.load_cards(filters=filters)
+            #self.load_cards(filters=filters)
+            load_cards(self.card_list, self.deck_content, self.mode, filters=filters)
 
         else:
             # Se l'utente annulla, resetta i filtri
-            self.load_cards(filters=None)
+            #self.load_cards(filters=None)
+            load_cards(self.card_list, self.deck_content, self.mode)
 
         dlg.Destroy()
 
