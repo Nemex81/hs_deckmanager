@@ -6,21 +6,9 @@
     Path:
         scr/controller.py
 
-    Componenti:
-
-    - HearthstoneApp (Finestra principale):
-        - Gestisce l'interfaccia utente principale tramite wxPython.
-        - Visualizza l'elenco dei mazzi in un controllo (wx.ListCtrl) con colonne per nome, classe e formato.
-        - Include una barra di ricerca per filtrare i mazzi.
-        - Presenta vari pulsanti per operazioni quali aggiunta, copia, visualizzazione, aggiornamento, eliminazione dei mazzi, visualizzazione della collezione carte e uscita dall'applicazione.
-        - Gestisce una barra di stato per mostrare messaggi informativi.
-        
-    - AppController (Controller):
-        - Coordina le operazioni tra le interfacce utente e il gestore dei mazzi  e delle carte.
-
     Descrizione:
 
-        Questo modulo rappresenta il cuore dell'applicazione, coordinando l'interazione tra le interfacce grafica, il database e la logica di gestione.
+        Questo modulo rappresenta il cuore dell'applicazione, coordinando l'interazione tra le interfacce grafiche, il database e la logica di gestione.
 
 """
 
