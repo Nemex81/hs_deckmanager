@@ -111,6 +111,7 @@ class EnuPetSubType(Enum):
     GOBLIN = "Goblin"
     NANO = "Nano"
     ANGELO = "Angelo"
+    ROBOT = "Robot"
     protos = "Protos"
     ZERL = "Zerl"
     TERRAN = "Terran"
@@ -146,6 +147,8 @@ class EnuExpansion(Enum):
 
     # Set di base: la collezione iniziale con cui i nuovi giocatori partono.
     SET_BASE = "Set Principale"
+    # set eventi speciali
+    EVENTO = "Evento"
 
     # Espansioni classiche (prime espansioni rilasciate)
     MALEDIZIONE_NAXXRAMAS = "La Maledizione di Naxxramas"          # Avventura/espansione che introduce nuove meccaniche come il deathrattle
