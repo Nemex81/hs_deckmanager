@@ -47,6 +47,12 @@ def load_cards_from_db(filters=None):
             if filters.get("card_subtype") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.card_subtype == filters["card_subtype"])
 
+            if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", " "]:
+                query = query.filter(Card.attack == int(filters["attack"]))
+
+            if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", " "]:
+                query = query.filter(Card.health == int(filters["health"]))
+
             if filters.get("rarity") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.rarity == filters["rarity"])
 
@@ -83,6 +89,12 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                     continue
 
                 if filters.get("card_subtype") not in ["Tutti", "tutti"] and card.card_subtype != filters["card_subtype"]:
+                    continue
+
+                if filters.get("attack") not in ["Qualsiasi", "qualsiasi"] and card.attack != int(filters["attack"]):
+                    continue
+
+                if filters.get("health") not in ["Qualsiasi", "qualsiasi"] and card.health != int(filters["health"]):
                     continue
 
                 if filters.get("rarity") not in ["Tutti", "tutti"] and card.rarity != filters["rarity"]:
@@ -366,8 +378,8 @@ class CardEditDialog(wx.Dialog):
             self.vita.SetValue(self.card.health) if self.card.health else self.vita.SetValue("-")
 
             # Imposta i valori di rarità ed espansione
-            self.rarità.SetValue(self.card.rarity)
-            self.espansione.SetValue(self.card.expansion)
+            self.rarità.SetValue(self.card.rarity) if self.card.rarity else self.rarità.SetValue("-")
+            self.espansione.SetValue(self.card.expansion) if self.card.expansion else self.espansione.SetValue("-")
 
             # Seleziona le classi associate alla carta
             if self.card.class_name:
@@ -445,16 +457,18 @@ class CardEditDialog(wx.Dialog):
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
                 self.card.class_name = card_data["class_name"]
-                self.card_name = self.card.name  # Aggiorna il nome della carta
+                # Aggiorno il nome della carta nella variabile locale
+                self.card_name = self.card.name 
             else:
                 # Aggiungi una nuova carta
                 new_card = Card(**card_data)
                 session.add(new_card)
                 self.card_name = new_card.name  # Memorizza il nome della nuova carta
 
+            # Salva le modifiche nel database
             session.commit()
-            self.EndModal(wx.ID_OK)  # Chiudi la finestra e notifica che i dati sono stati salvati
-            self.parent.load_cards()  # Ricarica la lista delle carte
+            self.EndModal(wx.ID_OK)                          # Chiudi la finestra e notifica che i dati sono stati salvati
+            self.parent.load_cards()                         # Ricarica la lista delle carte
             self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
             self.Destroy()
 
@@ -474,12 +488,14 @@ class CardEditDialog(wx.Dialog):
 
 class CardManagerDialog(wx.Dialog):
     """
-    Finestra generica per gestire le carte (collezione o mazzo).
 
-    :param parent: Finestra principale (frame), genitore della finestra di dialogo
-    :param deck_manager: Gestore dei mazzi
-    :param mode: Modalità della finestra ("collection" o "deck")
-    :param deck_name: Nome del mazzo (se la modalità è "deck")
+        Finestra generica per gestire le carte (collezione o mazzo).
+
+        :param parent: Finestra principale (frame), genitore della finestra di dialogo
+        :param deck_manager: Gestore dei mazzi
+        :param mode: Modalità della finestra ("collection" o "deck")
+        :param deck_name: Nome del mazzo (se la modalità è "deck")
+
     """
 
     def __init__(self, parent, deck_manager=None, mode="collection", deck_name=None):
@@ -494,9 +510,9 @@ class CardManagerDialog(wx.Dialog):
         if self.mode == "deck" and not self.deck_content:
             raise ValueError(f"Mazzo non trovato: {deck_name}")
 
-        self.Centre()  # Centra la finestra
+        self.Centre()    # Centra la finestra
         self.Maximize()  # Massimizza la finestra
-        self.init_ui()
+        self.init_ui()  # Inizializza l'interfaccia utente
 
 
     def init_ui(self):
@@ -529,12 +545,13 @@ class CardManagerDialog(wx.Dialog):
             self.card_list.AppendColumn("Classe", width=120)
             
         self.card_list.AppendColumn("Tipo", width=120)
-        self.card_list.AppendColumn("tipo_magia", width=120)
+        self.card_list.AppendColumn("Tipo Magia", width=120)
         self.card_list.AppendColumn("Sottotipo", width=120)
         self.card_list.AppendColumn("Attacco", width=50)
         self.card_list.AppendColumn("vita", width=50)
         self.card_list.AppendColumn("Rarità", width=120)
         self.card_list.AppendColumn("Espansione", width=500)
+        # Aggiungo la lista alla finestra
         sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
@@ -619,10 +636,10 @@ class CardManagerDialog(wx.Dialog):
         # Trova l'indice della carta nella lista
         for i in range(self.card_list.GetItemCount()):
             if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)  # Seleziona la riga
-                self.card_list.Focus(i)   # Sposta il focus alla riga selezionata
-                self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
-                self.card_list.SetFocus()  # Imposta il focus sulla lista
+                self.card_list.Select(i)                            # Seleziona la riga
+                self.card_list.Focus(i)                             # Sposta il focus alla riga selezionata
+                self.card_list.EnsureVisible(i)                     # Assicurati che la riga sia visibile
+                self.card_list.SetFocus()                           # Imposta il focus sulla lista
                 break
 
 
