@@ -96,10 +96,12 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 #card.id,
                 card.name,
                 str(card.mana_cost),
-                str(deck_card.quantity),  # Mostra la quantità nel mazzo
+                str(deck_card.quantity),
                 card.card_type,
                 card.spell_type,
                 card.card_subtype,
+                card.attack,
+                card.health,
                 card.rarity,
                 card.expansion
             ])
@@ -114,7 +116,18 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
     if mode == "collection":
         cards = load_cards_from_db(filters)
         for card in cards:
-            card_list.Append([card.name, str(card.mana_cost), card.class_name, card.card_type, card.spell_type, card.card_subtype, card.rarity, card.expansion])
+            card_list.Append([
+                card.name, 
+                str(card.mana_cost), 
+                card.class_name, 
+                card.card_type, 
+                card.spell_type, 
+                card.card_subtype, 
+                card.attack,
+                card.health,
+                card.rarity, 
+                card.expansion
+                ])
 
     elif mode == "deck":
         # Carica le carte del mazzo
@@ -1147,6 +1160,7 @@ class DecksManagerDialog(wx.Frame):
                                         class_name="Unknown",
                                         mana_cost=card_data["mana_cost"],
                                         card_type="Unknown",
+                                        spell_type="Unknown",
                                         card_subtype="Unknown",
                                         rarity="Unknown",
                                         expansion="Unknown"
@@ -1170,7 +1184,7 @@ class DecksManagerDialog(wx.Frame):
                         wx.MessageBox("Il mazzo negli appunti non è valido.", "Errore")
 
                 except Exception as e:
-                    logging.error(f"Errore durante l'aggiornamento del mazzo: {e}")
+                    log.error(f"Errore durante l'aggiornamento del mazzo: {e}")
                     wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
 
         else:
@@ -1185,8 +1199,10 @@ class DecksManagerDialog(wx.Frame):
             stats = self.controller.get_deck_statistics(deck_name)
             if stats:
                 DeckStatsDialog(self, stats).ShowModal()  # Mostra la finestra come modale
+
             else:
                 wx.MessageBox("Impossibile calcolare le statistiche per questo mazzo.", "Errore")
+
         else:
             wx.MessageBox("Seleziona un mazzo prima di visualizzare le statistiche.", "Errore")
 
@@ -1226,7 +1242,7 @@ class DecksManagerDialog(wx.Frame):
     def on_search(self, event):
         """Filtra i mazzi in base al testo di ricerca."""
 
-        # cerchiamo la parola richeista dall0utente sia nei nomi dei mazzi sia nella classe
+        # cerchiamo la parola richiesta dall0utente sia nei nomi dei mazzi sia nella classe
         search_text = self.search_bar.GetValue()
         self.deck_list.DeleteAllItems()
         decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
@@ -1307,7 +1323,7 @@ class HearthstoneAppDialog(wx.Frame):
         self.panel.SetSizerAndFit(main_sizer)
 
 
-    #@@# sezione metodi di classe
+    #@@# sezione metodi collegati agli eventi
 
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
