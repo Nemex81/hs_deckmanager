@@ -60,6 +60,10 @@ class EnuCardType(Enum):
     ARMA = "Arma"
     EROE = "Eroe"
 
+class EnuSpellType(Enum):
+    SEGRETO = "Segreto"
+    INCANTO = "Incanto"
+
 class EnuSpellSubType(Enum):
     """ sottotipi delle carte Magia """
 

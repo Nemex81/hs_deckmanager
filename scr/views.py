@@ -19,7 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
 from .models import DbManager, AppController
-from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
@@ -38,16 +38,19 @@ def load_cards_from_db(filters=None):
             if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
 
-            if filters.get("card_type") not in [None, "Tutti", "tutti", "", " "]:
+            if filters.get("card_type") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.card_type == filters["card_type"])
 
-            if filters.get("card_subtype") not in [None, "Tutti", "tutti", "", " "]:
+            if filters.get("spell_type") not in ["qualsiasi", "Qualsiasi", "", " "]:
+                query = query.filter(Card.spell_type == filters["spell_type"])
+
+            if filters.get("card_subtype") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.card_subtype == filters["card_subtype"])
 
-            if filters.get("rarity") not in [None, "Tutti", "tutti", "", " "]:
+            if filters.get("rarity") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.rarity == filters["rarity"])
 
-            if filters.get("expansion") not in [None, "Tutti", "tutti", "", " "]:
+            if filters.get("expansion") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.expansion == filters["expansion"])
 
         log.info(f"Carte trovate: {query.count()}")
@@ -73,16 +76,19 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
                     continue
 
-                if filters.get("card_type") not in [None, "Tutti"] and card.card_type != filters["card_type"]:
+                if filters.get("card_type") not in ["Tutti", "tutti"] and card.card_type != filters["card_type"]:
                     continue
 
-                if filters.get("card_subtype") not in [None, "Tutti"] and card.card_subtype != filters["card_subtype"]:
+                if filters.get("spell_type") not in ["Qualsiasi", "qualsiasi"] and card.spell_type != filters["spell_type"]:
                     continue
 
-                if filters.get("rarity") not in [None, "Tutti"] and card.rarity != filters["rarity"]:
+                if filters.get("card_subtype") not in ["Tutti", "tutti"] and card.card_subtype != filters["card_subtype"]:
                     continue
 
-                if filters.get("expansion") not in [None, "Tutti"] and card.expansion != filters["expansion"]:
+                if filters.get("rarity") not in ["Tutti", "tutti"] and card.rarity != filters["rarity"]:
+                    continue
+
+                if filters.get("expansion") not in ["Tutti", "tutti"] and card.expansion != filters["expansion"]:
                     continue
 
             # aggiungi la carta alla lista
@@ -92,6 +98,7 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 str(card.mana_cost),
                 str(deck_card.quantity),  # Mostra la quantità nel mazzo
                 card.card_type,
+                card.spell_type,
                 card.card_subtype,
                 card.rarity,
                 card.expansion
@@ -107,7 +114,7 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
     if mode == "collection":
         cards = load_cards_from_db(filters)
         for card in cards:
-            card_list.Append([card.name, str(card.mana_cost), card.class_name, card.card_type, card.card_subtype, card.rarity, card.expansion])
+            card_list.Append([card.name, str(card.mana_cost), card.class_name, card.card_type, card.spell_type, card.card_subtype, card.rarity, card.expansion])
 
     elif mode == "deck":
         # Carica le carte del mazzo
@@ -119,19 +126,24 @@ class FilterDialog(wx.Dialog):
     """ Finestra di dialogo per i filtri di ricerca. """
 
     def __init__(self, parent):
-        super().__init__(parent, title="Filtri di Ricerca", size=(300, 300))
+        super().__init__(parent, title="Filtri di Ricerca", size=(300, 400))
         self.parent = parent
         self.SetBackgroundColour('green')
         panel = wx.Panel(self)
 
         # Aggiungi "Qualsiasi" come prima opzione per il costo mana
         mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
+        attack_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
+        health_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
 
         controls = [
             ("nome", wx.TextCtrl),
             ("costo_mana", wx.ComboBox, {"choices": mana_choices, "style": wx.CB_READONLY}),
             ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
-            ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuSpellSubType], "style": wx.CB_READONLY}),
+            ("tipo_magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
+            ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
+            ("attacco", wx.ComboBox, {"choices": attack_choices, "style": wx.CB_READONLY}),
+            ("vita", wx.ComboBox, {"choices": health_choices, "style": wx.CB_READONLY}),
             ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
             ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
@@ -141,7 +153,10 @@ class FilterDialog(wx.Dialog):
         self.search_ctrl = control_dict["nome"]
         self.mana_cost = control_dict["costo_mana"]
         self.card_type = control_dict["tipo"]
+        self.spell_type = control_dict["tipo_magia"]
         self.card_subtype = control_dict["sottotipo"]
+        self.attack = control_dict["attacco"]
+        self.health = control_dict["vita"]
         self.rarity = control_dict["rarita"]
         self.expansion = control_dict["espansione"]
 
@@ -175,7 +190,10 @@ class FilterDialog(wx.Dialog):
         self.search_ctrl.SetValue("")
         self.mana_cost.SetValue("Qualsiasi")  # Imposta "Qualsiasi" come valore predefinito
         self.card_type.SetValue("Tutti")
+        self.spell_type.SetValue("Qualsiasi")
         self.card_subtype.SetValue("Tutti")
+        self.attack.SetValue("Qualsiasi")
+        self.health.SetValue("Qualsiasi")
         self.rarity.SetValue("Tutti")
         self.expansion.SetValue("Tutti")
 
@@ -272,7 +290,10 @@ class CardEditDialog(wx.Dialog):
             ("nome", wx.TextCtrl),  # Passa la classe wx.TextCtrl
             ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),  # Passa la classe wx.SpinCtrl e i kwargs
             ("tipo", wx.ComboBox, {"choices": [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo_magia", wx.ComboBox, {"choices": [t.value for t in EnuSpellType], "style": wx.CB_READONLY}),
             ("sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),  # Inizialmente vuoto
+            ("attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("vita", wx.SpinCtrl, {"min": 0, "max": 20}),
             ("rarita", wx.ComboBox, {"choices": [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
             ("espansione", wx.ComboBox, {"choices": [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
@@ -284,7 +305,10 @@ class CardEditDialog(wx.Dialog):
         self.nome = control_dict["nome"]
         self.costo_mana = control_dict["costo_mana"]
         self.tipo = control_dict["tipo"]
+        self.tipo_magia = control_dict["tipo_magia"]
         self.sottotipo = control_dict["sottotipo"]
+        self.attacco = control_dict["attacco"]
+        self.vita = control_dict["vita"]
         self.rarità = control_dict["rarita"]
         self.espansione = control_dict["espansione"]
 
@@ -316,6 +340,7 @@ class CardEditDialog(wx.Dialog):
             self.nome.SetValue(self.card.name)
             self.costo_mana.SetValue(self.card.mana_cost)
             self.tipo.SetValue(self.card.card_type)
+            self.tipo_magia.SetValue(self.card.spell_type) if self.card.spell_type else self.tipo_magia.SetValue("-")
 
             # Aggiorna i sottotipi in base al tipo di carta selezionato
             self.update_subtypes()
@@ -323,6 +348,11 @@ class CardEditDialog(wx.Dialog):
             # Imposta il valore corrente del sottotipo
             self.sottotipo.SetValue(self.card.card_subtype)
 
+            # Imposta i valori di attacco e vita (se presenti)
+            self.attacco.SetValue(self.card.attack) if self.card.attack else self.attacco.SetValue("-")
+            self.vita.SetValue(self.card.health) if self.card.health else self.vita.SetValue("-")
+
+            # Imposta i valori di rarità ed espansione
             self.rarità.SetValue(self.card.rarity)
             self.espansione.SetValue(self.card.expansion)
 
@@ -378,7 +408,10 @@ class CardEditDialog(wx.Dialog):
                 "name": self.nome.GetValue(),
                 "mana_cost": self.costo_mana.GetValue(),
                 "card_type": self.tipo.GetValue(),
+                "spell_type": self.tipo_magia.GetValue(),
                 "card_subtype": self.sottotipo.GetValue(),
+                "attack": self.attacco.GetValue(),
+                "health": self.vita.GetValue(),
                 "rarity": self.rarità.GetValue(),
                 "expansion": self.espansione.GetValue()
             }
@@ -392,7 +425,10 @@ class CardEditDialog(wx.Dialog):
                 self.card.name = card_data["name"]
                 self.card.mana_cost = card_data["mana_cost"]
                 self.card.card_type = card_data["card_type"]
+                self.card.spell_type = card_data["spell_type"]
                 self.card.card_subtype = card_data["card_subtype"]
+                self.card.attack = card_data["attack"]
+                self.card.health = card_data["health"]
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
                 self.card.class_name = card_data["class_name"]
@@ -480,7 +516,10 @@ class CardManagerDialog(wx.Dialog):
             self.card_list.AppendColumn("Classe", width=120)
             
         self.card_list.AppendColumn("Tipo", width=120)
+        self.card_list.AppendColumn("tipo_magia", width=120)
         self.card_list.AppendColumn("Sottotipo", width=120)
+        self.card_list.AppendColumn("Attacco", width=50)
+        self.card_list.AppendColumn("vita", width=50)
         self.card_list.AppendColumn("Rarità", width=120)
         self.card_list.AppendColumn("Espansione", width=500)
         sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -524,7 +563,6 @@ class CardManagerDialog(wx.Dialog):
 
     def load_cards(self, filters=None):
         """ carica le carte utilizzando le funzionihelper sopra definite"""
-
         load_cards(self.card_list, self.deck_content, self.mode, filters)
 
 
@@ -801,7 +839,10 @@ class CardCollectionDialog(CardManagerDialog):
                 "name": dlg.search_ctrl.GetValue(),
                 "mana_cost": dlg.mana_cost.GetValue(),
                 "card_type": dlg.card_type.GetValue(),
+                "spell_type": dlg.spell_type.GetValue(),
                 "card_subtype": dlg.card_subtype.GetValue(),
+                "attack": dlg.attack.GetValue(),
+                "health": dlg.health.GetValue(),
                 "rarity": dlg.rarity.GetValue(),
                 "expansion": dlg.expansion.GetValue()
             }
@@ -1199,6 +1240,110 @@ class DecksManagerDialog(wx.Frame):
         """Chiude l'applicazione."""
         self.Close()
 
+
+
+class HearthstoneAppDialog(wx.Frame):
+    """ Finestra principale dell'applicazione. """
+
+    def __init__(self, parent, title):
+        super(HearthstoneAppDialog, self).__init__(parent, title=title, size=(900, 700))
+        self.db_manager = DbManager()
+        #self.app_controller = AppController(self.db_manager, self)
+        # inizializzo l'istanza del giocatore
+        font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
+        self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
+        self.Maximize()                                                                         # Massimizza la finestra principale
+        #self.Center()                                                                           # Centra la finestra principale nello schermo
+
+        self.panel = wx.Panel(self)
+
+        # Aggiungo l'immagine
+        image = wx.Image("img/background_magic.jpeg", wx.BITMAP_TYPE_ANY)
+        image = image.Scale(1200, 790)  # Ridimensiona l'immagine
+        bitmap = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap(image))
+
+        # Aggiungo i pulsanti
+        self.collection_button = wx.Button(self.panel, label="Collezione")
+        self.collection_button.Bind(wx.EVT_BUTTON, self.on_collection_button_click)
+
+        self.decks_button = wx.Button(self.panel, label="Gestione Mazzi")
+        self.decks_button.Bind(wx.EVT_BUTTON, self.on_decks_button_click)
+
+        #self.match_button = wx.Button(self.panel, label="Palestra")
+        #self.match_button.Bind(wx.EVT_BUTTON, self.on_match_button_click)
+
+        #self.settings_button = wx.Button(self.panel, label="Impostazioni")
+        #self.settings_button.Bind(wx.EVT_BUTTON, self.on_settings_button_click)
+
+        self.quit_button = wx.Button(self.panel, label="Esci")
+        self.quit_button.Bind(wx.EVT_BUTTON, self.on_quit_button_click)
+
+        button_size = (250, 90)
+        self.collection_button.SetMinSize(button_size)
+        self.decks_button.SetMinSize(button_size)
+        #self.match_button.SetMinSize(button_size)
+        #self.settings_button.SetMinSize(button_size)
+        self.quit_button.SetMinSize(button_size)
+
+        font = wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.BOLD)  # 20 è la dimensione del font, regola secondo necessità
+        self.collection_button.SetFont(font)
+        self.decks_button.SetFont(font)
+        #self.match_button.SetFont(font)
+        #self.settings_button.SetFont(font)
+        self.quit_button.SetFont(font)
+
+        # Aggiungo un sizer per allineare i pulsanti verticalmente
+        button_sizer = wx.BoxSizer(wx.VERTICAL)
+        button_sizer.Add(self.collection_button, 0, wx.ALL, 20)
+        button_sizer.Add(self.decks_button, 0, wx.ALL, 20)
+        #button_sizer.Add(self.match_button, 0, wx.ALL, 20)
+        #button_sizer.Add(self.settings_button, 0, wx.ALL, 20)
+        button_sizer.Add(self.quit_button, 0, wx.ALL, 20)
+
+        # Aggiungo un sizer principale per allineare il bitmap e il sizer dei pulsanti
+        main_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        main_sizer.Add(bitmap, proportion=0, flag=wx.ALL, border=10)
+        main_sizer.Add(button_sizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
+        self.panel.SetSizerAndFit(main_sizer)
+
+
+    #@@# sezione metodi di classe
+
+    def on_collection_button_click(self, event):
+        """ Metodo per gestire il click sul pulsante 'Collezione'. """
+        collection_frame = CardCollectionDialog(self, self.db_manager)
+        collection_frame.ShowModal()
+        
+
+    def on_decks_button_click(self, event):
+        """ Metodo per gestire il click sul pulsante 'Gestione Mazzi'. """
+        decks_frame = DecksManagerDialog(self, self.db_manager)
+        decks_frame.Show()  # Mostra la finestra
+
+
+    #def on_match_button_click(self, event):
+        #match_frame = GamePrak(self)
+        #match_frame.ShowModal()  # Apri come dialogo modale
+
+
+    #def on_settings_button_click(self, event):
+            #settings_frame = SettingsFrame(self)  # Crea un'istanza della finestra di impostazioni
+            #settings_frame.ShowModal()  # Apri come dialogo modale
+
+
+    def on_quit_button_click(self, event):
+        # Mostra una finestra di dialogo di conferma
+        dlg = wx.MessageDialog(
+            self,
+            "Confermi l'uscita dall'applicazione?",
+            "Conferma Uscita",
+            wx.YES_NO | wx.ICON_QUESTION
+        )
+
+        # Se l'utente conferma, esci dall'applicazione
+        if dlg.ShowModal() == wx.ID_YES:
+            dlg.Destroy()  # Distruggi la finestra di dialogo
+            self.Close()   # Chiudi la finestra impostazioni account
 
 
 

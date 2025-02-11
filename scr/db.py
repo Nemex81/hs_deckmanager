@@ -73,6 +73,7 @@ class Card(Base):
         class_name (str): Classe di appartenenzadella carta.
         mana_cost (int): Costo in mana della carta.
         card_type (str): Tipo di carta (es. Creatura, Magia, Arma).
+        spell_type (str): Tipo di magia (opzionale, opzioni: ((segreto, incanto))
         card_subtype (str): Sottotipo della carta (opzionale).
         attack (int): Attacco della carta (opzionale, per Creature).
         health (int): Salute della carta (opzionale, per Creature).
@@ -87,6 +88,7 @@ class Card(Base):
     class_name = Column(String)
     mana_cost = Column(Integer, nullable=False)
     card_type = Column(String, nullable=False)
+    spell_type = Column(String)
     card_subtype = Column(String)
     attack = Column(Integer)
     health = Column(Integer)
@@ -100,7 +102,7 @@ class Card(Base):
     )
 
     def __repr__(self):
-        return f"<Card(name='{self.name}', mana_cost={self.mana_cost}, type='{self.card_type}')>"
+        return f"<Card(name='{self.name}', class='{self.class_name}', mana={self.mana_cost}, type='{self.card_type}', rarity='{self.rarity}')>"
 
 
 

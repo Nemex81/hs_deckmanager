@@ -57,15 +57,15 @@
 
 # lib
 import wx
-from scr.controller import HearthstoneAppDialog
-from scr.views import DecksManagerDialog
+from scr.controller import HearthstoneManager
+from scr.models import DbManager
+
 
 
 def start_app():
-    app = wx.App(False)
-    frame = HearthstoneAppDialog(None, title="Hearthstone Deck Manager, by Nemex81")
-    frame.Show()
-    app.MainLoop()
+    """ Start dell'applicazione. """
+    app = HearthstoneManager(DbManager())
+    app.run()
 
 
 

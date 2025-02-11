@@ -1,32 +1,19 @@
 """
-    models.py
+    Modulo per la gestione dei mazzi di Hearthstone.
 
-    Modulo per la gestione dei mazzi di Hearthstone e delle operazioni correlate.
-
-    Path:
-        scr/models.py   
+    path:
+        ./scr/db_model.py
 
     Descrizione:
- 
-        Questo modulo contiene la classe DeckManager e funzioni utili per gestire:
-
-            - Caricamento/salvataggio dei mazzi da/in file JSON
-            - Parsing delle carte dai mazzi con verifica di validità
-            - Sincronizzazione delle carte con il database
-            - Calcolo delle statistiche e delle proprietà del mazzo
-            - Manipolazione delle informazioni relative ai mazzi (aggiunta, eliminazione)
-
-    Note:
-        Questo modulo utilizza il modulo `db` per l'interazione con il database SQLite.
-        Le funzioni di parsing utilizzano regex per estrarre le informazioni dai mazzi.
+    
+        Questo modulo definisce la classe DbModel per la gestione dei mazzi di Hearthstone.
+        La classe DbModel si occupa di gestire l'interazione con il database per la memorizzazione dei mazzi e delle carte.
+        Include metodi per l'aggiunta, la visualizzazione e l'eliminazione dei mazzi, nonché per l'importazione di mazzi da Hearthstone.
 
 """
 
 #lib
-import os
-import shutil
-import re
-import pyperclip
+import os, re, shutil, pyperclip
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
@@ -37,16 +24,16 @@ from utyls import logger as log
 
 
 
-class DbManager:
+class Dbmodel:
     """ Classe per la gestione dei mazzi di Hearthstone. """
 
-    def __init__(self):
-        pass
+    def __init__(self, db=None):
+        self.db = db
 
     @staticmethod
     def parse_deck_metadata(deck_string):
-
         """ Estrae le informazioni di metadata da un mazzo. """
+
         lines = deck_string.splitlines()[:3]
         metadata = {
             "name": lines[0].replace("###", "").strip(),
@@ -57,7 +44,6 @@ class DbManager:
         for line in lines[1:]:
             if "Classe:" in line:
                 metadata["player_class"] = line.split(":")[1].strip()
-
             elif "Formato:" in line:
                 metadata["game_format"] = line.split(":")[1].strip()
         
@@ -66,6 +52,7 @@ class DbManager:
 
     def is_valid_deck(self, deck_string):
         """Verifica se una stringa rappresenta un mazzo valido."""
+
         last_verify = "# Per utilizzare questo mazzo, copialo negli appunti e crea un nuovo mazzo in Hearthstone"
         return bool(
             deck_string and 
@@ -93,7 +80,6 @@ class DbManager:
 
             pyperclip.copy(deck_info)
             return True
-
         return False
 
 
@@ -156,7 +142,6 @@ class DbManager:
         """ Sincronizza le carte del mazzo con il database. """
 
         log.info("Inizio sincronizzazione delle carte con il database.")
-
         try:
             cards = self.parse_cards_from_deck(deck_string)
             card_names = [card["name"] for card in cards]
@@ -171,12 +156,10 @@ class DbManager:
             # Crea una lista di oggetti Card per le nuove carte
             new_cards = [
                 Card(
-                    id = card_data["id"],
                     name=card_data["name"],
                     class_name="Unknown",
                     mana_cost=card_data["mana_cost"],
                     card_type="Unknown",
-                    spell_type="Unknown",
                     card_subtype="Unknown",
                     rarity="Unknown",
                     expansion="Unknown"
@@ -192,12 +175,11 @@ class DbManager:
         except SQLAlchemyError as e:
             log.error(f"Errore del database durante la sincronizzazione: {str(e)}")
             session.rollback()
-            log.error(f"Errore del database durante la sincronizzazione: {str(e)}", "Errore")
+            wx.MessageBox(f"Errore del database durante la sincronizzazione: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
             raise
-
         except Exception as e:
             log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}")
-            log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}", "Errore")
+            wx.MessageBox(f"Errore imprevisto durante la sincronizzazione: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
             raise
 
 
@@ -240,12 +222,10 @@ class DbManager:
         """Aggiunge una nuova carta al database."""
 
         new_card = Card(
-            id = card["id"],
             name=card["name"],
             class_name="Unknown",
             mana_cost=card["mana_cost"],
             card_type="Unknown",
-            spell_type="Unknown",
             card_subtype="Unknown",
             rarity="Unknown",
             expansion="Unknown"
@@ -335,13 +315,10 @@ class DbManager:
                 card_type = db_card.card_type.lower()
                 if card_type == "creatura":
                     stats["Creature"] += card["quantity"]
-
                 elif card_type == "magia":
                     stats["Magie"] += card["quantity"]
-
                 elif card_type == "arma":
                     stats["Armi"] += card["quantity"]
-
                 elif card_type == "luogo":
                     stats["Luoghi"] += card["quantity"]
 
@@ -359,55 +336,19 @@ class DbManager:
         return stats
 
 
-
-class AppController:
-    """ Controller per la gestione delle operazioni dell'applicazione. """
-
-    def __init__(self, db_manager, app):
-        self.db_manager = db_manager
-        self.app = app
+    def get_all_decks(self):
+        """Restituisce tutti i mazzi presenti nel database."""
+        decks = session.query(Deck).all()
+        return [deck.name for deck in decks]
 
 
-    def add_deck(self, deck_name):
-        """ Aggiunge un mazzo al database. """
-
-        try:
-            self.db_manager.add_deck_from_clipboard(deck_name)
-            self.app.update_deck_list()
-            self.app.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
-            return True
-
-        except ValueError as e:
-            raise
-
-        except Exception as e:
-            log.error(f"Errore durante l'aggiunta del mazzo: {e}")
-            raise
-
-
-    def delete_deck(self, deck_name):
-        """ Elimina un mazzo dal database. """
-
-        try:
-            if self.db_manager.delete_deck(deck_name):
-                self.app.update_deck_list()
-                self.app.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
-                log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-                return True
-
-        except SQLAlchemyError as e:
-            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
-
-        except Exception as e:
-            wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
-
-
-    def get_deck_statistics(self, deck_name):
-        """Restituisce le statistiche del mazzo."""
-        return self.db_manager.get_deck_statistics(deck_name)
+    def get_all_cards(self):
+        """Restituisce tutte le carte presenti nel database."""
+        cards = session.query(Card).all()
+        return [card.name for card in cards]
 
 
 
-#@@@# Fine del modulo
-if __name__ != "__main__":
+#@@# End del modulo
+if __name__ == "__main__":
     print("Carico: %s" % __name__)
