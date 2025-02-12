@@ -240,27 +240,40 @@ class FilterDialog(wx.Dialog):
         card_type = self.card_type.GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
-            self.spell_type.enable()
+
+        elif card_type == EnuCardType.CREATURA.value:
+            subtypes = [st.value for st in EnuPetSubType]
+
+        else:
+            subtypes = []
+
+        # Salva il sottotipo corrente
+        current_subtype = self.card_subtype.GetValue()
+        self.card_subtype.Clear()
+        self.card_subtype.AppendItems(subtypes)
+        # Se il sottotipo corrente è valido per il nuovo tipo di carta, mantienilo
+        if current_subtype not in subtypes:
+            self.card_subtype.SetValue("")  # Resetta il sottotipo se non è valido
+
+        if card_type == EnuCardType.MAGIA.value:
+            self.spell_type.Enable()
             self.attack.Disable()
             self.health.Disable()
             #self.durability.Disable()
 
         elif card_type == EnuCardType.CREATURA.value:
-            subtypes = [st.value for st in EnuPetSubType]
             self.attack.Enable()
             self.health.Enable()
             #self.durability.Disable()
             self.spell_type.Disable()
 
         elif card_type == EnuCardType.LUOGO.value:
-            subtypes = []
             self.attack.Disable()
             self.health.Disable()
             #self.durability.Enable()
             self.spell_type.Disable()
 
         elif card_type == EnuCardType.ARMA.value:
-            subtypes = []
             self.attack.Enable()
             self.health.Disable()
             #self.durability.Enable()
@@ -273,19 +286,10 @@ class FilterDialog(wx.Dialog):
             self.spell_type.Disable()
 
         else:
-            # deduciamo che sia stat oscelto tutti o qualsiasi quihndi abilitiamo tutto
             self.attack.Enable()
             self.health.Enable()
             #self.durability.Enable()
             self.spell_type.Enable()
-
-        # Salva il sottotipo corrente
-        current_subtype = self.card_subtype.GetValue()
-        self.card_subtype.Clear()
-        self.card_subtype.AppendItems(subtypes)
-        # Se il sottotipo corrente è valido per il nuovo tipo di carta, mantienilo
-        if current_subtype not in subtypes:
-            self.card_subtype.SetValue("")  # Resetta il sottotipo se non è valido
 
 
     def on_type_change(self, event):

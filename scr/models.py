@@ -396,15 +396,83 @@ class AppController:
                 return True
 
         except SQLAlchemyError as e:
-            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
+            log.error("Errore del database. Verificare le procedure.")
 
         except Exception as e:
-            wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
+            log.error(f"Si è verificato un errore: {e}", "Errore")
 
 
     def get_deck_statistics(self, deck_name):
         """Restituisce le statistiche del mazzo."""
         return self.db_manager.get_deck_statistics(deck_name)
+
+
+    def copy_deck_to_clipboard(self, deck_name):
+        """Copia un mazzo dal database negli appunti."""
+        if self.db_manager.copy_deck_to_clipboard(deck_name):
+            self.app.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
+            return True
+
+
+    def get_deck(self, deck_name):
+        """Restituisce il contenuto di un mazzo dal database."""
+        return self.db_manager.get_deck(deck_name)
+
+
+    def get_all_decks(self):
+        """Restituisce un elenco di tutti i mazzi presenti nel database."""
+        return session.query(Deck).all()
+
+
+    def get_all_cards(self):
+        """Restituisce un elenco di tutte le carte presenti nel database."""
+        return session.query(Card).all()
+
+
+    def get_card(self, card_name):
+        """Restituisce le informazioni di una carta dal database."""
+        return session.query(Card).filter_by(name=card_name).first()
+
+
+    def get_card_by_id(self, card_id):
+        """Restituisce le informazioni di una carta dal database tramite ID."""
+        return session.query(Card).filter_by(id=card_id).first()
+
+
+    def get_card_by_name(self, card_name):
+        """Restituisce le informazioni di una carta dal database tramite nome."""
+        return session.query(Card).filter_by(name=card_name).first()
+
+
+    def is_card_in_database(self, card_name):
+        """Verifica se una carta è presente nel database."""
+        return self.db_manager.is_card_in_database(card_name)
+
+
+
+    def add_card_to_database(self, card):
+        """Aggiunge una nuova carta al database."""
+        self.db_manager.add_card_to_database(card)
+        self.app.update_card_list()
+        self.app.update_status(f"Carta '{card['name']}' aggiunta al database.")
+        return True
+
+
+    def update_card_list(self):
+        """Aggiorna l'elenco delle carte nella vista."""
+        self.app.update_card_list()
+
+
+    def update_deck_list(self):
+        """Aggiorna l'elenco dei mazzi nella vista."""
+        self.app.update_deck_list()
+
+
+    def update_status(self, message):
+        """Aggiorna lo stato dell'applicazione."""
+        self.app.update_status(message)
+
+
 
 
 
