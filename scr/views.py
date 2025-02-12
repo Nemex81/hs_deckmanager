@@ -107,18 +107,16 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
             card_list.Append([
                 #card.id,
                 card.name,
-                str(card.mana_cost),
-                str(deck_card.quantity),
-                card.card_type,
-                card.spell_type,
-                card.card_subtype,
-                card.attack,
-                card.health,
+                str(card.mana_cost) if card.mana_cost else "-",
+                str(deck_card.quantity) if deck_card.quantity else "-",
+                card.card_type if card.card_type else "-",
+                card.spell_type if card.spell_type else "-",
+                card.card_subtype if card.card_subtype else "-", 
+                str(card.attack) if card.attack is not None else "-",  # Sostituisci None con "-"
+                str(card.health) if card.health is not None else "-",   # Sostituisci None con "-"
                 card.rarity,
                 card.expansion
             ])
-
-
 
 
 def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
@@ -130,15 +128,15 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
         for card in cards:
             card_list.Append([
                 card.name, 
-                str(card.mana_cost), 
-                card.class_name, 
-                card.card_type, 
-                card.spell_type, 
-                card.card_subtype, 
-                card.attack,
-                card.health,
-                card.rarity, 
-                card.expansion
+                str(card.mana_cost) if card.mana_cost else "-",
+                card.class_name if card.class_name else "-",
+                card.card_type if card.card_type else "-",
+                card.spell_type if card.spell_type else "-",
+                card.card_subtype if card.card_subtype else "-",
+                str(card.attack) if card.attack is not None else "-",
+                str(card.health) if card.health is not None else "-",
+                card.rarity if card.rarity else "-",
+                card.expansion if card.expansion else "-"
                 ])
 
     elif mode == "deck":
