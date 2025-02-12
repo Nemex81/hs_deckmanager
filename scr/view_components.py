@@ -29,18 +29,18 @@ class BasicView(wx.Dialog):
         self.parent = parent
         self.init_ui()
         self.Centre()
-        self.SetBackgroundColour('black')
         self.Show()
 
     def init_ui(self):
         """ Inizializza l'interfaccia utente. """
+        self.SetBackgroundColour('black')
         self.panel = wx.Panel(self)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel.SetSizer(self.sizer)
         self.init_ui_elements()
 
     @abstractmethod
-    def init_ui_elements(self):
+    def init_ui_elements(self, *args, **kwargs):
         """ Inizializza gli elementi dell'interfaccia utente. """
         pass
 

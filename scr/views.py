@@ -19,6 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
 from .models import DbManager, AppController
+from .view_components import BasicView
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -153,16 +154,17 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
 
 
 
-class FilterDialog(wx.Dialog):
+class FilterDialog(BasicView):
     """ Finestra di dialogo per i filtri di ricerca. """
 
     def __init__(self, parent):
         super().__init__(parent, title="Filtri di Ricerca", size=(300, 400))
         self.parent = parent
-        self.SetBackgroundColour('green')
-        panel = wx.Panel(self)
 
-        # Aggiungi "Qualsiasi" come prima opzione per il costo mana
+    def init_ui_elements(self):
+        """ Inizializza gli elementi dell'interfaccia utente. """
+
+        # Aggiungo "Qualsiasi" come prima opzione per il costo mana
         mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
         attack_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
         health_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
@@ -181,7 +183,7 @@ class FilterDialog(wx.Dialog):
             ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
 
-        sizer, control_dict = hp.create_ui_controls(panel, controls)
+        self.sizer, control_dict = hp.create_ui_controls(self.panel, controls)
 
         self.search_ctrl = control_dict["nome"]
         self.mana_cost = control_dict["costo_mana"]
@@ -202,8 +204,8 @@ class FilterDialog(wx.Dialog):
 
         # Pulsanti
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_apply = wx.Button(panel, label="Applica")
-        self.btn_cancel = wx.Button(panel, label="Annulla")
+        self.btn_apply = wx.Button(self.panel, label="Applica")
+        self.btn_cancel = wx.Button(self.panel, label="Annulla")
         btn_sizer.Add(self.btn_apply, flag=wx.RIGHT, border=10)
         btn_sizer.Add(self.btn_cancel)
 
@@ -211,9 +213,9 @@ class FilterDialog(wx.Dialog):
         self.btn_apply.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_OK))
         self.btn_cancel.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CANCEL))
 
-        sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT|wx.ALL, border=10)
-        panel.SetSizer(sizer)
-        self.Centre()
+        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT|wx.ALL, border=10)
+        self.panel.SetSizer(self.sizer)
+        self.SetBackgroundColour('red')
         # Aggiorna i sottotipi in base al tipo selezionato
         self.update_subtypes()
 
@@ -304,37 +306,47 @@ class FilterDialog(wx.Dialog):
 
 
 class DeckStatsDialog(wx.Dialog):
+#class DeckStatsDialog(BasicView):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
 
     def __init__(self, parent, stats):
         super().__init__(parent, title="Statistiche Mazzo", size=(300, 390))
         self.parent = parent
-        self.SetBackgroundColour('green')
-        panel = wx.Panel(self)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        
+        self.stats = stats
+        self.init_ui_elements()
+
+    def init_ui_elements(self):
+        """ Inizializza gli elementi dell'interfaccia utente. """
+
+        self.center = wx.BoxSizer(wx.VERTICAL)
+        self.Centre()
+        self.SetBackgroundColour('blue')
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+
         # Titolo
-        title = wx.StaticText(panel, label="Statistiche del Mazzo")
+        title = wx.StaticText(self.panel, label="Statistiche del Mazzo")
         title.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
-        sizer.Add(title, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
+        self.sizer.Add(title, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
         
         # Statistiche
+        stats = self.stats
         for key, value in stats.items():
             row = wx.BoxSizer(wx.HORIZONTAL)
-            row.Add(wx.StaticText(panel, label=f"{key}:"), flag=wx.LEFT, border=20)
-            row.Add(wx.StaticText(panel, label=str(value)), flag=wx.LEFT|wx.RIGHT, border=20)
-            sizer.Add(row, flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=5)
+            row.Add(wx.StaticText(self.panel, label=f"{key}:"), flag=wx.LEFT, border=20)
+            row.Add(wx.StaticText(self.panel, label=str(value)), flag=wx.LEFT|wx.RIGHT, border=20)
+            self.sizer.Add(row, flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=5)
 
         # impostiamo un separatore tra le statistiche delmazzo ed il pusante chiudi.
-        sizer.Add(wx.StaticLine(panel), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=10)
+        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=10)
 
         # Pulsante Chiudi
-        btn_close = wx.Button(panel, label="Chiudi", size=(100, 30))
+        btn_close = wx.Button(self.panel, label="Chiudi", size=(100, 30))
         btn_close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
-        sizer.Add(btn_close, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
+        self.sizer.Add(btn_close, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
         
-        panel.SetSizer(sizer)
-        self.Centre()
+        self.panel.SetSizer(self.sizer)
+        #self.Centre()
 
 
 
