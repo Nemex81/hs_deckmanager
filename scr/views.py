@@ -53,6 +53,9 @@ def load_cards_from_db(filters=None):
             if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", " "]:
                 query = query.filter(Card.health == int(filters["health"]))
 
+            #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", " "]:
+                #query = query.filter(Card.durability == filters["durability"])
+
             if filters.get("rarity") not in ["Tutti", "tutti", "", " "]:
                 query = query.filter(Card.rarity == filters["rarity"])
 
@@ -97,6 +100,9 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 if filters.get("health") not in ["Qualsiasi", "qualsiasi"] and card.health != int(filters["health"]):
                     continue
 
+                #if filters.get("durability") not in ["Qualsiasi", "qualsiasi"] and card.durability != int(filters["durability"]):
+                    #continue
+
                 if filters.get("rarity") not in ["Tutti", "tutti"] and card.rarity != filters["rarity"]:
                     continue
 
@@ -112,10 +118,11 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 card.card_type if card.card_type else "-",
                 card.spell_type if card.spell_type else "-",
                 card.card_subtype if card.card_subtype else "-", 
-                str(card.attack) if card.attack is not None else "-",  # Sostituisci None con "-"
-                str(card.health) if card.health is not None else "-",   # Sostituisci None con "-"
-                card.rarity,
-                card.expansion
+                str(card.attack) if card.attack is not None else "-",
+                str(card.health) if card.health is not None else "-",
+                str(card.durability) if card.durability is not None else "-",
+                card.rarity if card.rarity else "-",
+                card.expansion if card.expansion else "-"
             ])
 
 
@@ -135,6 +142,7 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
                 card.card_subtype if card.card_subtype else "-",
                 str(card.attack) if card.attack is not None else "-",
                 str(card.health) if card.health is not None else "-",
+                str(card.durability) if card.durability is not None else "-",
                 card.rarity if card.rarity else "-",
                 card.expansion if card.expansion else "-"
                 ])
@@ -158,6 +166,7 @@ class FilterDialog(wx.Dialog):
         mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
         attack_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
         health_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
+        durability_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
 
         controls = [
             ("nome", wx.TextCtrl),
@@ -167,6 +176,7 @@ class FilterDialog(wx.Dialog):
             ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
             ("attacco", wx.ComboBox, {"choices": attack_choices, "style": wx.CB_READONLY}),
             ("vita", wx.ComboBox, {"choices": health_choices, "style": wx.CB_READONLY}),
+            #("durability", wx.ComboBox, {"choices": durability_choices, "style": wx.CB_READONLY}),
             ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
             ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
@@ -180,6 +190,7 @@ class FilterDialog(wx.Dialog):
         self.card_subtype = control_dict["sottotipo"]
         self.attack = control_dict["attacco"]
         self.health = control_dict["vita"]
+        #self.durability = control_dict["durability"]
         self.rarity = control_dict["rarita"]
         self.expansion = control_dict["espansione"]
 
@@ -217,6 +228,7 @@ class FilterDialog(wx.Dialog):
         self.card_subtype.SetValue("Tutti")
         self.attack.SetValue("Qualsiasi")
         self.health.SetValue("Qualsiasi")
+        #self.durability.SetValue("Qualsiasi")
         self.rarity.SetValue("Tutti")
         self.expansion.SetValue("Tutti")
 
@@ -224,15 +236,48 @@ class FilterDialog(wx.Dialog):
     def update_subtypes(self):
         """ Aggiorna i sottotipi in base al tipo di carta selezionato. """
 
+        subtypes = "-"
         card_type = self.card_type.GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
+            self.spell_type.enable()
+            self.attack.Disable()
+            self.health.Disable()
+            #self.durability.Disable()
 
         elif card_type == EnuCardType.CREATURA.value:
             subtypes = [st.value for st in EnuPetSubType]
+            self.attack.Enable()
+            self.health.Enable()
+            #self.durability.Disable()
+            self.spell_type.Disable()
+
+        elif card_type == EnuCardType.LUOGO.value:
+            subtypes = []
+            self.attack.Disable()
+            self.health.Disable()
+            #self.durability.Enable()
+            self.spell_type.Disable()
+
+        elif card_type == EnuCardType.ARMA.value:
+            subtypes = []
+            self.attack.Enable()
+            self.health.Disable()
+            #self.durability.Enable()
+            self.spell_type.Disable()
+
+        elif card_type == EnuCardType.EROE.value:
+            self.attack.Enable()
+            self.health.Disable()
+            #self.durability.Disable()
+            self.spell_type.Disable()
 
         else:
-            subtypes = []
+            # deduciamo che sia stat oscelto tutti o qualsiasi quihndi abilitiamo tutto
+            self.attack.Enable()
+            self.health.Enable()
+            #self.durability.Enable()
+            self.spell_type.Enable()
 
         # Salva il sottotipo corrente
         current_subtype = self.card_subtype.GetValue()
@@ -317,6 +362,7 @@ class CardEditDialog(wx.Dialog):
             ("sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),  # Inizialmente vuoto
             ("attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
             ("vita", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("durability", wx.SpinCtrl, {"min": 0, "max": 20}) if self.card else None,
             ("rarita", wx.ComboBox, {"choices": [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
             ("espansione", wx.ComboBox, {"choices": [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
@@ -332,10 +378,15 @@ class CardEditDialog(wx.Dialog):
         self.sottotipo = control_dict["sottotipo"]
         self.attacco = control_dict["attacco"]
         self.vita = control_dict["vita"]
+        self.durability = control_dict["durability"]
         self.rarità = control_dict["rarita"]
         self.espansione = control_dict["espansione"]
 
-        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
+        # Disabilito la casella "tipo_magia e integrita" di default
+        self.tipo_magia.Disable()
+        self.durability.Disable()
+
+        # Collego l'evento di selezione del tipo di carta al metodo update_subtypes
         self.tipo.Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
         # Selezione multipla delle classi
@@ -374,6 +425,9 @@ class CardEditDialog(wx.Dialog):
             # Imposta i valori di attacco e vita (se presenti)
             self.attacco.SetValue(self.card.attack) if self.card.attack else self.attacco.SetValue("-")
             self.vita.SetValue(self.card.health) if self.card.health else self.vita.SetValue("-")
+
+            # Imposta il valore di integrità (se presente)
+            self.durability.SetValue(self.card.durability) if self.card.durability else self.durability.SetValue("-")
 
             # Imposta i valori di rarità ed espansione
             self.rarità.SetValue(self.card.rarity) if self.card.rarity else self.rarità.SetValue("-")
@@ -419,6 +473,57 @@ class CardEditDialog(wx.Dialog):
 
     def on_type_change(self, event):
         """Gestisce il cambio del tipo di carta."""
+
+        card_type = self.tipo.GetValue()
+
+        # Abilita o disabilita la casella "tipo_magia" in base al tipo selezionato
+        if card_type == EnuCardType.MAGIA.value:
+            self.tipo_magia.Enable()
+            self.attacco.Disable()
+            self.vita.Disable()
+            self.durability.Disable()
+        else:
+            self.tipo_magia.Disable()
+            self.tipo_magia.SetValue("-")  # Resetta il valore se non è una magia
+
+        # Gestisci la casella "durability" per le armi
+        if card_type == EnuCardType.ARMA.value:
+            self.durability.Enable()
+            self.attacco.Enable()
+            self.vita.Disable()
+            self.vita.SetValue("-")
+        else:
+            self.durability.Disable()
+            self.durability.SetValue("-")  # Resetta il valore se non è un'arma
+
+        # Gestisci la casella "attacco" per le creature
+        if card_type == EnuCardType.CREATURA.value:
+            self.attacco.Enable()
+            self.vita.Enable()
+        else:
+            self.attacco.Disable()
+            self.vita.Disable()
+            self.attacco.SetValue("-")
+            self.vita.SetValue("-")
+
+        if card_type == EnuCardType.LUOGO.value:
+            self.attacco.Disable()
+            self.vita.Disable()
+            self.durability.Enable()
+        else:
+            self.durability.Disable()
+            self.durability.SetValue("-")
+
+        if card_type == EnuCardType.EROE.value:
+            self.attacco.Disable()
+            self.vita.Disable()
+            self.durability.Disable()
+        else:
+            self.attacco.Disable()
+            self.vita.Disable()
+            self.durability.Disable()
+
+        # Aggiorna i sottotipi
         self.update_subtypes()
 
 
@@ -435,6 +540,7 @@ class CardEditDialog(wx.Dialog):
                 "card_subtype": self.sottotipo.GetValue(),
                 "attack": self.attacco.GetValue(),
                 "health": self.vita.GetValue(),
+                "durability": self.durability.GetValue() if self.durability.IsEnabled() else None,
                 "rarity": self.rarità.GetValue(),
                 "expansion": self.espansione.GetValue()
             }
@@ -452,6 +558,7 @@ class CardEditDialog(wx.Dialog):
                 self.card.card_subtype = card_data["card_subtype"]
                 self.card.attack = card_data["attack"]
                 self.card.health = card_data["health"]
+                self.card.durability = card_data["durability"]
                 self.card.rarity = card_data["rarity"]
                 self.card.expansion = card_data["expansion"]
                 self.card.class_name = card_data["class_name"]
@@ -519,15 +626,6 @@ class CardManagerDialog(wx.Dialog):
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Informazioni generali (solo per la modalità "deck")
-        if self.mode == "deck":
-            info_sizer = wx.BoxSizer(wx.HORIZONTAL)
-            info_sizer.Add(wx.StaticText(panel, label=f"Nome: {self.deck_content['name']}"), flag=wx.LEFT | wx.RIGHT, border=10)
-            info_sizer.Add(wx.StaticText(panel, label=f"Classe: {self.deck_content['player_class']}"), flag=wx.LEFT | wx.RIGHT, border=10)
-            info_sizer.Add(wx.StaticText(panel, label=f"Formato: {self.deck_content['game_format']}"), flag=wx.LEFT | wx.RIGHT, border=10)
-            info_sizer.Add(wx.StaticText(panel, label=f"Carte: {len(self.deck_content['cards'])}"), flag=wx.LEFT | wx.RIGHT, border=10)
-            sizer.Add(info_sizer, flag=wx.EXPAND | wx.ALL, border=10)
-
         # Lista delle carte
         self.card_list = wx.ListCtrl(
             panel,
@@ -546,9 +644,11 @@ class CardManagerDialog(wx.Dialog):
         self.card_list.AppendColumn("Tipo Magia", width=120)
         self.card_list.AppendColumn("Sottotipo", width=120)
         self.card_list.AppendColumn("Attacco", width=50)
-        self.card_list.AppendColumn("vita", width=50)
+        self.card_list.AppendColumn("Vita", width=50)
+        self.card_list.AppendColumn("Durabilità", width=50)  # Aggiungi questa colonna
         self.card_list.AppendColumn("Rarità", width=120)
         self.card_list.AppendColumn("Espansione", width=500)
+        
         # Aggiungo la lista alla finestra
         sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
