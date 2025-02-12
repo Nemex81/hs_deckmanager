@@ -38,28 +38,28 @@ def load_cards_from_db(filters=None):
             if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
 
-            if filters.get("card_type") not in ["Tutti", "tutti", "", " "]:
+            if filters.get("card_type", None) not in ["Tutti", "tutti", "", " ", None]:
                 query = query.filter(Card.card_type == filters["card_type"])
 
-            if filters.get("spell_type") not in ["qualsiasi", "Qualsiasi", "", " "]:
+            if filters.get("spell_type") not in ["qualsiasi", "Qualsiasi", "", " ", None]:
                 query = query.filter(Card.spell_type == filters["spell_type"])
 
-            if filters.get("card_subtype") not in ["Tutti", "tutti", "", " "]:
+            if filters.get("card_subtype") not in ["Tutti", "tutti", "", " ", None]:
                 query = query.filter(Card.card_subtype == filters["card_subtype"])
 
-            if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", " "]:
+            if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
                 query = query.filter(Card.attack == int(filters["attack"]))
 
-            if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", " "]:
+            if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
                 query = query.filter(Card.health == int(filters["health"]))
 
-            #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", " "]:
+            #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
                 #query = query.filter(Card.durability == filters["durability"])
 
-            if filters.get("rarity") not in ["Tutti", "tutti", "", " "]:
+            if filters.get("rarity") not in ["Tutti", "tutti", "", " ", None]:
                 query = query.filter(Card.rarity == filters["rarity"])
 
-            if filters.get("expansion") not in ["Tutti", "tutti", "", " "]:
+            if filters.get("expansion") not in ["Tutti", "tutti", "", " ", None]:
                 query = query.filter(Card.expansion == filters["expansion"])
 
         log.info(f"Carte trovate: {query.count()}")
@@ -85,7 +85,7 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
                     continue
 
-                if filters.get("card_type") not in ["Tutti", "tutti"] and card.card_type != filters["card_type"]:
+                if filters.get("card_type") not in ["Tutti", "tutti", "", " ", None]:
                     continue
 
                 if filters.get("spell_type") not in ["Qualsiasi", "qualsiasi"] and card.spell_type != filters["spell_type"]:
