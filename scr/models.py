@@ -8,17 +8,22 @@
 
     Descrizione:
  
-        Questo modulo contiene la classe DeckManager e funzioni utili per gestire:
+        Questo modulo contiene funzioni utili per gestire:
 
             - Caricamento/salvataggio dei mazzi da/in file JSON
             - Parsing delle carte dai mazzi con verifica di validità
             - Sincronizzazione delle carte con il database
             - Calcolo delle statistiche e delle proprietà del mazzo
             - Manipolazione delle informazioni relative ai mazzi (aggiunta, eliminazione)
+            - Gestione delle operazioni CRUD sulle carte
+            - Caricamento delle carte dal database con filtri
+            - Copia dei mazzi negli appunti
 
     Note:
-        Questo modulo utilizza il modulo `db` per l'interazione con il database SQLite.
-        Le funzioni di parsing utilizzano regex per estrarre le informazioni dai mazzi.
+        - Il modulo si occupa di gestire le operazioni di caricamento/salvataggio dei mazzi, la sincronizzazione delle carte con il database e la gestione delle operazioni CRUD sulle carte.
+        - Le funzioni di caricamento dei mazzi e delle carte dal database sono utilizzate per popolare le viste dell'applicazione.
+        - La classe DbManager fornisce metodi per gestire le operazioni sul database, mentre la classe AppController si occupa di coordinare le operazioni tra l'interfaccia utente e il DbManager.
+        - Il modulo utilizza il logger per registrare gli eventi e le eccezioni.
 
 """
 
