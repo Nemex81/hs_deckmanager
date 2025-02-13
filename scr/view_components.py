@@ -43,16 +43,16 @@ class BasicView(wx.Dialog):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
-    def close(self, event):
-        """Chiude la finestra di dialogo."""
-        self.EndModal(wx.ID_CANCEL)
+    def on_close(self, event):
+        """Chiude la finestra."""
+        self.Close()
 
 
 
 class SingleCardView(BasicView):
     """
-    Classe base per finestre che gestiscono i campi di una singola carta.
-    Utilizzata per finestre come "Aggiungi Carta", "Modifica Carta" o "Filtri".
+        Classe base per finestre che gestiscono i campi di una singola carta.
+        Utilizzata per finestre come "Aggiungi Carta", "Modifica Carta" o "Filtri".
     """
 
     def __init__(self, parent, title, size=(400, 500)):
@@ -61,6 +61,7 @@ class SingleCardView(BasicView):
 
     def init_ui_elements(self):
         """Inizializza i campi comuni per una singola carta."""
+
         self.fields = [
             ("nome", wx.TextCtrl),
             ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),
@@ -81,6 +82,7 @@ class SingleCardView(BasicView):
 
     def on_type_change(self, event):
         """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+
         card_type = self.control_dict["tipo"].GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
@@ -95,6 +97,7 @@ class SingleCardView(BasicView):
 
     def get_card_data(self):
         """Restituisce i dati della carta inseriti dall'utente."""
+
         return {
             "name": self.control_dict["nome"].GetValue(),
             "mana_cost": self.control_dict["costo_mana"].GetValue(),
@@ -123,6 +126,7 @@ class ListView(BasicView):
 
     def init_ui_elements(self):
         """Inizializza la lista e i pulsanti comuni."""
+
         self.list_ctrl = wx.ListCtrl(
             self.panel,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
@@ -138,6 +142,7 @@ class ListView(BasicView):
                 btn.Bind(wx.EVT_BUTTON, self.on_refresh)
             elif label == "Chiudi":
                 btn.Bind(wx.EVT_BUTTON, self.on_close)
+
         self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
     def load_data(self):
@@ -148,9 +153,7 @@ class ListView(BasicView):
         """Aggiorna l'elenco."""
         self.load_data()
 
-    def on_close(self, event):
-        """Chiude la finestra."""
-        self.EndModal(wx.ID_CANCEL)
+
 
 
 

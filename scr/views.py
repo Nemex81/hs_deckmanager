@@ -378,7 +378,7 @@ class CardEditDialog(wx.Dialog):
             ("sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),  # Inizialmente vuoto
             ("attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
             ("vita", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("durability", wx.SpinCtrl, {"min": 0, "max": 20}) if self.card else None,
+            ("durability", wx.SpinCtrl, {"min": 0, "max": 20}),
             ("rarita", wx.ComboBox, {"choices": [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
             ("espansione", wx.ComboBox, {"choices": [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
@@ -399,8 +399,8 @@ class CardEditDialog(wx.Dialog):
         self.espansione = control_dict["espansione"]
 
         # Disabilito la casella "tipo_magia e integrita" di default
-        self.tipo_magia.Disable()
-        self.durability.Disable()
+        #self.tipo_magia.Disable()
+        #self.durability.Disable()
 
         # Collego l'evento di selezione del tipo di carta al metodo update_subtypes
         self.tipo.Bind(wx.EVT_COMBOBOX, self.on_type_change)
@@ -603,7 +603,7 @@ class CardEditDialog(wx.Dialog):
 
         self.EndModal(wx.ID_CANCEL)
         self.parent.select_card_by_name(self.card_name)
-        self.Destroy()
+        self.close()
 
 
 
