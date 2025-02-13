@@ -23,11 +23,8 @@
 """
 
 #lib
-import os
-import shutil
-import re
-import pyperclip
-from datetime import datetime
+import re, pyperclip
+from contextlib import contextmanager
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from .db import session, db_session, Deck, DeckCard, Card
@@ -319,12 +316,10 @@ class DbManager:
         except SQLAlchemyError as e:
             log.error(f"Errore del database durante la sincronizzazione: {str(e)}")
             session.rollback()
-            log.error(f"Errore del database durante la sincronizzazione: {str(e)}", "Errore")
             raise
 
         except Exception as e:
             log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}")
-            log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}", "Errore")
             raise
 
 

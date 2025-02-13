@@ -13,144 +13,16 @@
 """
 
 # lib
-import wx
-import pyperclip
+import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
-from .models import DbManager, AppController
+from .models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
-
-
-
-def load_cards_from_db(filters=None):
-        """ Carica le carte dal database e le restituisce. """
-
-        query = session.query(Card)
-        if filters:
-            # Applica i filtri in modo combinato
-            if filters.get("name"):
-                query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-
-            if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
-                query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-
-            if filters.get("card_type", None) not in ["Tutti", "tutti", "", " ", None]:
-                query = query.filter(Card.card_type == filters["card_type"])
-
-            if filters.get("spell_type") not in ["qualsiasi", "Qualsiasi", "", " ", None]:
-                query = query.filter(Card.spell_type == filters["spell_type"])
-
-            if filters.get("card_subtype") not in ["Tutti", "tutti", "", " ", None]:
-                query = query.filter(Card.card_subtype == filters["card_subtype"])
-
-            if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
-                query = query.filter(Card.attack == int(filters["attack"]))
-
-            if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
-                query = query.filter(Card.health == int(filters["health"]))
-
-            #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
-                #query = query.filter(Card.durability == filters["durability"])
-
-            if filters.get("rarity") not in ["Tutti", "tutti", "", " ", None]:
-                query = query.filter(Card.rarity == filters["rarity"])
-
-            if filters.get("expansion") not in ["Tutti", "tutti", "", " ", None]:
-                query = query.filter(Card.expansion == filters["expansion"])
-
-        log.info(f"Carte trovate: {query.count()}")
-        cards = query.order_by(Card.mana_cost, Card.name).all()
-        if cards:
-            return cards
-
-
-def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
-    if not deck_content:
-        raise ValueError("Deck content non è stato inizializzato correttamente.")
-    
-    # Carica le carte del mazzo
-    deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
-    for deck_card in deck_cards:
-        card = session.query(Card).filter_by(id=deck_card.card_id).first()
-        if card:
-            # Applica i filtri (se presenti)
-            if filters:
-                if filters.get("name") and filters["name"].lower() not in card.name.lower():
-                    continue
-
-                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
-                    continue
-
-                if filters.get("card_type") not in ["Tutti", "tutti", "", " ", None]:
-                    continue
-
-                if filters.get("spell_type") not in ["Qualsiasi", "qualsiasi", "", None] and card.spell_type != filters["spell_type"]:
-                    continue
-
-                if filters.get("card_subtype") not in ["Tutti", "tutti", "", None] and card.card_subtype != filters["card_subtype"]:
-                    continue
-
-                if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", None] and card.attack != int(filters["attack"]):
-                    continue
-
-                if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", None] and card.health != int(filters["health"]):
-                    continue
-
-                #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", None] and card.durability != int(filters["durability"]):
-                    #continue
-
-                if filters.get("rarity") not in ["Tutti", "tutti", "", None] and card.rarity != filters["rarity"]:
-                    continue
-
-                if filters.get("expansion") not in ["Tutti", "tutti", "", None] and card.expansion != filters["expansion"]:
-                    continue
-
-            # aggiungi la carta alla lista
-            card_list.Append([
-                #card.id,
-                card.name,
-                str(card.mana_cost) if card.mana_cost else "-",
-                str(deck_card.quantity) if deck_card.quantity else "-",
-                card.card_type if card.card_type else "-",
-                card.spell_type if card.spell_type else "-",
-                card.card_subtype if card.card_subtype else "-", 
-                str(card.attack) if card.attack is not None else "-",
-                str(card.health) if card.health is not None else "-",
-                str(card.durability) if card.durability is not None else "-",
-                card.rarity if card.rarity else "-",
-                card.expansion if card.expansion else "-"
-            ])
-
-
-def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
-    """Carica le carte nella lista."""
-
-    card_list.DeleteAllItems()
-    if mode == "collection":
-        cards = load_cards_from_db(filters)
-        for card in cards:
-            card_list.Append([
-                card.name, 
-                str(card.mana_cost) if card.mana_cost else "-",
-                card.class_name if card.class_name else "-",
-                card.card_type if card.card_type else "-",
-                card.spell_type if card.spell_type else "-",
-                card.card_subtype if card.card_subtype else "-",
-                str(card.attack) if card.attack is not None else "-",
-                str(card.health) if card.health is not None else "-",
-                str(card.durability) if card.durability is not None else "-",
-                card.rarity if card.rarity else "-",
-                card.expansion if card.expansion else "-"
-                ])
-
-    elif mode == "deck":
-        # Carica le carte del mazzo
-        load_deck_from_db(deck_content=deck_content, filters=filters, card_list=card_list)
 
 
 
@@ -1000,11 +872,13 @@ class CardCollectionDialog(CardManagerDialog):
 
 
 
-class DecksManagerDialog(wx.Frame):
+class DecksManagerDialog(wx.Dialog):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent, db_manager):
-        super().__init__(parent, title="Gestione Mazzi", size=(800, 600))
+        title = "Gestione Mazzi"
+        super().__init__(parent, title=title, size=(800, 600))
+        self.parent = parent
         self.db_manager = db_manager
         self.controller = AppController(self.db_manager, self)
         self.init_ui()
@@ -1080,8 +954,8 @@ class DecksManagerDialog(wx.Frame):
         self.panel.SetSizer(sizer)
 
         # Barra di stato
-        self.status_bar = self.CreateStatusBar()
-        self.status_bar.SetStatusText("Pronto")
+        #self.status_bar = self.CreateStatusBar()
+        #self.status_bar.SetStatusText("Pronto")
 
         # Eventi
         btn_add.Bind(wx.EVT_BUTTON, self.on_add_deck)
@@ -1119,7 +993,8 @@ class DecksManagerDialog(wx.Frame):
 
     def update_status(self, message):
         """Aggiorna la barra di stato."""
-        self.status_bar.SetStatusText(message)
+        #self.status_bar.SetStatusText(message)
+        pass
 
 
     def get_selected_deck(self):

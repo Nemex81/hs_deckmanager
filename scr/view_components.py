@@ -18,9 +18,10 @@ from utyls import helper as hp
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
 
 
+
 class BasicView(wx.Dialog):
     """
-        Classe base per le finestre di dialogo dell'interfaccia utente.
+                    Classe base per le finestre di dialogo dell'interfaccia utente.
     """
 
     def __init__(self, parent, title, size=(500, 400)):

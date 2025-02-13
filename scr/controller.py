@@ -32,6 +32,7 @@ class HearthstoneManager():
         app.MainLoop()
 
 
+
 #@@@# Start del modulo
 if __name__ != "__main__":
     print("Carico: %s." % __name__)
