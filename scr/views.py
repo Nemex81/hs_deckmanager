@@ -89,25 +89,25 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 if filters.get("card_type") not in ["Tutti", "tutti", "", " ", None]:
                     continue
 
-                if filters.get("spell_type") not in ["Qualsiasi", "qualsiasi"] and card.spell_type != filters["spell_type"]:
+                if filters.get("spell_type") not in ["Qualsiasi", "qualsiasi", "", None] and card.spell_type != filters["spell_type"]:
                     continue
 
-                if filters.get("card_subtype") not in ["Tutti", "tutti"] and card.card_subtype != filters["card_subtype"]:
+                if filters.get("card_subtype") not in ["Tutti", "tutti", "", None] and card.card_subtype != filters["card_subtype"]:
                     continue
 
-                if filters.get("attack") not in ["Qualsiasi", "qualsiasi"] and card.attack != int(filters["attack"]):
+                if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", None] and card.attack != int(filters["attack"]):
                     continue
 
-                if filters.get("health") not in ["Qualsiasi", "qualsiasi"] and card.health != int(filters["health"]):
+                if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", None] and card.health != int(filters["health"]):
                     continue
 
-                #if filters.get("durability") not in ["Qualsiasi", "qualsiasi"] and card.durability != int(filters["durability"]):
+                #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", None] and card.durability != int(filters["durability"]):
                     #continue
 
-                if filters.get("rarity") not in ["Tutti", "tutti"] and card.rarity != filters["rarity"]:
+                if filters.get("rarity") not in ["Tutti", "tutti", "", None] and card.rarity != filters["rarity"]:
                     continue
 
-                if filters.get("expansion") not in ["Tutti", "tutti"] and card.expansion != filters["expansion"]:
+                if filters.get("expansion") not in ["Tutti", "tutti", "", None] and card.expansion != filters["expansion"]:
                     continue
 
             # aggiungi la carta alla lista
