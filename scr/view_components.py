@@ -156,6 +156,79 @@ class ListView(BasicView):
 
 
 
+class CardsListView(ListView):
+    """
+        Classe base per la visualizzazione di elenchi di carte.
+    """
+
+    def __init__(self, parent, title="Collezione Carte", size=(1200, 800)):
+        super().__init__(parent, title, size)
+        #self.init_ui_elements()
+
+    def init_ui_elements(self):
+        """Inizializza gli elementi dell'interfaccia utente specifici per la visualizzazione delle carte."""
+        super().init_ui_elements()
+        self.list_ctrl.AppendColumn("Nome", width=250)
+        self.list_ctrl.AppendColumn("Mana", width=50)
+        self.list_ctrl.AppendColumn("Classe", width=120)
+        self.list_ctrl.AppendColumn("Tipo", width=120)
+        self.list_ctrl.AppendColumn("Tipo Magia", width=120)
+        self.list_ctrl.AppendColumn("Sottotipo", width=120)
+        self.list_ctrl.AppendColumn("Attacco", width=50)
+        self.list_ctrl.AppendColumn("Vita", width=50)
+        self.list_ctrl.AppendColumn("Durabilità", width=50)
+        self.list_ctrl.AppendColumn("Rarità", width=120)
+        self.list_ctrl.AppendColumn("Espansione", width=500)
+
+    def load_data(self, filters=None):
+        """Carica le carte nella lista."""
+        cards = load_cards_from_db(filters)
+        self.list_ctrl.DeleteAllItems()
+        for card in cards:
+            self.list_ctrl.Append([
+                card.name,
+                str(card.mana_cost) if card.mana_cost else "-",
+                card.class_name if card.class_name else "-",
+                card.card_type if card.card_type else "-",
+                card.spell_type if card.spell_type else "-",
+                card.card_subtype if card.card_subtype else "-",
+                str(card.attack) if card.attack is not None else "-",
+                str(card.health) if card.health is not None else "-",
+                str(card.durability) if card.durability is not None else "-",
+                card.rarity if card.rarity else "-",
+                card.expansion if card.expansion else "-"
+            ])
+
+
+class DecksListView(ListView):
+    """
+        Classe base per la visualizzazione di elenchi di mazzi.
+    """
+
+    def __init__(self, parent, title="Gestione Mazzi", size=(800, 600)):
+        super().__init__(parent, title, size)
+        #self.init_ui_elements()
+
+    def init_ui_elements(self):
+        """Inizializza gli elementi dell'interfaccia utente specifici per la visualizzazione dei mazzi."""
+        super().init_ui_elements()
+        self.list_ctrl.AppendColumn("Mazzo", width=260)
+        self.list_ctrl.AppendColumn("Classe", width=200)
+        self.list_ctrl.AppendColumn("Formato", width=120)
+
+    def load_data(self):
+        """Carica i mazzi nella lista."""
+        decks = session.query(Deck).all()
+        self.list_ctrl.DeleteAllItems()
+        for deck in decks:
+            index = self.list_ctrl.InsertItem(self.list_ctrl.GetItemCount(), deck.name)
+            self.list_ctrl.SetItem(index, 1, deck.player_class)
+            self.list_ctrl.SetItem(index, 2, deck.game_format)
+
+
+
+
+
 
 #@@# End del modulo
 if __name__ == "__main__":
