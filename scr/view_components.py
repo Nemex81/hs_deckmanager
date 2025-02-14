@@ -233,7 +233,7 @@ class DecksListView(ListView):
 
 
 
-class CardManagerDialog(wx.Frame):
+class CardManagerFrame(wx.Frame):
     """
 
         Finestra generica per gestire le carte (collezione o mazzo).

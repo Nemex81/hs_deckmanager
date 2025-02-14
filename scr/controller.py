@@ -13,7 +13,7 @@
 
 # lib
 import wx
-from scr.views import HearthstoneAppDialog
+from scr.views import HearthstoneAppFrame
 from utyls import logger as log
 #import pdb
 
@@ -27,7 +27,7 @@ class HearthstoneManager():
 
     def run(self):
         app = wx.App(False)
-        frame = HearthstoneAppDialog(None, title="Hearthstone Deck Manager, by Nemex81")
+        frame = HearthstoneAppFrame(None, title="Hearthstone Deck Manager, by Nemex81")
         frame.Show()
         app.MainLoop()
 

@@ -18,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
 from .models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import BasicView, CardManagerDialog
+from .view_components import BasicView, CardManagerFrame
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -502,7 +502,7 @@ class CardEditDialog(wx.Dialog):
 
 
 
-class DeckViewDialog(CardManagerDialog):
+class DeckViewFrame(CardManagerFrame):
     """Finestra per gestire le carte di un mazzo."""
 
     def __init__(self, parent, deck_manager, deck_name):
@@ -625,7 +625,7 @@ class DeckViewDialog(CardManagerDialog):
 
 
 
-class CardCollectionDialog(CardManagerDialog):
+class CardCollectionFrame(CardManagerFrame):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, deck_manager):
@@ -789,7 +789,7 @@ class CardCollectionDialog(CardManagerDialog):
 
 
 
-class DecksManagerDialog(wx.Frame):
+class DecksManagerFrame(wx.Frame):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent, db_manager):
@@ -1045,7 +1045,7 @@ class DecksManagerDialog(wx.Frame):
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
                 #deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name)
-                deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name=deck_name)
+                deck_view_dialog = DeckViewFrame(self, self.db_manager, deck_name=deck_name)
                 #deck_view_dialog.ShowModal()
                 self.Hide()
                 deck_view_dialog.Show()
@@ -1136,7 +1136,7 @@ class DecksManagerDialog(wx.Frame):
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
         #collection_dialog = CardCollectionDialog(self, self.db_manager)
-        collection_dialog = CardCollectionDialog(self, self.controller)
+        collection_dialog = CardCollectionFrame(self, self.controller)
         self.Hide()                     # Nasconde la finestra di gestione dei mazzi
         collection_dialog.Show()  # Mostra la finestra come modale
 
@@ -1186,11 +1186,11 @@ class DecksManagerDialog(wx.Frame):
 
 
 
-class HearthstoneAppDialog(wx.Frame):
+class HearthstoneAppFrame(wx.Frame):
     """ Finestra principale dell'applicazione. """
 
     def __init__(self, parent, title):
-        super(HearthstoneAppDialog, self).__init__(parent, title=title, size=(900, 700))
+        super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
         self.db_manager = DbManager()
         #self.app_controller = AppController(self.db_manager, self)
         # inizializzo l'istanza del giocatore
@@ -1255,7 +1255,7 @@ class HearthstoneAppDialog(wx.Frame):
 
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
-        collection_frame = CardCollectionDialog(self, self.db_manager)
+        collection_frame = CardCollectionFrame(self, self.db_manager)
         #collection_frame.ShowModal()
         self.Hide()                     # Nasconde la finestra principale
         collection_frame.Show()         # Mostra la finestra di gestione della collezione 
@@ -1264,7 +1264,7 @@ class HearthstoneAppDialog(wx.Frame):
     def on_decks_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Gestione Mazzi'. """
         #decks_frame = DecksManagerDialog(self, self.db_manager)
-        decks_frame = DecksManagerDialog(self, self.db_manager)     # Crea un'istanza della finestra di gestione dei mazzi
+        decks_frame = DecksManagerFrame(self, self.db_manager)     # Crea un'istanza della finestra di gestione dei mazzi
         self.Hide()                                                 # nascondo la finestra principale
         decks_frame.Show()                                          # Mostro la finestra
 
