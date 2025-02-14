@@ -82,6 +82,8 @@ def load_cards_from_db(filters=None):
 
 
 def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
+    """ Carica le carte di un mazzo dal database e le aggiunge alla lista. """
+
     if not deck_content:
         raise ValueError("Deck content non è stato inizializzato correttamente.")
     
