@@ -872,12 +872,13 @@ class CardCollectionDialog(CardManagerDialog):
 
 
 
-class DecksManagerDialog(wx.Dialog):
+class DecksManagerDialog(wx.Frame):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent, db_manager):
         title = "Gestione Mazzi"
         super().__init__(parent, title=title, size=(800, 600))
+        #super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
         self.db_manager = db_manager
         self.controller = AppController(self.db_manager, self)
@@ -1126,8 +1127,8 @@ class DecksManagerDialog(wx.Dialog):
             deck_content = self.db_manager.get_deck(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name)
-                #deck_view_dialog = CardManagerDialog(self, self.db_manager, mode="deck", deck_name=deck_name)
+                #deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name)
+                deck_view_dialog = CardManagerDialog(self, self.db_manager, mode="deck", deck_name=deck_name)
                 deck_view_dialog.ShowModal()
 
             else:
@@ -1260,7 +1261,8 @@ class DecksManagerDialog(wx.Dialog):
 
     def on_close(self, event):
         """Chiude l'applicazione."""
-        self.Close()
+        self.parent.Show()  # Mostra la finestra principale
+        self.Close()        # Chiude la finestra di gestione dei mazzi
 
 
 
@@ -1339,8 +1341,10 @@ class HearthstoneAppDialog(wx.Frame):
 
     def on_decks_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Gestione Mazzi'. """
-        decks_frame = DecksManagerDialog(self, self.db_manager)
-        decks_frame.Show()  # Mostra la finestra
+        #decks_frame = DecksManagerDialog(self, self.db_manager)
+        decks_frame = DecksManagerDialog(self, self.db_manager)     # Crea un'istanza della finestra di gestione dei mazzi
+        self.Hide()                                                 # nascondo la finestra principale
+        decks_frame.Show()                                          # Mostro la finestra
 
 
     #def on_match_button_click(self, event):
