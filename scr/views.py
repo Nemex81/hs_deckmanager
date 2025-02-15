@@ -36,6 +36,10 @@ class FilterDialog(BasicDialog):
     def init_ui_elements(self):
         """ Inizializza gli elementi dell'interfaccia utente. """
 
+        # Pannello principale
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+
         # Aggiungo "Qualsiasi" come prima opzione per il costo mana
         mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
         attack_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
@@ -177,48 +181,57 @@ class FilterDialog(BasicDialog):
 
 
 
-class DeckStatsDialog(wx.Dialog):
-#class DeckStatsDialog(BasicView):
+#class DeckStatsDialog(wx.Dialog):
+class DeckStatsDialog(BasicDialog):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
 
     def __init__(self, parent, stats):
         super().__init__(parent, title="Statistiche Mazzo", size=(300, 390))
         self.parent = parent
-        self.stats = stats
-        self.init_ui_elements()
+        self.stats = stats              # Inizializza l'attributo stats
+        self.init_ui_elements()         # Inizializza gli elementi dell'interfaccia utente
+
+    def init_ui(self):
+        pass
 
     def init_ui_elements(self):
         """ Inizializza gli elementi dell'interfaccia utente. """
 
-        self.center = wx.BoxSizer(wx.VERTICAL)
-        self.Centre()
-        self.SetBackgroundColour('blue')
+        # Imposta il colore di sfondo della finestra
+        self.SetBackgroundColour('yellowe')
+
+        # Crea un panel e imposta il suo colore di sfondo
         self.panel = wx.Panel(self)
+        self.panel.SetBackgroundColour(wx.YELLOW)  # Imposta un colore di sfondo contrastante
+
+        # Crea un sizer verticale per il panel
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Titolo
         title = wx.StaticText(self.panel, label="Statistiche del Mazzo")
         title.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
-        self.sizer.Add(title, flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
-        
+        self.sizer.Add(title, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, border=10)
+
         # Statistiche
         stats = self.stats
         for key, value in stats.items():
             row = wx.BoxSizer(wx.HORIZONTAL)
             row.Add(wx.StaticText(self.panel, label=f"{key}:"), flag=wx.LEFT, border=20)
-            row.Add(wx.StaticText(self.panel, label=str(value)), flag=wx.LEFT|wx.RIGHT, border=20)
-            self.sizer.Add(row, flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=5)
+            row.Add(wx.StaticText(self.panel, label=str(value)), flag=wx.LEFT | wx.RIGHT, border=20)
+            self.sizer.Add(row, flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=5)
 
-        # impostiamo un separatore tra le statistiche delmazzo ed il pusante chiudi.
-        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND|wx.TOP|wx.BOTTOM, border=10)
+        # Separatore tra le statistiche e il pulsante Chiudi
+        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Pulsante Chiudi
         btn_close = wx.Button(self.panel, label="Chiudi", size=(100, 30))
         btn_close.Bind(wx.EVT_BUTTON, lambda e: self.Close())
-        self.sizer.Add(btn_close, flag=wx.ALIGN_CENTER|wx.ALL, border=10)
-        
+        self.sizer.Add(btn_close, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+
+        # Imposta il sizer per il panel
         self.panel.SetSizer(self.sizer)
-        #self.Centre()
+
+        self.Layout()               # Forza il ridisegno del layout
 
 
 
@@ -1124,7 +1137,7 @@ class DecksManagerFrame(wx.Frame):
         if deck_name:
             stats = self.controller.get_deck_statistics(deck_name)
             if stats:
-                DeckStatsDialog(self, stats).ShowModal()  # Mostra la finestra come modale
+                DeckStatsDialog(self, stats=stats).ShowModal()
 
             else:
                 wx.MessageBox("Impossibile calcolare le statistiche per questo mazzo.", "Errore")

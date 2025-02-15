@@ -24,10 +24,10 @@ from utyls import logger as log
 
 class BasicDialog(wx.Dialog):
     """
-                    Classe base per le finestre di dialogo dell'interfaccia utente.
+        Classe base per le finestre di dialogo dell'interfaccia utente.
     """
 
-    def __init__(self, parent, title, size=(500, 400)):
+    def __init__(self, parent, title, size=(500, 400), **kwargs):
         super().__init__(parent=parent, title=title, size=size)
         self.parent = parent
         self.init_ui()
@@ -36,11 +36,12 @@ class BasicDialog(wx.Dialog):
 
     def init_ui(self):
         """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
-        self.SetBackgroundColour('blue')
-        self.panel = wx.Panel(self)
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.panel.SetSizer(self.sizer)
-        self.init_ui_elements()
+
+        #self.panel = wx.Panel(self)                     # Crea un pannello
+        #self.sizer = wx.BoxSizer(wx.VERTICAL)           # Crea un sizer verticale
+        #self.panel.SetSizer(self.sizer)                 # Imposta il sizer per il pannello
+        #self.Center()                                   # Centra la finestra
+        self.init_ui_elements()                         # Inizializza gli elementi dell'interfaccia utente
 
     @abstractmethod
     def init_ui_elements(self, *args, **kwargs):
