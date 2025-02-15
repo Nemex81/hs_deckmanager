@@ -22,7 +22,7 @@ from utyls import logger as log
 
 
 
-class BasicView(wx.Dialog):
+class BasicDialog(wx.Dialog):
     """
                     Classe base per le finestre di dialogo dell'interfaccia utente.
     """
@@ -49,6 +49,38 @@ class BasicView(wx.Dialog):
 
     def on_close(self, event):
         """Chiude la finestra."""
+        self.Close()
+
+
+
+
+class BasicView(wx.Frame):
+    """
+        Classe base per le finestre principali dell'interfaccia utente.
+    """
+    
+    def __init__(self, parent, title, size=(500, 400)):
+        super().__init__(parent=parent, title=title, size=size)
+        self.parent = parent
+        self.init_ui()
+        self.Centre()
+        self.Show()
+    
+    def init_ui(self):
+        """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.panel.SetSizer(self.sizer)
+        self.init_ui_elements()
+
+    @abstractmethod
+    def init_ui_elements(self, *args, **kwargs):
+        """Inizializza gli elementi dell'interfaccia utente."""
+        pass
+
+    def on_close(self, event):
+        """Chiude la finestra."""
+        self.parent.show()
         self.Close()
 
 
@@ -474,6 +506,7 @@ class CardManagerFrame(wx.Frame):
         self.parent.show()
         self.Close()
         self.Destroy()
+
 
 
 

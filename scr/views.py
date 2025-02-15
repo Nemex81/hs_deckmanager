@@ -18,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
 from .models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import BasicView, CardManagerFrame
+from .view_components import BasicView, BasicDialog, CardManagerFrame
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -26,7 +26,7 @@ from utyls import logger as log
 
 
 
-class FilterDialog(BasicView):
+class FilterDialog(BasicDialog):
     """ Finestra di dialogo per i filtri di ricerca. """
 
     def __init__(self, parent):
