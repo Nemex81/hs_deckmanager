@@ -86,7 +86,7 @@ class BasicView(wx.Frame):
 
 
 
-class SingleCardView(BasicView):
+class SingleCardView(BasicDialog):
     """
         Classe base per finestre che gestiscono i campi di una singola carta.
         Utilizzata per finestre come "Aggiungi Carta", "Modifica Carta" o "Filtri".

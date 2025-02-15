@@ -18,7 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from scr.models import DbManager, AppController
 from .db import session, Card, DeckCard, Deck
 from .models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import BasicView, BasicDialog, CardManagerFrame
+from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -181,7 +181,6 @@ class FilterDialog(BasicDialog):
 
 
 
-#class DeckStatsDialog(wx.Dialog):
 class DeckStatsDialog(BasicDialog):
     """Finestra di dialogo per visualizzare le statistiche di un mazzo."""
 
@@ -235,23 +234,23 @@ class DeckStatsDialog(BasicDialog):
 
 
 
-class CardEditDialog(wx.Dialog):
+#class CardEditDialog(wx.Dialog):
+class CardEditDialog(SingleCardView):
     """Finestra di dialogo per aggiungere o modificare una carta."""
 
     def __init__(self, parent, card=None):
         title = "Modifica Carta" if card else "Aggiungi Carta"
-        super().__init__(parent, title=title, size=(400, 500))
+        
         self.parent = parent
-        self.SetBackgroundColour('green')
         self.card = card
         self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
-        self.Center()
-        self.init_ui()
+        #self.Center()
+        super().__init__(parent, title=title, size=(400, 500))
 
-
-    def init_ui(self):
+    def init_ui_elements(self):
         """ Inizializza l'interfaccia utente. """
 
+        self.SetBackgroundColour('yellow')
         panel = wx.Panel(self)
 
         # Campi di input
