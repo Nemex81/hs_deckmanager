@@ -248,7 +248,7 @@ class CardEditDialog(SingleCardView):
         """ Inizializza l'interfaccia utente. """
 
         self.SetBackgroundColour('yellow')
-        panel = wx.Panel(self)
+        #panel = wx.Panel(self)
 
         # Campi di input
         fields = [
@@ -265,7 +265,7 @@ class CardEditDialog(SingleCardView):
         ]
 
         # Crea i controlli UI e ottieni il sizer e il dizionario dei controlli
-        sizer, control_dict = hp.create_ui_controls(panel, fields)
+        self.sizer, control_dict = hp.create_ui_controls(self.panel, fields)
 
         # Assegna i controlli agli attributi della classe
         self.nome = control_dict["nome"]
@@ -287,24 +287,24 @@ class CardEditDialog(SingleCardView):
         self.tipo.Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
         # Selezione multipla delle classi
-        self.classes_listbox = wx.CheckListBox(panel, choices=[h.value for h in EnuHero])
-        sizer.Add(wx.StaticText(panel, label="Classi:"), flag=wx.LEFT | wx.RIGHT, border=10)
-        sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.classes_listbox = wx.CheckListBox(self.panel, choices=[h.value for h in EnuHero])
+        self.sizer.Add(wx.StaticText(self.panel, label="Classi:"), flag=wx.LEFT | wx.RIGHT, border=10)
+        self.sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsanti
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn_save = wx.Button(panel, label="Salva")
-        btn_close = wx.Button(panel, label="Chiudi")
+        btn_save = wx.Button(self.panel, label="Salva")
+        btn_close = wx.Button(self.panel, label="Chiudi")
         btn_sizer.Add(btn_save, flag=wx.RIGHT, border=10)
         btn_sizer.Add(btn_close)
-
+        
         # Eventi
         btn_save.Bind(wx.EVT_BUTTON, self.on_save)
         btn_close.Bind(wx.EVT_BUTTON, self.on_close)
 
-        sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-        panel.SetSizer(sizer)
-        self.Centre()
+        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        self.panel.SetSizer(self.sizer)
+        self.Layout()  # Forza il ridisegno del layout
 
         # Se è una modifica, pre-carica i dati della carta
         if self.card:

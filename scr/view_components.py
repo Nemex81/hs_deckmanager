@@ -37,10 +37,10 @@ class BasicDialog(wx.Dialog):
     def init_ui(self):
         """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
 
-        #self.panel = wx.Panel(self)                     # Crea un pannello
-        #self.sizer = wx.BoxSizer(wx.VERTICAL)           # Crea un sizer verticale
-        #self.panel.SetSizer(self.sizer)                 # Imposta il sizer per il pannello
-        #self.Center()                                   # Centra la finestra
+        self.panel = wx.Panel(self)                     # Crea un pannello
+        self.sizer = wx.BoxSizer(wx.VERTICAL)           # Crea un sizer verticale
+        self.panel.SetSizer(self.sizer)                 # Imposta il sizer per il pannello
+        self.Center()                                   # Centra la finestra
         self.init_ui_elements()                         # Inizializza gli elementi dell'interfaccia utente
 
     @abstractmethod
