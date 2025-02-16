@@ -240,11 +240,9 @@ class CardEditDialog(SingleCardView):
 
     def __init__(self, parent, card=None):
         title = "Modifica Carta" if card else "Aggiungi Carta"
-        
         self.parent = parent
         self.card = card
         self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
-        #self.Center()
         super().__init__(parent, title=title, size=(400, 500))
 
     def init_ui_elements(self):
@@ -802,19 +800,23 @@ class CardCollectionFrame(CardManagerFrame):
 
 
 class DecksManagerFrame(wx.Frame):
+#class DecksManagerFrame(BasicView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent, db_manager):
         title = "Gestione Mazzi"
-        super().__init__(parent, title=title, size=(800, 600))
+        #super().__init__(parent, title=title, size=(800, 600))
         #super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
         self.db_manager = db_manager
         self.controller = AppController(self.db_manager, self)
-        self.init_ui()
-
+        super().__init__(parent, title=title, size=(800, 600))
+        self.init_ui_elements()
 
     def init_ui(self):
+        pass
+
+    def init_ui_elements(self):
         """ Inizializza l'interfaccia utente. """
 
         # Impostazioni finestra principale
