@@ -234,7 +234,6 @@ class DeckStatsDialog(BasicDialog):
 
 
 
-#class CardEditDialog(wx.Dialog):
 class CardEditDialog(SingleCardView):
     """Finestra di dialogo per aggiungere o modificare una carta."""
 
@@ -805,13 +804,12 @@ class DecksManagerFrame(wx.Frame):
 
     def __init__(self, parent, db_manager):
         title = "Gestione Mazzi"
-        #super().__init__(parent, title=title, size=(800, 600))
-        #super().__init__(parent, title=title, size=(800, 600))
+        super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
         self.db_manager = db_manager
         self.controller = AppController(self.db_manager, self)
-        super().__init__(parent, title=title, size=(800, 600))
         self.init_ui_elements()
+
 
     def init_ui(self):
         pass
@@ -1201,18 +1199,25 @@ class DecksManagerFrame(wx.Frame):
 
 
 class HearthstoneAppFrame(wx.Frame):
+#class HearthstoneAppFrame(BasicView):
     """ Finestra principale dell'applicazione. """
 
     def __init__(self, parent, title):
         super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
         self.db_manager = DbManager()
         #self.app_controller = AppController(self.db_manager, self)
-        # inizializzo l'istanza del giocatore
         font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
         self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
         self.Maximize()                                                                         # Massimizza la finestra principale
-        #self.Center()                                                                           # Centra la finestra principale nello schermo
+        self.init_ui_elements()                                                                 # Inizializza gli elementi dell'interfaccia utente
 
+    def init_ui(self):
+        pass
+
+    def init_ui_elements(self, *args, **kwargs):
+        """ Inizializza gli elementi dell'interfaccia utente. """
+
+        # pannello per contenere gli elementi dell'interfaccia utente
         self.panel = wx.Panel(self)
 
         # Aggiungo l'immagine
@@ -1263,7 +1268,6 @@ class HearthstoneAppFrame(wx.Frame):
         main_sizer.Add(bitmap, proportion=0, flag=wx.ALL, border=10)
         main_sizer.Add(button_sizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
         self.panel.SetSizerAndFit(main_sizer)
-
 
     #@@# sezione metodi collegati agli eventi
 
