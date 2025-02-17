@@ -798,8 +798,8 @@ class CardCollectionFrame(CardManagerFrame):
 
 
 
-class DecksManagerFrame(wx.Frame):
-#class DecksManagerFrame(BasicView):
+#class DecksManagerFrame(wx.Frame):
+class DecksManagerFrame(BasicView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent, db_manager):
@@ -808,18 +808,18 @@ class DecksManagerFrame(wx.Frame):
         self.parent = parent
         self.db_manager = db_manager
         self.controller = AppController(self.db_manager, self)
-        self.init_ui_elements()
+        #self.init_ui_elements()
 
 
-    def init_ui(self):
-        pass
+    #def init_ui(self):
+        #pass
 
     def init_ui_elements(self):
         """ Inizializza l'interfaccia utente. """
 
         # Impostazioni finestra principale
         self.SetBackgroundColour('green')
-        self.panel = wx.Panel(self)
+        #self.panel = wx.Panel(self)
 
         # Layout principale
         self.Centre()
@@ -855,16 +855,16 @@ class DecksManagerFrame(wx.Frame):
         btn_exit = wx.Button(self.panel, label="Chiudi")
 
         # Layout principale
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(lbl_title, flag=wx.CENTER | wx.TOP, border=10)
-        sizer.Add(self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
+        #sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(lbl_title, flag=wx.CENTER | wx.TOP, border=10)
+        self.sizer.Add(self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Separatore tra barra di ricerca e lista dei mazzi
-        sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
-        sizer.Add(self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.sizer.Add(self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
-        sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Layout pulsanti
         btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
@@ -876,16 +876,16 @@ class DecksManagerFrame(wx.Frame):
         btn_sizer.Add(btn_delete, flag=wx.EXPAND | wx.ALL, border=5)
         btn_sizer.Add(btn_collection, flag=wx.EXPAND | wx.ALL, border=5)
         btn_sizer.Add(btn_exit, flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.sizer.Add(btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra pulsanti e barra di stato
-        sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
-        self.panel.SetSizer(sizer)
+        self.panel.SetSizer(self.sizer)
 
         # Barra di stato
-        #self.status_bar = self.CreateStatusBar()
-        #self.status_bar.SetStatusText("Pronto")
+        self.status_bar = self.CreateStatusBar()
+        self.status_bar.SetStatusText("Pronto")
 
         # Eventi
         btn_add.Bind(wx.EVT_BUTTON, self.on_add_deck)
