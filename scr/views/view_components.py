@@ -279,10 +279,6 @@ class FilterDialog(BasicDialog):
     def init_ui_elements(self):
         """ Inizializza gli elementi dell'interfaccia utente. """
 
-        # Pannello principale
-        self.panel = wx.Panel(self)
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-
         # Aggiungo "Qualsiasi" come prima opzione per il costo mana
         mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
         attack_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
