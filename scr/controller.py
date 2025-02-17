@@ -13,7 +13,8 @@
 
 # lib
 import wx
-from scr.views import HearthstoneAppFrame
+#from scr.views import HearthstoneAppFrame
+from .views.main_views import HearthstoneAppFrame
 from utyls import logger as log
 #import pdb
 
