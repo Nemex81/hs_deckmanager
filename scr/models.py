@@ -272,15 +272,19 @@ class DbManager:
 
         except pyperclip.PyperclipException as e:
             log.error(f"Errore negli appunti: {str(e)}")
-            raise
+            return False
 
         except ValueError as e:
             log.warning(f"Errore di validazione: {str(e)}")
-            raise
+            return False
+
+        except SQLAlchemyError as e:
+            log.error(f"Errore del database: {str(e)}")
+            return False
 
         except Exception as e:
             log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
-            raise
+            return False
 
 
     def sync_cards_with_database(self, deck_string):

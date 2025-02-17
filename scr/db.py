@@ -84,7 +84,7 @@ class Card(Base):
 
     __tablename__ = 'cards'
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, index=True)  # Aggiungo un indice sul campo 'name'
     class_name = Column(String)
     mana_cost = Column(Integer, nullable=False)
     card_type = Column(String, nullable=False)
