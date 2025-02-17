@@ -1198,8 +1198,8 @@ class DecksManagerFrame(wx.Frame):
 
 
 
-class HearthstoneAppFrame(wx.Frame):
-#class HearthstoneAppFrame(BasicView):
+#class HearthstoneAppFrame(wx.Frame):
+class HearthstoneAppFrame(BasicView):
     """ Finestra principale dell'applicazione. """
 
     def __init__(self, parent, title):
@@ -1209,16 +1209,16 @@ class HearthstoneAppFrame(wx.Frame):
         font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
         self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
         self.Maximize()                                                                         # Massimizza la finestra principale
-        self.init_ui_elements()                                                                 # Inizializza gli elementi dell'interfaccia utente
+        #self.init_ui_elements()                                                                 # Inizializza gli elementi dell'interfaccia utente
 
-    def init_ui(self):
-        pass
+    #def init_ui(self):
+        #pass
 
     def init_ui_elements(self, *args, **kwargs):
         """ Inizializza gli elementi dell'interfaccia utente. """
 
         # pannello per contenere gli elementi dell'interfaccia utente
-        self.panel = wx.Panel(self)
+        #self.panel = wx.Panel(self)
 
         # Aggiungo l'immagine
         image = wx.Image("img/background_magic.jpeg", wx.BITMAP_TYPE_ANY)
