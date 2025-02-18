@@ -388,19 +388,18 @@ class DecksManagerFrame(BasicView):
 
     def on_delete_deck(self, event):
         """Elimina il mazzo selezionato."""
-
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 try:
-                    success = self.db_manager.delete_deck(deck_name)
-                    #success = self.controller.delete_deck(deck_name)
-                    if success:
-                        self.update_deck_list()
-                        self.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
-                        wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
-                    else:
-                        wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+                    with db_session() as session:  # Usa il contesto db_session
+                        success = self.db_manager.delete_deck(deck_name)
+                        if success:
+                            self.update_deck_list()
+                            self.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
+                            wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+                        else:
+                            wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
 
                 except SQLAlchemyError as e:
                     wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
