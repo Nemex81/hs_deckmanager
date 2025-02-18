@@ -425,3 +425,9 @@ class DecksManagerFrame(BasicView):
         """Chiude l'applicazione."""
         self.parent.Show()  # Mostra la finestra principale
         self.Close()        # Chiude la finestra di gestione dei mazzi
+
+
+
+#@@@# Start del modulo
+if __name__ != "__main__":
+    log.debug(f"Carico: {__name__}")

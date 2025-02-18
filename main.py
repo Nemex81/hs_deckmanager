@@ -27,7 +27,7 @@
 # lib
 import wx
 from scr.controller import HearthstoneManager
-from scr.models import DbManager
+from scr.models import DbManager, AppController
 
 
 

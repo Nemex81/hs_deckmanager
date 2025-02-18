@@ -19,7 +19,7 @@ import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from ..models import DbManager, AppController
 from ..db import session, Card, DeckCard, Deck
-from ..models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
+from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView
 from .collection_view import CardCollectionFrame
 from .decks_view import DecksManagerFrame
@@ -37,15 +37,16 @@ class HearthstoneAppFrame(BasicView):
 
     def __init__(self, parent, title):
         super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
-        self.db_manager = DbManager()
-        #self.app_controller = AppController(self.db_manager, self)
+        self.db_manager = None
         font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
         self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
         self.Maximize()                                                                         # Massimizza la finestra principale
         #self.init_ui_elements()                                                                 # Inizializza gli elementi dell'interfaccia utente
 
-    #def init_ui(self):
-        #pass
+    def set_db_manager(self, db_manager):
+        """ Imposta il controller del database. """
+        self.db_manager = db_manager
+
 
     def init_ui_elements(self, *args, **kwargs):
         """ Inizializza gli elementi dell'interfaccia utente. """
@@ -107,7 +108,6 @@ class HearthstoneAppFrame(BasicView):
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
         collection_frame = CardCollectionFrame(self, self.db_manager)
-        #collection_frame.ShowModal()
         self.Hide()                     # Nasconde la finestra principale
         collection_frame.Show()         # Mostra la finestra di gestione della collezione 
         
@@ -148,4 +148,4 @@ class HearthstoneAppFrame(BasicView):
 
 #@@@# Start del modulo
 if __name__ != "__main__":
-    print("Carico: %s." % __name__)
+    log.debug(f"Carico: {__name__}")

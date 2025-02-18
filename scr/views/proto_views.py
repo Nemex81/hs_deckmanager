@@ -270,4 +270,4 @@ class DecksListView(ListView):
 
 #@@@# Start del modulo
 if __name__ != "__main__":
-    print("Carico: %s." % __name__)
+    log.debug(f"Carico: {__name__}")
