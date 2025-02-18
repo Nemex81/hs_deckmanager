@@ -508,7 +508,7 @@ class AppController:
     def copy_deck_to_clipboard(self, deck_name):
         """Copia un mazzo dal database negli appunti."""
         if self.db_manager.copy_deck_to_clipboard(deck_name):
-            self.app.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
+            #self.app.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
             return True
 
     def get_deck(self, deck_name):

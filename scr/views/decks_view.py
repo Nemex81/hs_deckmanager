@@ -17,7 +17,7 @@
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from ..models import DbManager, AppController
-from ..db import session, Card, DeckCard, Deck
+from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView, DeckStatsDialog
 from .collection_view import CardCollectionFrame
