@@ -113,7 +113,7 @@ class CardCollectionFrame(CardManagerFrame):
         if hasattr(self, "filters"):
             del self.filters  # Libera la memoria occupata dai filtri precedenti
         # Ricarica le carte senza filtri
-            self.load_cards()
+        self.load_cards()
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
