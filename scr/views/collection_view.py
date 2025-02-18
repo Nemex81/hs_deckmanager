@@ -21,14 +21,15 @@
 # lib
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
-from ..models import DbManager, AppController
-from ..db import session, Card, DeckCard, Deck
-from ..models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
+from ..db import session, db_session, Card, DeckCard, Deck
+from ..models import load_cards
 from .view_components import BasicView, BasicDialog, FilterDialog, CardEditDialog, CardManagerFrame
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
+
+
 
 
 
@@ -111,10 +112,8 @@ class CardCollectionFrame(CardManagerFrame):
 
         if hasattr(self, "filters"):
             del self.filters  # Libera la memoria occupata dai filtri precedenti
-
         # Ricarica le carte senza filtri
-        #self.load_cards()
-        load_cards(self.card_list, self.deck_content, self.mode)
+            self.load_cards()
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
