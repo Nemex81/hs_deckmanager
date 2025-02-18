@@ -43,24 +43,20 @@ Base = declarative_base()                                           # Base per i
 @contextmanager
 def db_session():
     """ Gestisce la sessione del database e il commit/rollback automatico. """
-
+    session = Session()  # Crea una nuova sessione ogni volta
     try:
         yield session
         session.commit()
-
     except SQLAlchemyError as e:
         session.rollback()
         log.error(f"Errore del database: {str(e)}")
         raise
-
     except Exception as e:
         session.rollback()
         log.error(f"Errore imprevisto: {str(e)}")
         raise
-
     finally:
         session.close()
-
 
 
 class Card(Base):

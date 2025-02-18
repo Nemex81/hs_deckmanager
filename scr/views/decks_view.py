@@ -37,7 +37,7 @@ class DecksManagerFrame(BasicView):
         super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
         self.db_manager = db_manager
-        self.controller = AppController(self.db_manager, self)
+        #self.controller = AppController(self.db_manager, self)
         #self.init_ui_elements()
 
 
@@ -197,7 +197,7 @@ class DecksManagerFrame(BasicView):
                 return
 
             #metadata = parse_deck_metadata(deck_string)
-            metadata = DbManager.parse_deck_metadata(deck_string)
+            metadata = self.db_manager.parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
 
             # Mostra una finestra di conferma con i dati estratti
@@ -301,7 +301,6 @@ class DecksManagerFrame(BasicView):
 
     def on_update_deck(self, event):
         """Aggiorna il mazzo selezionato con il contenuto degli appunti."""
-
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(
@@ -312,41 +311,45 @@ class DecksManagerFrame(BasicView):
                 try:
                     deck_string = pyperclip.paste()
                     if self.db_manager.is_valid_deck(deck_string):
-                        deck = session.query(Deck).filter_by(name=deck_name).first()
-                        if deck:
-                            session.query(DeckCard).filter_by(deck_id=deck.id).delete()
-                            session.commit()
-
-                            self.db_manager.sync_cards_with_database(deck_string)
-
-                            cards = self.db_manager.parse_cards_from_deck(deck_string)
-                            for card_data in cards:
-                                card = session.query(Card).filter_by(name=card_data["name"]).first()
-                                if not card:
-                                    card = Card(
-                                        name=card_data["name"],
-                                        class_name="Unknown",
-                                        mana_cost=card_data["mana_cost"],
-                                        card_type="Unknown",
-                                        spell_type="Unknown",
-                                        card_subtype="Unknown",
-                                        rarity="Unknown",
-                                        expansion="Unknown"
-                                    )
-                                    session.add(card)
-                                    session.commit()
-
-                                deck_card = DeckCard(deck_id=deck.id, card_id=card.id, quantity=card_data["quantity"])
-                                session.add(deck_card)
+                        with db_session() as session:  # Usa il contesto db_session
+                            deck = session.query(Deck).filter_by(name=deck_name).first()
+                            if deck:
+                                # Elimina le carte associate al mazzo
+                                session.query(DeckCard).filter_by(deck_id=deck.id).delete()
                                 session.commit()
 
-                            self.update_deck_list()
-                            self.update_status(f"Mazzo '{deck_name}' aggiornato con successo.")
-                            wx.MessageBox(f"Mazzo '{deck_name}' aggiornato con successo.", "Successo")
-                            self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
+                                # Sincronizza le carte con il database
+                                self.db_manager.sync_cards_with_database(deck_string)
 
-                        else:
-                            wx.MessageBox("Errore: Mazzo non trovato nel database.", "Errore")
+                                # Aggiungi le nuove carte al mazzo
+                                cards = self.db_manager.parse_cards_from_deck(deck_string)
+                                for card_data in cards:
+                                    card = session.query(Card).filter_by(name=card_data["name"]).first()
+                                    if not card:
+                                        card = Card(
+                                            name=card_data["name"],
+                                            class_name="Unknown",
+                                            mana_cost=card_data["mana_cost"],
+                                            card_type="Unknown",
+                                            spell_type="Unknown",
+                                            card_subtype="Unknown",
+                                            rarity="Unknown",
+                                            expansion="Unknown"
+                                        )
+                                        session.add(card)
+                                        session.commit()
+
+                                    deck_card = DeckCard(deck_id=deck.id, card_id=card.id, quantity=card_data["quantity"])
+                                    session.add(deck_card)
+                                    session.commit()
+
+                                self.update_deck_list()
+                                self.update_status(f"Mazzo '{deck_name}' aggiornato con successo.")
+                                wx.MessageBox(f"Mazzo '{deck_name}' aggiornato con successo.", "Successo")
+                                self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
+
+                            else:
+                                wx.MessageBox("Errore: Mazzo non trovato nel database.", "Errore")
 
                     else:
                         wx.MessageBox("Il mazzo negli appunti non è valido.", "Errore")
@@ -364,7 +367,7 @@ class DecksManagerFrame(BasicView):
 
         deck_name = self.get_selected_deck()
         if deck_name:
-            stats = self.controller.get_deck_statistics(deck_name)
+            stats = self.db_manager.get_deck_statistics(deck_name)
             if stats:
                 DeckStatsDialog(self, stats=stats).ShowModal()
 
@@ -390,8 +393,8 @@ class DecksManagerFrame(BasicView):
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 try:
-                    #success = self.db_manager.delete_deck(deck_name)
-                    success = self.controller.delete_deck(deck_name)
+                    success = self.db_manager.delete_deck(deck_name)
+                    #success = self.controller.delete_deck(deck_name)
                     if success:
                         self.update_deck_list()
                         self.update_status(f"Mazzo '{deck_name}' eliminato con successo.")

@@ -115,7 +115,7 @@ class HearthstoneAppFrame(BasicView):
     def on_decks_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Gestione Mazzi'. """
         #decks_frame = DecksManagerDialog(self, self.db_manager)
-        decks_frame = DecksManagerFrame(self, self.db_manager)     # Crea un'istanza della finestra di gestione dei mazzi
+        decks_frame = DecksManagerFrame(parent=self, db_manager=self.db_manager)     # Crea un'istanza della finestra di gestione dei mazzi
         self.Hide()                                                 # nascondo la finestra principale
         decks_frame.Show()                                          # Mostro la finestra
 

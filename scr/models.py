@@ -40,39 +40,35 @@ from utyls import logger as log
 
 
 def load_cards_from_db(filters=None):
-        """ Carica le carte dal database e le restituisce. """
-
+    """ Carica le carte dal database e le restituisce. """
+    with db_session() as session:
         query = session.query(Card)
         if filters:
             # Applica i filtri in modo combinato
             if filters.get("name"):
                 query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-
             if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-
-            if filters.get("card_type", None) not in ["Tutti", "tutti", "", " ", None]:
+            
+            if filters.get("card_type") and filters["card_type"] != "Tutti":
                 query = query.filter(Card.card_type == filters["card_type"])
 
-            if filters.get("spell_type") not in ["qualsiasi", "Qualsiasi", "", " ", None]:
+            if filters.get("spell_type") and filters["spell_type"] != "Qualsiasi":
                 query = query.filter(Card.spell_type == filters["spell_type"])
 
-            if filters.get("card_subtype") not in ["Tutti", "tutti", "", " ", None]:
+            if filters.get("card_subtype") and filters["card_subtype"] != "Tutti":
                 query = query.filter(Card.card_subtype == filters["card_subtype"])
 
-            if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
+            if filters.get("attack") and filters["attack"] != "Qualsiasi":
                 query = query.filter(Card.attack == int(filters["attack"]))
 
-            if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
+            if filters.get("health") and filters["health"] != "Qualsiasi":
                 query = query.filter(Card.health == int(filters["health"]))
 
-            #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", " ", None]:
-                #query = query.filter(Card.durability == filters["durability"])
-
-            if filters.get("rarity") not in ["Tutti", "tutti", "", " ", None]:
+            if filters.get("rarity") and filters["rarity"] != "Tutti":
                 query = query.filter(Card.rarity == filters["rarity"])
 
-            if filters.get("expansion") not in ["Tutti", "tutti", "", " ", None]:
+            if filters.get("expansion") and filters["expansion"] != "Tutti":
                 query = query.filter(Card.expansion == filters["expansion"])
 
         log.info(f"Carte trovate: {query.count()}")
@@ -83,62 +79,58 @@ def load_cards_from_db(filters=None):
 
 def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
     """ Carica le carte di un mazzo dal database e le aggiunge alla lista. """
-
     if not deck_content:
         raise ValueError("Deck content non è stato inizializzato correttamente.")
     
-    # Carica le carte del mazzo
-    deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
-    for deck_card in deck_cards:
-        card = session.query(Card).filter_by(id=deck_card.card_id).first()
-        if card:
-            # Applica i filtri (se presenti)
-            if filters:
-                if filters.get("name") and filters["name"].lower() not in card.name.lower():
-                    continue
+    with db_session() as session:  # Utilizza il contesto db_session
+        # Carica le carte del mazzo
+        deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
+        for deck_card in deck_cards:
+            card = session.query(Card).filter_by(id=deck_card.card_id).first()
+            if card:
+                # Applica i filtri (se presenti)
+                if filters:
+                    if filters.get("name") and filters["name"].lower() not in card.name.lower():
+                        continue
 
-                if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
-                    continue
+                    if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
+                        continue
 
-                if filters.get("card_type") not in ["Tutti", "tutti", "", " ", None]:
-                    continue
+                    if filters.get("card_type") and filters["card_type"] != "Tutti" and card.card_type != filters["card_type"]:
+                        continue
 
-                if filters.get("spell_type") not in ["Qualsiasi", "qualsiasi", "", None] and card.spell_type != filters["spell_type"]:
-                    continue
+                    if filters.get("spell_type") and filters["spell_type"] != "Qualsiasi" and card.spell_type != filters["spell_type"]:
+                        continue
 
-                if filters.get("card_subtype") not in ["Tutti", "tutti", "", None] and card.card_subtype != filters["card_subtype"]:
-                    continue
+                    if filters.get("card_subtype") and filters["card_subtype"] != "Tutti" and card.card_subtype != filters["card_subtype"]:
+                        continue
 
-                if filters.get("attack") not in ["Qualsiasi", "qualsiasi", "", None] and card.attack != int(filters["attack"]):
-                    continue
+                    if filters.get("attack") and filters["attack"] != "Qualsiasi" and card.attack != int(filters["attack"]):
+                        continue
 
-                if filters.get("health") not in ["Qualsiasi", "qualsiasi", "", None] and card.health != int(filters["health"]):
-                    continue
+                    if filters.get("health") and filters["health"] != "Qualsiasi" and card.health != int(filters["health"]):
+                        continue
 
-                #if filters.get("durability") not in ["Qualsiasi", "qualsiasi", "", None] and card.durability != int(filters["durability"]):
-                    #continue
+                    if filters.get("rarity") and filters["rarity"] != "Tutti" and card.rarity != filters["rarity"]:
+                        continue
 
-                if filters.get("rarity") not in ["Tutti", "tutti", "", None] and card.rarity != filters["rarity"]:
-                    continue
+                    if filters.get("expansion") and filters["expansion"] != "Tutti" and card.expansion != filters["expansion"]:
+                        continue
 
-                if filters.get("expansion") not in ["Tutti", "tutti", "", None] and card.expansion != filters["expansion"]:
-                    continue
-
-            # aggiungi la carta alla lista
-            card_list.Append([
-                #card.id,
-                card.name,
-                str(card.mana_cost) if card.mana_cost else "-",
-                str(deck_card.quantity) if deck_card.quantity else "-",
-                card.card_type if card.card_type else "-",
-                card.spell_type if card.spell_type else "-",
-                card.card_subtype if card.card_subtype else "-", 
-                str(card.attack) if card.attack is not None else "-",
-                str(card.health) if card.health is not None else "-",
-                str(card.durability) if card.durability is not None else "-",
-                card.rarity if card.rarity else "-",
-                card.expansion if card.expansion else "-"
-            ])
+                # aggiungi la carta alla lista
+                card_list.Append([
+                    card.name,
+                    str(card.mana_cost) if card.mana_cost else "-",
+                    str(deck_card.quantity) if deck_card.quantity else "-",
+                    card.card_type if card.card_type else "-",
+                    card.spell_type if card.spell_type else "-",
+                    card.card_subtype if card.card_subtype else "-", 
+                    str(card.attack) if card.attack is not None else "-",
+                    str(card.health) if card.health is not None else "-",
+                    str(card.durability) if card.durability is not None else "-",
+                    card.rarity if card.rarity else "-",
+                    card.expansion if card.expansion else "-"
+                ])
 
 
 def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
