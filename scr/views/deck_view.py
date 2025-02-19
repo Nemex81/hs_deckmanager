@@ -20,9 +20,8 @@
 # lib
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
-from ..models import DbManager, AppController
 from ..db import session, Card, DeckCard, Deck
-from ..models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
+from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView, CardEditDialog
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp

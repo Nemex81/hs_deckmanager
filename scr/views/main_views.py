@@ -17,7 +17,7 @@
 # lib
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
-from ..models import DbManager, AppController
+#from ..models import DbManager, AppController
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView
@@ -41,9 +41,9 @@ class HearthstoneAppFrame(BasicView):
         font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
         self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
         self.Maximize()                                                                         # Massimizza la finestra principale
-        #self.init_ui_elements()                                                                 # Inizializza gli elementi dell'interfaccia utente
 
-    def set_db_manager(self, db_manager):
+
+    def set_db_manager(self, db_manager=None):
         """ Imposta il controller del database. """
         self.db_manager = db_manager
 

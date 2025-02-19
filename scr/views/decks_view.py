@@ -16,9 +16,8 @@
 # lib
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
-from ..models import DbManager, AppController
 from ..db import session, db_session, Card, DeckCard, Deck
-from ..models import DbManager, AppController, load_cards_from_db, load_deck_from_db, load_cards
+from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView, DeckStatsDialog
 from .collection_view import CardCollectionFrame
 from .deck_view import DeckViewFrame
@@ -381,9 +380,9 @@ class DecksManagerFrame(BasicView):
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
         #collection_dialog = CardCollectionDialog(self, self.db_manager)
-        collection_dialog = CardCollectionFrame(self, self.controller)
-        self.Hide()                     # Nasconde la finestra di gestione dei mazzi
-        collection_dialog.Show()  # Mostra la finestra come modale
+        collection_dialog = CardCollectionFrame(self, self.db_manager)
+        self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
+        collection_dialog.Show()                                            # Mostra la finestra come modale
 
 
     def on_delete_deck(self, event):

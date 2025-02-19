@@ -36,9 +36,12 @@ from utyls import logger as log
 class CardCollectionFrame(CardManagerFrame):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent, deck_manager):
-        super().__init__(parent, deck_manager, mode="collection")
+    def __init__(self, parent, db_manager):
+        super().__init__(parent, db_manager, mode="collection")
         self.parent = parent
+        self.db_manager = db_manager
+        self.SetTitle("Collezione")
+
         self.init_search_and_filters()
 
     def init_search_and_filters(self):

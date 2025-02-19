@@ -40,51 +40,68 @@ from utyls import logger as log
 
 
 def load_cards_from_db(filters=None):
-    """ Carica le carte dal database e le restituisce. """
+    """Carica le carte dal database e le restituisce come dizionari."""
+
     with db_session() as session:
         query = session.query(Card)
         if filters:
-            # Applica i filtri in modo combinato
+            # Applica i filtri
             if filters.get("name"):
                 query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-            if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", ""]:
+            if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-            
             if filters.get("card_type") and filters["card_type"] != "Tutti":
                 query = query.filter(Card.card_type == filters["card_type"])
-
             if filters.get("spell_type") and filters["spell_type"] != "Qualsiasi":
                 query = query.filter(Card.spell_type == filters["spell_type"])
-
             if filters.get("card_subtype") and filters["card_subtype"] != "Tutti":
                 query = query.filter(Card.card_subtype == filters["card_subtype"])
-
             if filters.get("attack") and filters["attack"] != "Qualsiasi":
                 query = query.filter(Card.attack == int(filters["attack"]))
-
             if filters.get("health") and filters["health"] != "Qualsiasi":
                 query = query.filter(Card.health == int(filters["health"]))
-
             if filters.get("rarity") and filters["rarity"] != "Tutti":
                 query = query.filter(Card.rarity == filters["rarity"])
-
             if filters.get("expansion") and filters["expansion"] != "Tutti":
                 query = query.filter(Card.expansion == filters["expansion"])
 
         log.info(f"Carte trovate: {query.count()}")
         cards = query.order_by(Card.mana_cost, Card.name).all()
-        if cards:
-            return cards
+
+        # Serializza le carte in dizionari
+        card_data = [
+            {
+                "id": card.id,
+                "name": card.name,
+                "class_name": card.class_name,
+                "mana_cost": card.mana_cost,
+                "card_type": card.card_type,
+                "spell_type": card.spell_type,
+                "card_subtype": card.card_subtype,
+                "attack": card.attack,
+                "health": card.health,
+                "durability": card.durability,
+                "rarity": card.rarity,
+                "expansion": card.expansion
+            }
+            for card in cards
+        ]
+        return card_data
 
 
-def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
-    """ Carica le carte di un mazzo dal database e le aggiunge alla lista. """
-    if not deck_content:
-        raise ValueError("Deck content non è stato inizializzato correttamente.")
-    
-    with db_session() as session:  # Utilizza il contesto db_session
-        # Carica le carte del mazzo
-        deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
+def load_deck_from_db(deck_name=None, filters=None):
+    """Carica le carte di un mazzo dal database e le restituisce come dizionari."""
+    with db_session() as session:
+        deck = session.query(Deck).filter_by(name=deck_name).first()
+        if not deck:
+            log.warning(f"Mazzo '{deck_name}' non trovato.")
+            return []
+
+        # Recupera le relazioni tra mazzo e carte
+        deck_cards = session.query(DeckCard).filter_by(deck_id=deck.id).all()
+
+        # Serializza le carte in dizionari
+        card_data = []
         for deck_card in deck_cards:
             card = session.query(Card).filter_by(id=deck_card.card_id).first()
             if card:
@@ -92,72 +109,70 @@ def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list
                 if filters:
                     if filters.get("name") and filters["name"].lower() not in card.name.lower():
                         continue
-
                     if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
                         continue
-
                     if filters.get("card_type") and filters["card_type"] != "Tutti" and card.card_type != filters["card_type"]:
                         continue
 
-                    if filters.get("spell_type") and filters["spell_type"] != "Qualsiasi" and card.spell_type != filters["spell_type"]:
-                        continue
+                card_data.append({
+                    "id": card.id,
+                    "name": card.name,
+                    "class_name": card.class_name,
+                    "mana_cost": card.mana_cost,
+                    "card_type": card.card_type,
+                    "spell_type": card.spell_type,
+                    "card_subtype": card.card_subtype,
+                    "attack": card.attack,
+                    "health": card.health,
+                    "durability": card.durability,
+                    "rarity": card.rarity,
+                    "expansion": card.expansion,
+                    "quantity": deck_card.quantity
+                })
 
-                    if filters.get("card_subtype") and filters["card_subtype"] != "Tutti" and card.card_subtype != filters["card_subtype"]:
-                        continue
-
-                    if filters.get("attack") and filters["attack"] != "Qualsiasi" and card.attack != int(filters["attack"]):
-                        continue
-
-                    if filters.get("health") and filters["health"] != "Qualsiasi" and card.health != int(filters["health"]):
-                        continue
-
-                    if filters.get("rarity") and filters["rarity"] != "Tutti" and card.rarity != filters["rarity"]:
-                        continue
-
-                    if filters.get("expansion") and filters["expansion"] != "Tutti" and card.expansion != filters["expansion"]:
-                        continue
-
-                # aggiungi la carta alla lista
-                card_list.Append([
-                    card.name,
-                    str(card.mana_cost) if card.mana_cost else "-",
-                    str(deck_card.quantity) if deck_card.quantity else "-",
-                    card.card_type if card.card_type else "-",
-                    card.spell_type if card.spell_type else "-",
-                    card.card_subtype if card.card_subtype else "-", 
-                    str(card.attack) if card.attack is not None else "-",
-                    str(card.health) if card.health is not None else "-",
-                    str(card.durability) if card.durability is not None else "-",
-                    card.rarity if card.rarity else "-",
-                    card.expansion if card.expansion else "-"
-                ])
+        log.info(f"Carte trovate nel mazzo '{deck_name}': {len(card_data)}")
+        return card_data
 
 
 def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
     """Carica le carte nella lista."""
-
     card_list.DeleteAllItems()
+
     if mode == "collection":
+        # Carica tutte le carte dalla collezione
         cards = load_cards_from_db(filters)
         for card in cards:
             card_list.Append([
-                card.name, 
-                str(card.mana_cost) if card.mana_cost else "-",
-                card.class_name if card.class_name else "-",
-                card.card_type if card.card_type else "-",
-                card.spell_type if card.spell_type else "-",
-                card.card_subtype if card.card_subtype else "-",
-                str(card.attack) if card.attack is not None else "-",
-                str(card.health) if card.health is not None else "-",
-                str(card.durability) if card.durability is not None else "-",
-                card.rarity if card.rarity else "-",
-                card.expansion if card.expansion else "-"
-                ])
+                card["name"],
+                str(card["mana_cost"]) if card["mana_cost"] else "-",
+                card["class_name"] if card["class_name"] else "-",
+                card["card_type"] if card["card_type"] else "-",
+                card["spell_type"] if card["spell_type"] else "-",
+                card["card_subtype"] if card["card_subtype"] else "-",
+                str(card["attack"]) if card["attack"] is not None else "-",
+                str(card["health"]) if card["health"] is not None else "-",
+                str(card["durability"]) if card["durability"] is not None else "-",
+                card["rarity"] if card["rarity"] else "-",
+                card["expansion"] if card["expansion"] else "-"
+            ])
 
     elif mode == "deck":
-        # Carica le carte del mazzo
-        load_deck_from_db(deck_content=deck_content, filters=filters, card_list=card_list)
-
+        # Carica le carte del mazzo specificato
+        cards = load_deck_from_db(deck_name=deck_content["name"], filters=filters)
+        for card in cards:
+            card_list.Append([
+                card["name"],
+                str(card["mana_cost"]) if card["mana_cost"] else "-",
+                str(card["quantity"]) if card["quantity"] else "-",
+                card["card_type"] if card["card_type"] else "-",
+                card["spell_type"] if card["spell_type"] else "-",
+                card["card_subtype"] if card["card_subtype"] else "-",
+                str(card["attack"]) if card["attack"] is not None else "-",
+                str(card["health"]) if card["health"] is not None else "-",
+                str(card["durability"]) if card["durability"] is not None else "-",
+                card["rarity"] if card["rarity"] else "-",
+                card["expansion"] if card["expansion"] else "-"
+            ])
 
 
 class DbManager:
@@ -456,167 +471,6 @@ class DbManager:
                     stats[key] = round(value, 2)
 
             return stats
-
-
-
-class AppController:
-    """ Controller per la gestione delle operazioni dell'applicazione. """
-
-    def __init__(self, db_manager, app):
-        self.db_manager = db_manager
-        self.app = app
-
-    # Metodi esistenti
-    def add_deck(self, deck_name):
-        """ Aggiunge un mazzo al database. """
-        try:
-            self.db_manager.add_deck_from_clipboard(deck_name)
-            self.app.update_deck_list()
-            self.app.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
-            return True
-        except ValueError as e:
-            raise
-        except Exception as e:
-            log.error(f"Errore durante l'aggiunta del mazzo: {e}")
-            raise
-
-    def delete_deck(self, deck_name):
-        """ Elimina un mazzo dal database. """
-        try:
-            if self.db_manager.delete_deck(deck_name):
-                self.app.update_deck_list()
-                self.app.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
-                log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-                return True
-        except SQLAlchemyError as e:
-            log.error("Errore del database. Verificare le procedure.")
-        except Exception as e:
-            log.error(f"Si è verificato un errore: {e}", "Errore")
-
-    def get_deck_statistics(self, deck_name):
-        """Restituisce le statistiche del mazzo."""
-        return self.db_manager.get_deck_statistics(deck_name)
-
-    def copy_deck_to_clipboard(self, deck_name):
-        """Copia un mazzo dal database negli appunti."""
-        if self.db_manager.copy_deck_to_clipboard(deck_name):
-            #self.app.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
-            return True
-
-    def get_deck(self, deck_name):
-        """Restituisce il contenuto di un mazzo dal database."""
-        return self.db_manager.get_deck(deck_name)
-
-    def get_all_decks(self):
-        """Restituisce un elenco di tutti i mazzi presenti nel database."""
-        return session.query(Deck).all()
-
-    def get_all_cards(self):
-        """Restituisce un elenco di tutte le carte presenti nel database."""
-        return session.query(Card).all()
-
-    def get_card(self, card_name):
-        """Restituisce le informazioni di una carta dal database."""
-        return session.query(Card).filter_by(name=card_name).first()
-
-    def get_card_by_id(self, card_id):
-        """Restituisce le informazioni di una carta dal database tramite ID."""
-        return session.query(Card).filter_by(id=card_id).first()
-
-    def get_card_by_name(self, card_name):
-        """Restituisce le informazioni di una carta dal database tramite nome."""
-        return session.query(Card).filter_by(name=card_name).first()
-
-    def is_card_in_database(self, card_name):
-        """Verifica se una carta è presente nel database."""
-        return self.db_manager.is_card_in_database(card_name)
-
-    def add_card_to_database(self, card):
-        """Aggiunge una nuova carta al database."""
-        self.db_manager.add_card_to_database(card)
-        self.app.update_card_list()
-        self.app.update_status(f"Carta '{card['name']}' aggiunta al database.")
-        return True
-
-    def update_card_list(self):
-        """Aggiorna l'elenco delle carte nella vista."""
-        self.app.update_card_list()
-
-    def update_deck_list(self):
-        """Aggiorna l'elenco dei mazzi nella vista."""
-        self.app.update_deck_list()
-
-    def update_status(self, message):
-        """Aggiorna lo stato dell'applicazione."""
-        self.app.update_status(message)
-
-    # Nuovi metodi aggiunti per coprire tutte le funzionalità di DbManager
-    def sync_cards_with_database(self, deck_string):
-        """Sincronizza le carte del mazzo con il database."""
-        try:
-            self.db_manager.sync_cards_with_database(deck_string)
-            self.app.update_status("Carte sincronizzate con il database.")
-            return True
-        except Exception as e:
-            log.error(f"Errore durante la sincronizzazione delle carte: {e}")
-            raise
-
-    def parse_deck_metadata(self, deck_string):
-        """Estrae le informazioni di metadata da un mazzo."""
-        return self.db_manager.parse_deck_metadata(deck_string)
-
-    def is_valid_deck(self, deck_string):
-        """Verifica se una stringa rappresenta un mazzo valido."""
-        return self.db_manager.is_valid_deck(deck_string)
-
-    def parse_cards_from_deck(self, deck_string):
-        """Estrae le informazioni delle carte da un mazzo."""
-        return self.db_manager.parse_cards_from_deck(deck_string)
-
-    def update_deck(self, deck_name, new_data):
-        """Aggiorna le informazioni di un mazzo esistente."""
-        try:
-            deck = session.query(Deck).filter_by(name=deck_name).first()
-            if deck:
-                for key, value in new_data.items():
-                    setattr(deck, key, value)
-                session.commit()
-                self.app.update_deck_list()
-                self.app.update_status(f"Mazzo '{deck_name}' aggiornato con successo.")
-                return True
-            else:
-                log.warning(f"Mazzo '{deck_name}' non trovato.")
-                return False
-        except SQLAlchemyError as e:
-            log.error(f"Errore del database durante l'aggiornamento del mazzo: {e}")
-            session.rollback()
-            raise
-        except Exception as e:
-            log.error(f"Errore imprevisto durante l'aggiornamento del mazzo: {e}")
-            raise
-
-    def update_card(self, card_name, new_data):
-        """Aggiorna le informazioni di una carta esistente."""
-        try:
-            card = session.query(Card).filter_by(name=card_name).first()
-            if card:
-                for key, value in new_data.items():
-                    setattr(card, key, value)
-                session.commit()
-                self.app.update_card_list()
-                self.app.update_status(f"Carta '{card_name}' aggiornata con successo.")
-                return True
-            else:
-                log.warning(f"Carta '{card_name}' non trovata.")
-                return False
-        except SQLAlchemyError as e:
-            log.error(f"Errore del database durante l'aggiornamento della carta: {e}")
-            session.rollback()
-            raise
-        except Exception as e:
-            log.error(f"Errore imprevisto durante l'aggiornamento della carta: {e}")
-            raise
-
 
 
 #@@@# Fine del modulo
