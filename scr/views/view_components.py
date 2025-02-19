@@ -40,7 +40,7 @@ class CardManagerFrame(wx.Frame):
         title = "Collezione Carte" if mode == "collection" else f"Mazzo: {deck_name}"
         super().__init__(parent, title=title, size=(1200, 800))
         self.parent = parent
-        self.SetBackgroundColour('green')
+        self.SetBackgroundColour('yellow')
         self.deck_manager = deck_manager
         self.mode = mode  # "collection" o "deck"
         self.deck_name = deck_name
@@ -142,9 +142,17 @@ class CardManagerFrame(wx.Frame):
             item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
             items.append(item)
 
+        # Funzione lambda per gestire la conversione sicura a intero
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                # Assegna un valore predefinito per valori non numerici
+                return float('inf') if value == "-" else value
+
         # Ordina i dati in base alla colonna selezionata
         if col == 1:  # Colonna "Mana" (numerica)
-            items.sort(key=lambda x: int(x[col]))
+            items.sort(key=lambda x: safe_int(x[col]))
 
         else:  # Altre colonne (testuali)
             items.sort(key=lambda x: x[col])
@@ -259,12 +267,6 @@ class CardManagerFrame(wx.Frame):
             # Altrimenti, applica la ricerca
             self.load_cards(filters={"name": search_text})
 
-
-    def on_close(self):
-        """Chiude la finestra di dialogo."""
-        self.parent.show()
-        self.Close()
-        self.Destroy()
 
 
 

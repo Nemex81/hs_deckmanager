@@ -23,7 +23,8 @@ import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
-from .view_components import BasicView, BasicDialog, FilterDialog, CardEditDialog, CardManagerFrame
+from .proto_views import BasicView, BasicDialog, CardsListView
+from .view_components import FilterDialog,  CardManagerFrame, CardEditDialog
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -34,37 +35,40 @@ from utyls import logger as log
 
 
 class CardCollectionFrame(CardManagerFrame):
+#class CardCollectionFrame(CardsListView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, db_manager):
         super().__init__(parent, db_manager, mode="collection")
+        #super().__init__(parent) 
         self.parent = parent
         self.db_manager = db_manager
         self.SetTitle("Collezione")
+        self.init_ui_elements()
 
-        self.init_search_and_filters()
 
-    def init_search_and_filters(self):
+
+    def init_ui_elements(self):
         """Aggiunge la barra di ricerca e i filtri."""
 
-        panel = self.GetChildren()[0]  # Ottieni il pannello principale
-        sizer = panel.GetSizer()
+        self.panel = self.GetChildren()[0]  # Ottieni il pannello principale
+        self.sizer = self.panel.GetSizer()
         self.Center()
         self.Maximize()
 
         # Barra di ricerca
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.search_ctrl = wx.SearchCtrl(panel)
+        self.search_ctrl = wx.SearchCtrl(self.panel)
         self.search_ctrl.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search)
         search_sizer.Add(self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsante filtri
-        self.btn_filters = wx.Button(panel, label="Filtri Avanzati")
+        self.btn_filters = wx.Button(self.panel, label="Filtri Avanzati")
         self.btn_filters.Bind(wx.EVT_BUTTON, self.on_show_filters)
         search_sizer.Add(self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
 
         # Aggiungi la barra di ricerca e i filtri al layout
-        sizer.Insert(0, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.sizer.Insert(0, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # eventi
         self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -192,7 +196,6 @@ class CardCollectionFrame(CardManagerFrame):
     def on_close(self, event):
         """Chiude la finestra di dialogo."""
         self.parent.Show()
-        self.Close()
         self.Destroy()
 
 

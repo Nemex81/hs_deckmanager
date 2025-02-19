@@ -15,13 +15,13 @@
 # Lib
 import wx
 from abc import ABC, abstractmethod
-from scr.models import load_cards_from_db
+from sqlalchemy.exc import SQLAlchemyError
+from ..db import session, Card, DeckCard, Deck
+from ..models import load_cards_from_db
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
 from utyls import helper as hp
-from scr.db import session, Card, Deck
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
 from utyls import logger as log
-
 
 
 
@@ -82,10 +82,10 @@ class BasicView(wx.Frame):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
+    @abstractmethod
     def on_close(self, event):
         """Chiude la finestra."""
-        self.parent.show()
-        self.Close()
+        pass
 
 
 
@@ -216,7 +216,7 @@ class CardsListView(ListView):
         self.list_ctrl.AppendColumn("Sottotipo", width=120)
         self.list_ctrl.AppendColumn("Attacco", width=50)
         self.list_ctrl.AppendColumn("Vita", width=50)
-        self.list_ctrl.AppendColumn("Durabilità", width=50)
+        self.list_ctrl.AppendColumn("Integrità", width=50)
         self.list_ctrl.AppendColumn("Rarità", width=120)
         self.list_ctrl.AppendColumn("Espansione", width=500)
 
@@ -238,6 +238,7 @@ class CardsListView(ListView):
                 card.rarity if card.rarity else "-",
                 card.expansion if card.expansion else "-"
             ])
+
 
 
 class DecksListView(ListView):

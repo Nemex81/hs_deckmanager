@@ -21,6 +21,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import BasicView
+from .proto_views import CardsListView
 from .collection_view import CardCollectionFrame
 from .decks_view import DecksManagerFrame
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
@@ -108,6 +109,7 @@ class HearthstoneAppFrame(BasicView):
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
         collection_frame = CardCollectionFrame(self, self.db_manager)
+        #collection_frame = CardsListView(parent=self)     # Crea un'istanza della finestra di gestione della collezione
         self.Hide()                     # Nasconde la finestra principale
         collection_frame.Show()         # Mostra la finestra di gestione della collezione 
         
