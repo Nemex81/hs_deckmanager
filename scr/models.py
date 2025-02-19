@@ -39,111 +39,134 @@ from utyls import logger as log
 
 
 
+def serialize_card(card):
+    """Serializza un oggetto Card in un dizionario."""
+    return {
+        "id": card.id,
+        "name": card.name,
+        "class_name": card.class_name,
+        "mana_cost": card.mana_cost,
+        "card_type": card.card_type,
+        "spell_type": card.spell_type,
+        "card_subtype": card.card_subtype,
+        "attack": card.attack,
+        "health": card.health,
+        "durability": card.durability,
+        "rarity": card.rarity,
+        "expansion": card.expansion
+    }
+
+
 def load_cards_from_db(filters=None):
     """Carica le carte dal database e le restituisce come dizionari."""
-
     with db_session() as session:
         query = session.query(Card)
         if filters:
-            # Applica i filtri
+            # Applica i filtri in modo combinato
             if filters.get("name"):
                 query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-            if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi":
+            if filters.get("mana_cost") and filters["mana_cost"] not in ["Qualsiasi", "", None]:
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
+            
             if filters.get("card_type") and filters["card_type"] != "Tutti":
                 query = query.filter(Card.card_type == filters["card_type"])
+
             if filters.get("spell_type") and filters["spell_type"] != "Qualsiasi":
                 query = query.filter(Card.spell_type == filters["spell_type"])
+
             if filters.get("card_subtype") and filters["card_subtype"] != "Tutti":
                 query = query.filter(Card.card_subtype == filters["card_subtype"])
+
             if filters.get("attack") and filters["attack"] != "Qualsiasi":
                 query = query.filter(Card.attack == int(filters["attack"]))
+
             if filters.get("health") and filters["health"] != "Qualsiasi":
                 query = query.filter(Card.health == int(filters["health"]))
+
+            if filters.get("durability") and filters["durability"] != "Qualsiasi":
+                query = query.filter(Card.durability == int(filters["durability"]))
+
             if filters.get("rarity") and filters["rarity"] != "Tutti":
                 query = query.filter(Card.rarity == filters["rarity"])
+
             if filters.get("expansion") and filters["expansion"] != "Tutti":
                 query = query.filter(Card.expansion == filters["expansion"])
 
         log.info(f"Carte trovate: {query.count()}")
         cards = query.order_by(Card.mana_cost, Card.name).all()
-
-        # Serializza le carte in dizionari
-        card_data = [
-            {
-                "id": card.id,
-                "name": card.name,
-                "class_name": card.class_name,
-                "mana_cost": card.mana_cost,
-                "card_type": card.card_type,
-                "spell_type": card.spell_type,
-                "card_subtype": card.card_subtype,
-                "attack": card.attack,
-                "health": card.health,
-                "durability": card.durability,
-                "rarity": card.rarity,
-                "expansion": card.expansion
-            }
-            for card in cards
-        ]
-        return card_data
+        return [serialize_card(card) for card in cards]  # Restituisci una lista di dizionari
 
 
-def load_deck_from_db(deck_name=None, filters=None):
-    """Carica le carte di un mazzo dal database e le restituisce come dizionari."""
+
+def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
+    """Carica le carte di un mazzo dal database e le aggiunge alla lista."""
+    if not deck_content:
+        raise ValueError("Deck content non è stato inizializzato correttamente.")
+    
     with db_session() as session:
-        deck = session.query(Deck).filter_by(name=deck_name).first()
-        if not deck:
-            log.warning(f"Mazzo '{deck_name}' non trovato.")
-            return []
-
-        # Recupera le relazioni tra mazzo e carte
-        deck_cards = session.query(DeckCard).filter_by(deck_id=deck.id).all()
-
-        # Serializza le carte in dizionari
-        card_data = []
+        # Carica le carte del mazzo
+        deck_cards = session.query(DeckCard).filter_by(deck_id=deck_content["id"]).all()
         for deck_card in deck_cards:
             card = session.query(Card).filter_by(id=deck_card.card_id).first()
             if card:
+                card_dict = serialize_card(card)  # Serializza la carta in un dizionario
                 # Applica i filtri (se presenti)
                 if filters:
-                    if filters.get("name") and filters["name"].lower() not in card.name.lower():
-                        continue
-                    if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card.mana_cost != int(filters["mana_cost"]):
-                        continue
-                    if filters.get("card_type") and filters["card_type"] != "Tutti" and card.card_type != filters["card_type"]:
+                    if filters.get("name") and filters["name"].lower() not in card_dict["name"].lower():
                         continue
 
-                card_data.append({
-                    "id": card.id,
-                    "name": card.name,
-                    "class_name": card.class_name,
-                    "mana_cost": card.mana_cost,
-                    "card_type": card.card_type,
-                    "spell_type": card.spell_type,
-                    "card_subtype": card.card_subtype,
-                    "attack": card.attack,
-                    "health": card.health,
-                    "durability": card.durability,
-                    "rarity": card.rarity,
-                    "expansion": card.expansion,
-                    "quantity": deck_card.quantity
-                })
+                    if filters.get("mana_cost") and filters["mana_cost"] != "Qualsiasi" and card_dict["mana_cost"] != int(filters["mana_cost"]):
+                        continue
 
-        log.info(f"Carte trovate nel mazzo '{deck_name}': {len(card_data)}")
-        return card_data
+                    if filters.get("card_type") and filters["card_type"] != "Tutti" and card_dict["card_type"] != filters["card_type"]:
+                        continue
+
+                    if filters.get("spell_type") and filters["spell_type"] != "Qualsiasi" and card_dict["spell_type"] != filters["spell_type"]:
+                        continue
+
+                    if filters.get("card_subtype") and filters["card_subtype"] != "Tutti" and card_dict["card_subtype"] != filters["card_subtype"]:
+                        continue
+
+                    if filters.get("attack") and filters["attack"] != "Qualsiasi" and card_dict["attack"] != int(filters["attack"]):
+                        continue
+
+                    if filters.get("health") and filters["health"] != "Qualsiasi" and card_dict["health"] != int(filters["health"]):
+                        continue
+
+                    if filters.get("rarity") and filters["rarity"] != "Tutti" and card_dict["rarity"] != filters["rarity"]:
+                        continue
+
+                    if filters.get("expansion") and filters["expansion"] != "Tutti" and card_dict["expansion"] != filters["expansion"]:
+                        continue
+
+                # Aggiungi la carta alla lista
+                card_list.Append([
+                    card_dict["name"],
+                    str(card_dict["mana_cost"]) if card_dict["mana_cost"] else "-",
+                    str(deck_card.quantity) if deck_card.quantity else "-",
+                    card_dict["card_type"] if card_dict["card_type"] else "-",
+                    card_dict["spell_type"] if card_dict["spell_type"] else "-",
+                    card_dict["card_subtype"] if card_dict["card_subtype"] else "-", 
+                    str(card_dict["attack"]) if card_dict["attack"] is not None else "-",
+                    str(card_dict["health"]) if card_dict["health"] is not None else "-",
+                    str(card_dict["durability"]) if card_dict["durability"] is not None else "-",
+                    card_dict["rarity"] if card_dict["rarity"] else "-",
+                    card_dict["expansion"] if card_dict["expansion"] else "-"
+                ])
+
+        log.info(f"Caricate {len(deck_cards)} carte dal mazzo '{deck_name}'.")
+        return deck_cards
 
 
 def load_cards(card_list=None, deck_content=None, mode="collection", filters=None):
     """Carica le carte nella lista."""
-    card_list.DeleteAllItems()
 
+    card_list.DeleteAllItems()
     if mode == "collection":
-        # Carica tutte le carte dalla collezione
-        cards = load_cards_from_db(filters)
+        cards = load_cards_from_db(filters)  # Ora cards è una lista di dizionari
         for card in cards:
             card_list.Append([
-                card["name"],
+                card["name"], 
                 str(card["mana_cost"]) if card["mana_cost"] else "-",
                 card["class_name"] if card["class_name"] else "-",
                 card["card_type"] if card["card_type"] else "-",
@@ -157,22 +180,9 @@ def load_cards(card_list=None, deck_content=None, mode="collection", filters=Non
             ])
 
     elif mode == "deck":
-        # Carica le carte del mazzo specificato
-        cards = load_deck_from_db(deck_name=deck_content["name"], filters=filters)
-        for card in cards:
-            card_list.Append([
-                card["name"],
-                str(card["mana_cost"]) if card["mana_cost"] else "-",
-                str(card["quantity"]) if card["quantity"] else "-",
-                card["card_type"] if card["card_type"] else "-",
-                card["spell_type"] if card["spell_type"] else "-",
-                card["card_subtype"] if card["card_subtype"] else "-",
-                str(card["attack"]) if card["attack"] is not None else "-",
-                str(card["health"]) if card["health"] is not None else "-",
-                str(card["durability"]) if card["durability"] is not None else "-",
-                card["rarity"] if card["rarity"] else "-",
-                card["expansion"] if card["expansion"] else "-"
-            ])
+        # Carica le carte del mazzo
+        load_deck_from_db(deck_content=deck_content, filters=filters, card_list=card_list)
+
 
 
 class DbManager:
