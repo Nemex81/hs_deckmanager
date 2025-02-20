@@ -443,6 +443,14 @@ class DbManager:
             log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
             raise
 
+    def get_card_by_name(self, card_name):
+        """Restituisce una carta dal database in base al nome."""
+        with db_session():
+            card = session.query(Card).filter_by(name=card_name).first()
+            if card:
+                return serialize_card(card)
+            return None
+
     def get_deck_statistics(self, deck_name):
         """Calcola statistiche dettagliate per un mazzo."""
         with db_session():

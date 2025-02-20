@@ -42,8 +42,8 @@ class BasicDialog(wx.Dialog):
 
         self.panel = wx.Panel(self)                     # Crea un pannello
         self.sizer = wx.BoxSizer(wx.VERTICAL)           # Crea un sizer verticale
-        self.panel.SetSizer(self.sizer)                 # Imposta il sizer per il pannello
         self.Center()                                   # Centra la finestra
+        self.SetBackgroundColour('yellow')              # Imposta il colore di sfondo
         self.init_ui_elements()                         # Inizializza gli elementi dell'interfaccia utente
 
     @abstractmethod
@@ -82,10 +82,16 @@ class BasicView(wx.Frame):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
-    @abstractmethod
+    def Close(self):
+        """Chiude la finestra."""
+        if self.parent:
+            self.parent.Show()
+
+        self.Destroy()
+
     def on_close(self, event):
         """Chiude la finestra."""
-        pass
+        self.Close()
 
 
 
