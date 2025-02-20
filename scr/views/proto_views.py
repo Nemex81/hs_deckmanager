@@ -75,6 +75,13 @@ class BasicView(wx.Frame):
         self.panel = wx.Panel(self)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel.SetSizer(self.sizer)
+        # imposta i colori di spondo giallo per finestra e pannello
+        self.BackgroundColour = 'black'
+        self.panel.BackgroundColour = 'black'
+        # imposta il font per il titolo
+        font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        title = wx.StaticText(self.panel, label=self.Title)
+        title.SetFont(font)
         self.init_ui_elements()
 
     @abstractmethod
