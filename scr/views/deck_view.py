@@ -50,7 +50,7 @@ class DeckViewFrame(BasicView):
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Barra di ricerca
+        # aggiongo Barra di ricerca
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.search_ctrl = wx.SearchCtrl(panel)
         self.search_ctrl.SetDescriptiveText("Cerca per nome...")
@@ -66,6 +66,8 @@ class DeckViewFrame(BasicView):
             panel,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
         )
+
+        # Aggiungi le colonne alla lista
         self.card_list.AppendColumn("Nome", width=250)
         self.card_list.AppendColumn("Mana", width=50)
         self.card_list.AppendColumn("Quantità", width=80)
