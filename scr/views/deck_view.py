@@ -36,10 +36,9 @@ class DeckViewFrame(BasicView):
     """Finestra per gestire le carte di un mazzo."""
 
     def __init__(self, parent, deck_manager, deck_name):
-
         self.parent = parent
         self.deck_manager = deck_manager
-        self.mode = "deck"  # Modalità "deck" per gestire i mazzi
+        self.mode = "deck"                              # Modalità "deck" per gestire i mazzi
         self.deck_name = deck_name
         self.deck_content = self.deck_manager.get_deck(deck_name)  # Carica il mazzo
         
@@ -48,13 +47,10 @@ class DeckViewFrame(BasicView):
         
         # Chiamata al costruttore della classe base
         super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
-        
+        #self.Maximize()                                 # Massimizza la finestra
 
     def init_ui_elements(self):
         """Inizializza l'interfaccia utente."""
-        #panel = wx.Panel(self)
-        #sizer = wx.BoxSizer(wx.VERTICAL)
-        self.Maximize()
 
         # Lista delle carte
         self.card_list = wx.ListCtrl(

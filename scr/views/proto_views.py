@@ -65,9 +65,10 @@ class BasicView(wx.Frame):
     
     def __init__(self, parent, title, size=(500, 400)):
         super().__init__(parent=parent, title=title, size=size)
-        self.parent = parent
-        self.init_ui()
-        self.Centre()
+        self.parent = parent          # Finestra genitore
+        self.Maximize()               # Massimizza la finestra
+        self.Centre()                 # Centra la finestra
+        self.init_ui()                # Inizializza l'interfaccia utente
         self.Show()
     
     def init_ui(self):
