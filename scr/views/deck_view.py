@@ -1,5 +1,4 @@
 """
-
     deck_view.py
 
     Modulo per la finestra di dialogo della gestione del mazzo.
@@ -12,9 +11,8 @@
         scr/views/collection_view.py
 
     Note:
-        - La finestra di dialogo DeckViewFrame eredita dalla classe CardManagerFrame, che a sua volta eredita dalla classe BasicView.
+        - La finestra di dialogo DeckViewFrame eredita dalla classe BasicView.
         - Questo modulo utilizza la libreria wxPython per la creazione delle finestre di dialogo dell'interfaccia utente.
-
 """
 
 # lib
@@ -23,22 +21,20 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
 from .proto_views import BasicView
-#from .view_components import CardManagerFrame
 from .card_edit_dialog import CardEditDialog
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
-#import pdb
-
 
 
 class DeckViewFrame(BasicView):
     """Finestra per gestire le carte di un mazzo."""
 
     def __init__(self, parent, deck_manager, deck_name):
+        # Inizializzazione delle variabili PRIMA di chiamare super().__init__
         self.parent = parent
         self.deck_manager = deck_manager
-        self.mode = "deck"                              # Modalità "deck" per gestire i mazzi
+        self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.deck_name = deck_name
         self.deck_content = self.deck_manager.get_deck(deck_name)  # Carica il mazzo
         
@@ -47,14 +43,27 @@ class DeckViewFrame(BasicView):
         
         # Chiamata al costruttore della classe base
         super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
-        #self.Maximize()                                 # Massimizza la finestra
 
-    def init_ui_elements(self):
+
+    def init_ui(self):
         """Inizializza l'interfaccia utente."""
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Barra di ricerca
+        search_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.search_ctrl = wx.SearchCtrl(panel)
+        self.search_ctrl.SetDescriptiveText("Cerca per nome...")
+        self.search_ctrl.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search)
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
+        search_sizer.Add(self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Aggiungi la barra di ricerca al layout
+        sizer.Add(search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
         self.card_list = wx.ListCtrl(
-            self.panel,
+            panel,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
         )
         self.card_list.AppendColumn("Nome", width=250)
@@ -70,10 +79,10 @@ class DeckViewFrame(BasicView):
         self.card_list.AppendColumn("Espansione", width=500)
 
         # Aggiungi la lista alla finestra
-        self.sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
-        btn_panel = wx.Panel(self.panel)
+        btn_panel = wx.Panel(panel)
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # Aggiungi i pulsanti
@@ -93,36 +102,85 @@ class DeckViewFrame(BasicView):
 
         # Aggiungi i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        self.sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
         # Imposta il layout principale
-        #self.panel.SetSizer(self.sizer)
-        self.Layout()
+        panel.SetSizer(sizer)
 
-        # Carica le carte
-        self.load_cards()
+        # Carica le carte SOLO se il mazzo è stato caricato correttamente
+        if hasattr(self, "deck_content") and self.deck_content:
+            self.load_cards()
+            self.set_focus_to_list()
 
         # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
 
-    def init_search(self):
-        """Aggiunge la barra di ricerca."""
-        panel = self.GetChildren()[0]  # Ottieni il pannello principale
-        sizer = panel.GetSizer()
+    def set_focus_to_list(self):
+        """Imposta il focus sulla prima carta della lista carte."""
 
-        # Barra di ricerca
-        search_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.search_ctrl = wx.SearchCtrl(panel)
-        self.search_ctrl.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search)
-        search_sizer.Add(self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-
-        # Aggiungi la barra di ricerca al layout
-        sizer.Insert(0, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        if hasattr(self, "card_list"):
+            self.card_list.SetFocus()
+            self.card_list.Select(0)
+            self.card_list.Focus(0)
+            self.card_list.EnsureVisible(0)
 
     def load_cards(self, filters=None):
-        """Carica le carte nel mazzo."""
-        load_cards(self.card_list, self.deck_content, self.mode, filters)
+        """Carica le carte nel mazzo, applicando eventuali filtri."""
+        if not hasattr(self, "deck_content") or not self.deck_content:
+            return  # Esce se il mazzo non è stato caricato correttamente
+
+        # Pulisce la lista delle carte
+        self.card_list.DeleteAllItems()
+
+        # Filtra le carte in base ai criteri specificati
+        for card_data in self.deck_content["cards"]:
+            if filters and "name" in filters:
+                if filters["name"].lower() not in card_data["name"].lower():
+                    continue  # Salta le carte che non corrispondono al filtro
+
+            # Aggiunge la carta alla lista, gestendo chiavi mancanti
+            self.card_list.Append([
+                card_data.get("name", "-"),
+                str(card_data.get("mana_cost", "-")) if card_data.get("mana_cost") else "-",
+                str(card_data.get("quantity", "-")) if card_data.get("quantity") else "-",
+                card_data.get("card_type", "-"),
+                card_data.get("spell_type", "-"),
+                card_data.get("card_subtype", "-"),
+                str(card_data.get("attack", "-")) if card_data.get("attack") is not None else "-",
+                str(card_data.get("health", "-")) if card_data.get("health") is not None else "-",
+                str(card_data.get("durability", "-")) if card_data.get("durability") is not None else "-",
+                card_data.get("rarity", "-"),
+                card_data.get("expansion", "-")
+            ])
+
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        # Se la casella di ricerca è vuota o contiene "tutti" o "all", ripristina la visualizzazione
+        if search_text is None or search_text == "" or search_text in ["tutti", "tutto", "all"]:
+            self.on_reset(event)
+
+        else:
+            # Altrimenti, applica la ricerca
+            self.load_cards(filters={"name": search_text})
+            # sposta il focus sulla lista
+            self.set_focus_to_list()
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self.apply_search_filter(search_text)
+
+    def apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista delle carte."""
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
+            self.load_cards()
+        else:
+            # Filtra le carte in base al nome
+            self.load_cards(filters={"name": search_text})
 
     def on_reset(self, event):
         """Ripristina la visualizzazione originale."""
@@ -235,20 +293,11 @@ class DeckViewFrame(BasicView):
                 self.sort_cards(col)
         event.Skip()
 
-    def on_search(self, event):
-        """Filtra le carte in base al testo di ricerca."""
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        if search_text in ["", "tutti", "tutto", "all"]:
-            self.on_reset(event)
-        else:
-            self.load_cards(filters={"name": search_text})
-
     def on_close(self, event):
         """Chiude la finestra."""
         self.parent.Show()
         self.Close()
         self.Destroy()
-
 
 
 #@@@# Start del modulo
