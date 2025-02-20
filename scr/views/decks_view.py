@@ -18,7 +18,8 @@ import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView, DeckStatsDialog
+from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView
+from .deck_stats_dialog import DeckStatsDialog
 from .collection_view import CardCollectionFrame
 from .deck_view import DeckViewFrame
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
