@@ -286,8 +286,6 @@ class DecksManagerFrame(BasicView):
             deck_content = self.db_manager.get_deck(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                #deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name)
-                #deck_view_dialog = DeckViewFrame(self, self.db_manager, deck_name=deck_name, deck_content=deck_content)
                 deck_view_dialog = DeckViewFrame(self, self.db_manager, deck_name=deck_name)
                 self.Hide()
                 deck_view_dialog.Show()
