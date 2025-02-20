@@ -409,6 +409,7 @@ class DbManager:
                             "mana_cost": card.mana_cost,
                             "quantity": deck_card.quantity
                         })
+
                 return {
                     "id": deck.id,
                     "name": deck.name,
@@ -416,7 +417,7 @@ class DbManager:
                     "game_format": deck.game_format,
                     "cards": cards
                 }
-            return None
+            #return None
 
     def delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """

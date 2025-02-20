@@ -18,7 +18,7 @@ import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import BasicView, BasicDialog, CardManagerFrame, SingleCardView
+from .proto_views import BasicView
 from .deck_stats_dialog import DeckStatsDialog
 from .collection_view import CardCollectionFrame
 from .deck_view import DeckViewFrame
@@ -287,8 +287,8 @@ class DecksManagerFrame(BasicView):
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
                 #deck_view_dialog = DeckViewDialog(self, self.db_manager, deck_name)
+                #deck_view_dialog = DeckViewFrame(self, self.db_manager, deck_name=deck_name, deck_content=deck_content)
                 deck_view_dialog = DeckViewFrame(self, self.db_manager, deck_name=deck_name)
-                #deck_view_dialog.ShowModal()
                 self.Hide()
                 deck_view_dialog.Show()
 
