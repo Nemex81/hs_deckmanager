@@ -7,7 +7,7 @@ import wx
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card
 from ..models import load_cards
-from .view_components import SingleCardView
+from .proto_views import SingleCardView
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log

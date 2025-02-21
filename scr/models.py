@@ -36,6 +36,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from .db import session, db_session, Deck, DeckCard, Card
 from utyls import enu_glob as eg
+from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
 

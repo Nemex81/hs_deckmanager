@@ -14,6 +14,8 @@
 # lib
 import wx
 from .views.main_views import HearthstoneAppFrame
+from utyls import enu_glob as eg
+from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 

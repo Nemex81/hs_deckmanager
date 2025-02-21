@@ -14,10 +14,7 @@
 
 from enum import Enum
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import  Column, Integer, String, UniqueConstraint, Index
-from sqlalchemy.ext.declarative import declarative_base
-from scr.db import Base, session, Card, Deck, DeckCard
-# from utyls.logger import Logger
+from utyls import logger as log
 #import pdb
 
 # colori rgb

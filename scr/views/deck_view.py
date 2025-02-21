@@ -19,7 +19,7 @@ from ..db import session, Card, DeckCard, Deck
 #from ..models import load_deck_from_db, load_cards
 from .proto_views import BasicView
 from .card_edit_dialog import CardEditDialog
-#from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 
@@ -35,7 +35,7 @@ class DeckViewFrame(BasicView):
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.deck_name = deck_name
         self.deck_content = self.deck_manager.get_deck(deck_name)  # Carica il mazzo
-        
+        # Se il mazzo non esiste, solleva un'eccezione
         if not self.deck_content:
             raise ValueError(f"Mazzo non trovato: {deck_name}")
         
@@ -45,6 +45,9 @@ class DeckViewFrame(BasicView):
 
     def init_ui_elements(self):
         """Inizializza l'interfaccia utente."""
+
+        # coloro il pannello di giallo
+        self.panel.BackgroundColour = 'yellow'
 
         # aggiungo Barra di ricerca
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)

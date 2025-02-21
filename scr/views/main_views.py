@@ -17,14 +17,10 @@
 # lib
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
-#from ..models import DbManager, AppController
-from ..db import session, Card, DeckCard, Deck
-from ..models import load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import BasicView
-from .proto_views import CardsListView
+from .proto_views import BasicView
 from .collection_view import CardCollectionFrame
 from .decks_view import DecksManagerFrame
-from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb

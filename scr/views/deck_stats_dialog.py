@@ -8,8 +8,7 @@
 
 # lib
 import wx
-from .view_components import BasicDialog, SingleCardView
-from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from .proto_views import BasicDialog
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
