@@ -18,6 +18,7 @@
 import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from .proto_views import BasicView
+from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer
 from .collection_view import CardCollectionFrame
 from .decks_view import DecksManagerFrame
 from utyls import enu_glob as eg
@@ -44,61 +45,47 @@ class HearthstoneAppFrame(BasicView):
         """ Imposta il controller del database. """
         self.db_manager = db_manager
 
-
-    def init_ui_elements(self, *args, **kwargs):
+    def init_ui_elements(self):
         """ Inizializza gli elementi dell'interfaccia utente. """
-
-        # pannello per contenere gli elementi dell'interfaccia utente
-        #self.panel = wx.Panel(self)
 
         # Aggiungo l'immagine
         image = wx.Image("img/background_magic.jpeg", wx.BITMAP_TYPE_ANY)
         image = image.Scale(1200, 790)  # Ridimensiona l'immagine
         bitmap = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap(image))
 
-        # Aggiungo i pulsanti
-        self.collection_button = wx.Button(self.panel, label="Collezione")
-        self.collection_button.Bind(wx.EVT_BUTTON, self.on_collection_button_click)
+        # Creazione pulsanti
+        self.collection_button = create_button(
+            self.panel, 
+            label="Collezione", 
+            event_handler=self.on_collection_button_click
+        )
 
-        self.decks_button = wx.Button(self.panel, label="Gestione Mazzi")
-        self.decks_button.Bind(wx.EVT_BUTTON, self.on_decks_button_click)
+        self.decks_button = create_button(
+            self.panel, 
+            label="Gestione Mazzi", 
+            event_handler=self.on_decks_button_click
+        )
 
-        #self.match_button = wx.Button(self.panel, label="Palestra")
-        #self.match_button.Bind(wx.EVT_BUTTON, self.on_match_button_click)
-
-        #self.settings_button = wx.Button(self.panel, label="Impostazioni")
-        #self.settings_button.Bind(wx.EVT_BUTTON, self.on_settings_button_click)
-
-        self.quit_button = wx.Button(self.panel, label="Esci")
-        self.quit_button.Bind(wx.EVT_BUTTON, self.on_quit_button_click)
-
-        button_size = (250, 90)
-        self.collection_button.SetMinSize(button_size)
-        self.decks_button.SetMinSize(button_size)
-        #self.match_button.SetMinSize(button_size)
-        #self.settings_button.SetMinSize(button_size)
-        self.quit_button.SetMinSize(button_size)
-
-        font = wx.Font(20, wx.DEFAULT, wx.NORMAL, wx.BOLD)  # 20 è la dimensione del font, regola secondo necessità
-        self.collection_button.SetFont(font)
-        self.decks_button.SetFont(font)
-        #self.match_button.SetFont(font)
-        #self.settings_button.SetFont(font)
-        self.quit_button.SetFont(font)
+        self.quit_button = create_button(
+            self.panel,
+            label="Esci",
+            event_handler=self.on_quit_button_click
+        )
 
         # Aggiungo un sizer per allineare i pulsanti verticalmente
         button_sizer = wx.BoxSizer(wx.VERTICAL)
         button_sizer.Add(self.collection_button, 0, wx.ALL, 20)
         button_sizer.Add(self.decks_button, 0, wx.ALL, 20)
-        #button_sizer.Add(self.match_button, 0, wx.ALL, 20)
-        #button_sizer.Add(self.settings_button, 0, wx.ALL, 20)
         button_sizer.Add(self.quit_button, 0, wx.ALL, 20)
 
-        # Aggiungo un sizer principale per allineare il bitmap e il sizer dei pulsanti
+        # Creazione sizer principale orizzontale per allineare l'immagine e i pulsanti
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
         main_sizer.Add(bitmap, proportion=0, flag=wx.ALL, border=10)
         main_sizer.Add(button_sizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
-        self.panel.SetSizerAndFit(main_sizer)
+
+        self.panel.SetSizer(main_sizer)
+        self.Layout()
+
 
     #@@# sezione metodi collegati agli eventi
 
