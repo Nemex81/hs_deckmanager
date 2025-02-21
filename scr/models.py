@@ -407,7 +407,16 @@ class DbManager:
                             "id": card.id,
                             "name": card.name,
                             "mana_cost": card.mana_cost,
-                            "quantity": deck_card.quantity
+                            "quantity": deck_card.quantity,
+                            "class_name": card.class_name,
+                            "card_type": card.card_type,
+                            "spell_type": card.spell_type,
+                            "card_subtype": card.card_subtype,
+                            "attack": card.attack,
+                            "health": card.health,
+                            "durability": card.durability,
+                            "rarity": card.rarity,
+                            "expansion": card.expansion
                         })
 
                 return {

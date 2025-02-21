@@ -24,6 +24,7 @@ from utyls import helper as hp
 from utyls import logger as log
 
 
+
 class DeckViewFrame(BasicView):
     """Finestra per gestire le carte di un mazzo."""
 
@@ -66,13 +67,13 @@ class DeckViewFrame(BasicView):
         self.card_list.AppendColumn("Nome", width=250)
         self.card_list.AppendColumn("Mana", width=50)
         self.card_list.AppendColumn("Quantità", width=80)
-        self.card_list.AppendColumn("Tipo", width=120)
-        self.card_list.AppendColumn("Tipo Magia", width=120)
-        self.card_list.AppendColumn("Sottotipo", width=120)
-        self.card_list.AppendColumn("Attacco", width=50)
-        self.card_list.AppendColumn("Vita", width=50)
-        self.card_list.AppendColumn("Durabilità", width=50)
-        self.card_list.AppendColumn("Rarità", width=120)
+        self.card_list.AppendColumn("Tipo", width=200)
+        self.card_list.AppendColumn("Tipo Magia", width=200)
+        self.card_list.AppendColumn("Sottotipo", width=200)
+        self.card_list.AppendColumn("Attacco", width=90)
+        self.card_list.AppendColumn("Vita", width=90)
+        self.card_list.AppendColumn("Durabilità", width=90)
+        self.card_list.AppendColumn("Rarità", width=300)
         self.card_list.AppendColumn("Espansione", width=500)
 
         # aggiungo la lista alla finestra
@@ -102,7 +103,7 @@ class DeckViewFrame(BasicView):
         self.sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
         # Imposta il layout principale
-        #self.panel.SetSizer(self.sizer)
+        self.Layout()
 
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
@@ -113,6 +114,7 @@ class DeckViewFrame(BasicView):
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
 
+
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
 
@@ -121,6 +123,7 @@ class DeckViewFrame(BasicView):
             self.card_list.Select(0)
             self.card_list.Focus(0)
             self.card_list.EnsureVisible(0)
+
 
     def load_cards(self, filters=None):
         """Carica le carte nel mazzo, applicando eventuali filtri."""
