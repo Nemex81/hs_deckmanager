@@ -19,6 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .proto_views import BasicView
+from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .deck_stats_dialog import DeckStatsDialog
 from .collection_view import CardCollectionFrame
 from .deck_view import DeckViewFrame
@@ -37,95 +38,71 @@ class DecksManagerFrame(BasicView):
         super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
         self.db_manager = db_manager
-        #self.controller = AppController(self.db_manager, self)
-        #self.init_ui_elements()
-
-
-    #def init_ui(self):
-        #pass
 
     def init_ui_elements(self):
-        """ Inizializza l'interfaccia utente. """
+        """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Impostazioni finestra principale
         self.SetBackgroundColour('green')
-        #self.panel = wx.Panel(self)
-
-        # Layout principale
         self.Centre()
         self.Maximize()
+
+        # Creazione degli elementi dell'interfaccia
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
-        #self.deck_list = wx.ListBox(self.panel)
-        self.deck_list = wx.ListCtrl(
+        self.deck_list = create_list_ctrl(
             self.panel,
-            #style=wx.LC_REPORT | wx.BORDER_SUNKEN
-            style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.BORDER_SUNKEN
+            columns=[("Mazzo", 260), ("Classe", 200), ("Formato", 120)]
         )
 
-        # aggiungiamo le righe e le colonne
-        self.deck_list.InsertColumn(0, "mazzo", width=260)
-        self.deck_list.InsertColumn(1, "Classe ", width=200)
-        self.deck_list.InsertColumn(2, "Formato ", width=120)
-
-        # carichiamo i mazzi
+        # Carichiamo i mazzi
         self.load_decks()
 
         # Barra di ricerca
-        self.search_bar = wx.SearchCtrl(self.panel)
-        self.search_bar.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search)
+        self.search_bar = create_search_bar(
+            self.panel,
+            placeholder="Cerca mazzo...",
+            event_handler=self.on_search
+        )
 
         # Pulsanti
-        btn_add = wx.Button(self.panel, label="Aggiungi Mazzo")
-        btn_copy = wx.Button(self.panel, label="Copia Mazzo")
-        btn_view = wx.Button(self.panel, label="Visualizza Mazzo")
-        btn_stats = wx.Button(self.panel, label="Statistiche Mazzo")
-        btn_update = wx.Button(self.panel, label="Aggiorna Mazzo")
-        btn_delete = wx.Button(self.panel, label="Elimina Mazzo")
-        btn_collection = wx.Button(self.panel, label="Collezione Carte")
-        btn_exit = wx.Button(self.panel, label="Chiudi")
+        btn_add = create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
+        btn_copy = create_button(self.panel, label="Copia Mazzo", event_handler=self.on_copy_deck)
+        btn_view = create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
+        btn_stats = create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
+        btn_update = create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)
+        btn_delete = create_button(self.panel, label="Elimina Mazzo", event_handler=self.on_delete_deck)
+        btn_collection = create_button(self.panel, label="Collezione Carte", event_handler=self.on_view_collection)
+        btn_exit = create_button(self.panel, label="Chiudi", event_handler=self.on_close)
 
         # Layout principale
-        #sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(lbl_title, flag=wx.CENTER | wx.TOP, border=10)
-        self.sizer.Add(self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
+        main_sizer = create_sizer(wx.VERTICAL)
+        add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
+        add_to_sizer(main_sizer, self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Separatore tra barra di ricerca e lista dei mazzi
-        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
-        self.sizer.Add(self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        add_to_sizer(main_sizer, self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
-        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Layout pulsanti
         btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
-        btn_sizer.Add(btn_add, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_copy, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_view, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_stats, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_update, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_delete, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_collection, flag=wx.EXPAND | wx.ALL, border=5)
-        btn_sizer.Add(btn_exit, flag=wx.EXPAND | wx.ALL, border=5)
-        self.sizer.Add(btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        for btn in [btn_add, btn_copy, btn_view, btn_stats, btn_update, btn_delete, btn_collection, btn_exit]:
+            btn_sizer.Add(btn, flag=wx.EXPAND | wx.ALL, border=5)
+
+        add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra pulsanti e barra di stato
-        self.sizer.Add(wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
-        self.panel.SetSizer(self.sizer)
+        # Imposta il sizer principale
+        self.panel.SetSizer(main_sizer)
 
         # Barra di stato
         self.status_bar = self.CreateStatusBar()
         self.status_bar.SetStatusText("Pronto")
-
-        # Eventi
-        btn_add.Bind(wx.EVT_BUTTON, self.on_add_deck)
-        btn_copy.Bind(wx.EVT_BUTTON, self.on_copy_deck)
-        btn_view.Bind(wx.EVT_BUTTON, self.on_view_deck)
-        btn_update.Bind(wx.EVT_BUTTON, self.on_update_deck)
-        btn_stats.Bind(wx.EVT_BUTTON, self.on_view_stats)
-        btn_collection.Bind(wx.EVT_BUTTON, self.on_view_collection)
-        btn_delete.Bind(wx.EVT_BUTTON, self.on_delete_deck)
-        btn_exit.Bind(wx.EVT_BUTTON, self.on_close)
+        self.Layout()
 
 
     def load_decks(self):
