@@ -130,14 +130,21 @@ def add_to_sizer(sizer, element, proportion=0, flag=wx.ALL, border=10):
     """
     sizer.Add(element, proportion=proportion, flag=flag, border=border)
 
-def create_separator(parent):
+def create_separator(parent, style=wx.LI_HORIZONTAL, thickness=1, color=None):
     """
-    Crea un separatore orizzontale per gli elementi dell'interfaccia utente.
+    Crea un separatore orizzontale o verticale per gli elementi dell'interfaccia utente.
 
     :param parent: Il genitore del separatore.
+    :param style: Stile della linea (wx.LI_HORIZONTAL o wx.LI_VERTICAL). Default: wx.LI_HORIZONTAL.
+    :param thickness: Spessore della linea. Default: 1.
+    :param color: Colore della linea (opzionale). Esempio: wx.Colour(200, 200, 200).
     :return: Un'istanza di wx.StaticLine.
     """
-    return wx.StaticLine(parent)
+    separator = wx.StaticLine(parent, style=style)
+    if color:
+        separator.SetBackgroundColour(color)
+    separator.SetMinSize((-1, thickness))  # Imposta lo spessore della linea
+    return separator
 
 def question_box(parent, message, title="Conferma", style=wx.YES_NO | wx.ICON_QUESTION):
     """

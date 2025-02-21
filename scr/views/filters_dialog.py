@@ -33,6 +33,7 @@ class FilterDialog(BasicDialog):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper, mantenendo l'impaginazione originale."""
 
         # Impostazioni finestra principale
+        self.SetBackgroundColour('red')
         self.panel.SetBackgroundColour(wx.RED)
 
         # Creazione degli elementi dell'interfaccia
@@ -71,12 +72,12 @@ class FilterDialog(BasicDialog):
         # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
         self.card_type.Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
-        # separatore
-        end_separator = create_separator(self.panel)
-        add_to_sizer(self.sizer, end_separator)
-
         # Pulsanti
-        btn_sizer = create_sizer(wx.HORIZONTAL)  
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)  # Sizer orizzontale per i pulsanti
+
+        # creazione di un separatore
+        separator = create_separator(self.panel, style=wx.LI_HORIZONTAL, thickness=1, color=wx.Colour(200, 200, 200))
+        add_to_sizer(self.sizer, separator, flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=12)
 
         # Creazione dei pulsanti con font ridotto a 12 pt e dimensioni ridotte
         font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
@@ -97,15 +98,15 @@ class FilterDialog(BasicDialog):
         self.btn_cancel.SetFont(font)  # Imposta il font a 12 pt
 
         # Aggiungi i pulsanti al sizer orizzontale con spaziatura
-        btn_sizer.Add(self.btn_apply, flag=wx.LEFT, border=10)
-        btn_sizer.Add(self.btn_cancel, flag=wx.RIGHT, border=10)
+        btn_sizer.Add(self.btn_apply, flag=wx.RIGHT, border=10)
+        btn_sizer.Add(self.btn_cancel)
 
         # Aggiungi il sizer dei pulsanti al sizer principale
         self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
         # Imposta il sizer principale per il pannello
-        self.panel.SetSizer(self.sizer)         # Imposta il sizer principale per il pannello
-        self.Layout()                           # Forza il ridisegno del layout
+        self.panel.SetSizer(self.sizer)
+        self.Layout()
 
         # Aggiorna i sottotipi in base al tipo selezionato
         self.update_subtypes()
