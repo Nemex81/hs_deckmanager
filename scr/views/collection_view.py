@@ -24,6 +24,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
 from .proto_views import BasicView
+from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
 from utyls import enu_glob as eg
@@ -37,100 +38,96 @@ class CardCollectionFrame(BasicView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, db_manager):
-        #self.mode = "collection"
-        #self.deck_content = None
-        #self.card_list = None
+        self.mode = "collection"
         super().__init__(parent, title="Collezione")
         self.parent = parent
         self.db_manager = db_manager
 
     def init_ui_elements(self):
-        """Aggiunge la barra di ricerca e i filtri."""
+        """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
 
-        self.panel = self.GetChildren()[0]  # ottengo il pannello principale
-        self.sizer = self.panel.GetSizer()
+        # Impostazioni finestra principale
         self.SetBackgroundColour('yellow')
         self.panel.SetBackgroundColour('yellow')
+        self.Centre()
         self.Maximize()
 
-        # Lista delle carte
-        self.card_list = wx.ListCtrl(    
+        # Creazione degli elementi dell'interfaccia
+        search_sizer = create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = create_search_bar(
             self.panel,
-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
+            placeholder="Cerca per nome...",
+            event_handler=self.on_search
         )
+        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
-        # Aggiungo il colore di sfondo alla lista
+        # Pulsante filtri avanzati
+        self.btn_filters = create_button(
+            self.panel,
+            label="Filtri Avanzati",
+            event_handler=self.on_show_filters
+        )
+        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+
+        # Aggiungo la barra di ricerca e i filtri al layout
+        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Lista delle carte
+        self.card_list = create_list_ctrl(
+            self.panel,
+            columns=[
+                ("Nome", 250),
+                ("Mana", 50),
+                ("Classe", 120),
+                ("Tipo", 120),
+                ("Tipo Magia", 120),
+                ("Sottotipo", 120),
+                ("Attacco", 50),
+                ("Vita", 50),
+                ("Durabilità", 50),
+                ("Rarità", 120),
+                ("Espansione", 500)
+            ]
+        )
         self.card_list.SetBackgroundColour('yellow')
 
-        # Aggiungo le colonne alla lista
-        self.card_list.AppendColumn("Nome", width=250)
-        self.card_list.AppendColumn("Mana", width=50)
-        self.card_list.AppendColumn("Classe", width=120)    
-        self.card_list.AppendColumn("Tipo", width=120)
-        self.card_list.AppendColumn("Tipo Magia", width=120)
-        self.card_list.AppendColumn("Sottotipo", width=120)
-        self.card_list.AppendColumn("Attacco", width=50)
-        self.card_list.AppendColumn("Vita", width=50)
-        self.card_list.AppendColumn("Durabilità", width=50)  # Aggiungi questa colonna
-        self.card_list.AppendColumn("Rarità", width=120)
-        self.card_list.AppendColumn("Espansione", width=500)
-
         # Aggiungo la lista alla finestra
-        self.sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        btn_sizer = create_sizer(wx.HORIZONTAL)
 
-        # Aggiungo gli altri pulsanti
-        for label in ["Aggiorna", "Aggiungi Carta", "Modifica Carta", "Elimina Carta", "Chiudi"]:
-            btn = wx.Button(btn_panel, label=label)
-            btn_sizer.Add(btn, flag=wx.RIGHT, border=5)
-            if label == "Aggiorna":
-                btn.Bind(wx.EVT_BUTTON, self.on_reset)
+        # Creazione dei pulsanti
+        buttons = [
+            ("Aggiorna", self.on_reset),
+            ("Aggiungi Carta", self.on_add_card),
+            ("Modifica Carta", self.on_edit_card),
+            ("Elimina Carta", self.on_delete_card),
+            ("Chiudi", lambda e: self.Close())
+        ]
 
-            elif label == "Aggiungi Carta":
-                btn.Bind(wx.EVT_BUTTON, self.on_add_card)
+        for label, handler in buttons:
+            btn = create_button(btn_panel, label=label, event_handler=handler)
+            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
 
-            elif label == "Modifica Carta":
-                btn.Bind(wx.EVT_BUTTON, self.on_edit_card)
-
-            elif label == "Elimina Carta":
-                btn.Bind(wx.EVT_BUTTON, self.on_delete_card)
-
-            else:
-                btn.Bind(wx.EVT_BUTTON, lambda e: self.Close())
-        
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        self.sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
-        self.panel.SetSizer(self.sizer)
+        # Imposta il layout principale
+        self.Layout()
+
+        # Carica le carte
         self.load_cards()
 
-        # Aggiungi l'evento per il clic sulle intestazioni delle colonne
+        # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
-
-        # Aggiungi l'evento per i tasti premuti
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
-
-
-        # Barra di ricerca
-        search_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.search_ctrl = wx.SearchCtrl(self.panel)
-        self.search_ctrl.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search)
-        search_sizer.Add(self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-
-        # Pulsante filtri
-        self.btn_filters = wx.Button(self.panel, label="Filtri Avanzati")
-        self.btn_filters.Bind(wx.EVT_BUTTON, self.on_show_filters)
-        search_sizer.Add(self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
-
-        # Aggiungi la barra di ricerca e i filtri al layout
-        self.sizer.Insert(0, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # eventi
         self.Bind(wx.EVT_CLOSE, self.on_close)
+
+        # Imposta il layout principale
+        self.Layout()
 
 
     def load_cards(self, filters=None):
