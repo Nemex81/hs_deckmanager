@@ -1,10 +1,21 @@
 """
+    Modulo Filter Dialog
+
+    path:
+        scr/views/filters_dialog.py
+
+    Descrizione:
+        Questo modulo contiene la classe FilterDialog, una finestra di dialogo per i filtri di ricerca delle carte.
+        La finestra di dialogo permette all'utente di filtrare le carte per nome, costo in mana, tipo, sottotipo, attacco, vita, rarità ed espansione.
+        I filtri sono implementati utilizzando wxPython e sono progettati per essere riutilizzabili in altre finestre dell'applicazione.
+        La finestra di dialogo include anche pulsanti per applicare i filtri e annullare le modifiche.
 
 """
 
 # Lib
 import wx
 from .proto_views import BasicDialog
+from .view_components import create_sizer, add_to_sizer, create_button, create_separator
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuPetSubType, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -15,33 +26,35 @@ class FilterDialog(BasicDialog):
     """ Finestra di dialogo per i filtri di ricerca. """
 
     def __init__(self, parent):
-        super().__init__(parent, title="Filtri di Ricerca", size=(300, 400))
+        super().__init__(parent, title="Filtri di Ricerca", size=(420, 600))
         self.parent = parent
 
     def init_ui_elements(self):
-        """ Inizializza gli elementi dell'interfaccia utente. """
+        """Inizializza l'interfaccia utente utilizzando le funzioni helper, mantenendo l'impaginazione originale."""
 
-        # Aggiungo "Qualsiasi" come prima opzione per il costo mana
-        mana_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
-        attack_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
-        health_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
-        durability_choices = ["Qualsiasi"] + [str(i) for i in range(0, 21)]
+        # Impostazioni finestra principale
+        self.panel.SetBackgroundColour(wx.RED)
 
+        # Creazione degli elementi dell'interfaccia
+        self.sizer = wx.BoxSizer(wx.VERTICAL)  # Sizer principale verticale
+
+        # Definizione dei controlli UI
         controls = [
             ("nome", wx.TextCtrl),
-            ("costo_mana", wx.ComboBox, {"choices": mana_choices, "style": wx.CB_READONLY}),
+            ("costo_mana", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
             ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
             ("tipo_magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
             ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
-            ("attacco", wx.ComboBox, {"choices": attack_choices, "style": wx.CB_READONLY}),
-            ("vita", wx.ComboBox, {"choices": health_choices, "style": wx.CB_READONLY}),
-            #("durability", wx.ComboBox, {"choices": durability_choices, "style": wx.CB_READONLY}),
+            ("attacco", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("vita", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
             ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
             ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
 
+        # Creazione dei controlli UI utilizzando la funzione helper
         self.sizer, control_dict = hp.create_ui_controls(self.panel, controls)
 
+        # Assegnazione dei controlli agli attributi della classe
         self.search_ctrl = control_dict["nome"]
         self.mana_cost = control_dict["costo_mana"]
         self.card_type = control_dict["tipo"]
@@ -49,7 +62,6 @@ class FilterDialog(BasicDialog):
         self.card_subtype = control_dict["sottotipo"]
         self.attack = control_dict["attacco"]
         self.health = control_dict["vita"]
-        #self.durability = control_dict["durability"]
         self.rarity = control_dict["rarita"]
         self.expansion = control_dict["espansione"]
 
@@ -59,20 +71,42 @@ class FilterDialog(BasicDialog):
         # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
         self.card_type.Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
+        # separatore
+        end_separator = create_separator(self.panel)
+        add_to_sizer(self.sizer, end_separator)
+
         # Pulsanti
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_apply = wx.Button(self.panel, label="Applica")
-        self.btn_cancel = wx.Button(self.panel, label="Annulla")
-        btn_sizer.Add(self.btn_apply, flag=wx.RIGHT, border=10)
-        btn_sizer.Add(self.btn_cancel)
+        btn_sizer = create_sizer(wx.HORIZONTAL)  
 
-        # Eventi
-        self.btn_apply.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_OK))
-        self.btn_cancel.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CANCEL))
+        # Creazione dei pulsanti con font ridotto a 12 pt e dimensioni ridotte
+        font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+        self.btn_apply = create_button(
+            self.panel, 
+            label="Applica", 
+            size=(100, 30),  # Dimensioni ridotte
+            event_handler=lambda e: self.EndModal(wx.ID_OK)
+        )
+        self.btn_apply.SetFont(font)  # Imposta il font a 12 pt
 
-        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT|wx.ALL, border=10)
-        self.panel.SetSizer(self.sizer)
-        self.SetBackgroundColour('red')
+        self.btn_cancel = create_button(
+            self.panel, 
+            label="Annulla", 
+            size=(100, 30),  # Dimensioni ridotte
+            event_handler=lambda e: self.EndModal(wx.ID_CANCEL)
+        )
+        self.btn_cancel.SetFont(font)  # Imposta il font a 12 pt
+
+        # Aggiungi i pulsanti al sizer orizzontale con spaziatura
+        btn_sizer.Add(self.btn_apply, flag=wx.LEFT, border=10)
+        btn_sizer.Add(self.btn_cancel, flag=wx.RIGHT, border=10)
+
+        # Aggiungi il sizer dei pulsanti al sizer principale
+        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(self.sizer)         # Imposta il sizer principale per il pannello
+        self.Layout()                           # Forza il ridisegno del layout
+
         # Aggiorna i sottotipi in base al tipo selezionato
         self.update_subtypes()
 

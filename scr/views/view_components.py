@@ -130,6 +130,14 @@ def add_to_sizer(sizer, element, proportion=0, flag=wx.ALL, border=10):
     """
     sizer.Add(element, proportion=proportion, flag=flag, border=border)
 
+def create_separator(parent):
+    """
+    Crea un separatore orizzontale per gli elementi dell'interfaccia utente.
+
+    :param parent: Il genitore del separatore.
+    :return: Un'istanza di wx.StaticLine.
+    """
+    return wx.StaticLine(parent)
 
 def question_box(parent, message, title="Conferma", style=wx.YES_NO | wx.ICON_QUESTION):
     """
