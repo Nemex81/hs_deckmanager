@@ -8,11 +8,8 @@
         La finestra di dialogo include una lista di carte, una barra di ricerca, filtri avanzati e pulsanti per aggiungere, modificare e rimuovere carte.
 
     path:
-        scr/views/collection_view.py
+        scr/views/deck_view.py
 
-    Note:
-        - La finestra di dialogo DeckViewFrame eredita dalla classe BasicView.
-        - Questo modulo utilizza la libreria wxPython per la creazione delle finestre di dialogo dell'interfaccia utente.
 """
 
 # lib
@@ -45,29 +42,27 @@ class DeckViewFrame(BasicView):
         super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
 
 
-    def init_ui(self):
+    def init_ui_elements(self):
         """Inizializza l'interfaccia utente."""
-        panel = wx.Panel(self)
-        sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # aggiongo Barra di ricerca
+        # aggiungo Barra di ricerca
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.search_ctrl = wx.SearchCtrl(panel)
+        self.search_ctrl = wx.SearchCtrl(self.panel)
         self.search_ctrl.SetDescriptiveText("Cerca per nome...")
         self.search_ctrl.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.on_search)
         self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
         search_sizer.Add(self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
-        # Aggiungi la barra di ricerca al layout
-        sizer.Add(search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        # Aggiungo la barra di ricerca al layout
+        self.sizer.Add(search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
         self.card_list = wx.ListCtrl(
-            panel,
+            self.panel,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
         )
 
-        # Aggiungi le colonne alla lista
+        # aggiungo le colonne alla lista
         self.card_list.AppendColumn("Nome", width=250)
         self.card_list.AppendColumn("Mana", width=50)
         self.card_list.AppendColumn("Quantità", width=80)
@@ -80,14 +75,14 @@ class DeckViewFrame(BasicView):
         self.card_list.AppendColumn("Rarità", width=120)
         self.card_list.AppendColumn("Espansione", width=500)
 
-        # Aggiungi la lista alla finestra
-        sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        # aggiungo la lista alla finestra
+        self.sizer.Add(self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
-        btn_panel = wx.Panel(panel)
+        btn_panel = wx.Panel(self.panel)
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Aggiungi i pulsanti
+        # aggiungo i pulsanti
         for label in ["Aggiorna", "Aggiungi Carta", "Modifica Carta", "Elimina Carta", "Chiudi"]:
             btn = wx.Button(btn_panel, label=label)
             btn_sizer.Add(btn, flag=wx.RIGHT, border=5)
@@ -102,19 +97,19 @@ class DeckViewFrame(BasicView):
             else:
                 btn.Bind(wx.EVT_BUTTON, lambda e: self.Close())
 
-        # Aggiungi i pulsanti al pannello
+        # aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        self.sizer.Add(btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
 
         # Imposta il layout principale
-        panel.SetSizer(sizer)
+        #self.panel.SetSizer(self.sizer)
 
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
             self.load_cards()
             self.set_focus_to_list()
 
-        # Aggiungi eventi
+        # aggiungo eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
 
