@@ -24,7 +24,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
 from .proto_views import BasicView
-from .view_components import  CardManagerFrame
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
 from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
@@ -34,9 +33,6 @@ from utyls import logger as log
 
 
 
-
-
-#class CardCollectionFrame(CardManagerFrame):
 class CardCollectionFrame(BasicView):
     """Finestra per gestire la collezione di carte."""
 
