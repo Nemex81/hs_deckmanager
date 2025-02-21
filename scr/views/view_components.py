@@ -144,6 +144,7 @@ def question_box(parent, message, title="Conferma", style=wx.YES_NO | wx.ICON_QU
     return wx.MessageDialog(parent, message, title, style)
 
 
+
 #@@# End del modulo
 if __name__ == "__main__":
     log.debug(f"Carico: {__name__}")
