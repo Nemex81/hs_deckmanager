@@ -14,117 +14,46 @@
 
 # Lib
 import wx
-from .proto_views import BasicDialog
+from .proto_views import BasicDialog, CardFormDialog
 from .view_components import create_sizer, add_to_sizer, create_button, create_separator
-from utyls.enu_glob import EnuCardType, EnuSpellType, EnuPetSubType, EnuRarity, EnuExpansion
+from utyls.enu_glob import EnuCardType, EnuSpellType , EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 
 
-class FilterDialog(BasicDialog):
-    """ Finestra di dialogo per i filtri di ricerca. """
+class FilterDialog(CardFormDialog):
+    """Finestra di dialogo per i filtri di ricerca."""
 
     def __init__(self, parent):
         super().__init__(parent, title="Filtri di Ricerca", size=(420, 600))
         self.parent = parent
+        self.init_specific_ui_elements()
 
-    def init_ui_elements(self):
-        """Inizializza l'interfaccia utente utilizzando le funzioni helper, mantenendo l'impaginazione originale."""
+    def init_specific_ui_elements(self):
+        """Inizializza i componenti specifici per FilterDialog."""
 
-        # Impostazioni finestra principale
-        self.SetBackgroundColour('red')
-        self.panel.SetBackgroundColour(wx.RED)
-
-        # Creazione degli elementi dell'interfaccia
-        self.sizer = wx.BoxSizer(wx.VERTICAL)  # Sizer principale verticale
-
-        # Definizione dei controlli UI
-        controls = [
-            ("nome", wx.TextCtrl),
-            ("costo_mana", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
-            ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
-            ("tipo_magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
-            ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
-            ("attacco", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
-            ("vita", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
-            ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
-            ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
-        ]
-
-        # Creazione dei controlli UI utilizzando la funzione helper
-        self.sizer, control_dict = hp.create_ui_controls(self.panel, controls)
-
-        # Assegnazione dei controlli agli attributi della classe
-        self.search_ctrl = control_dict["nome"]
-        self.mana_cost = control_dict["costo_mana"]
-        self.card_type = control_dict["tipo"]
-        self.spell_type = control_dict["tipo_magia"]
-        self.card_subtype = control_dict["sottotipo"]
-        self.attack = control_dict["attacco"]
-        self.health = control_dict["vita"]
-        self.rarity = control_dict["rarita"]
-        self.expansion = control_dict["espansione"]
+        # Aggiungi pulsanti "Applica" e "Annulla"
+        self.add_buttons([
+            ("Applica", lambda e: self.EndModal(wx.ID_OK)),
+            ("Annulla", lambda e: self.EndModal(wx.ID_CANCEL))
+        ])
 
         # Imposta i valori predefiniti
         self.reset_filters()
 
-        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
-        self.card_type.Bind(wx.EVT_COMBOBOX, self.on_type_change)
-
-        # Pulsanti
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)  # Sizer orizzontale per i pulsanti
-
-        # creazione di un separatore
-        separator = create_separator(self.panel, style=wx.LI_HORIZONTAL, thickness=1, color=wx.Colour(200, 200, 200))
-        add_to_sizer(self.sizer, separator, flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=12)
-
-        # Creazione dei pulsanti con font ridotto a 12 pt e dimensioni ridotte
-        font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
-        self.btn_apply = create_button(
-            self.panel, 
-            label="Applica", 
-            size=(100, 30),  # Dimensioni ridotte
-            event_handler=lambda e: self.EndModal(wx.ID_OK)
-        )
-        self.btn_apply.SetFont(font)  # Imposta il font a 12 pt
-
-        self.btn_cancel = create_button(
-            self.panel, 
-            label="Annulla", 
-            size=(100, 30),  # Dimensioni ridotte
-            event_handler=lambda e: self.EndModal(wx.ID_CANCEL)
-        )
-        self.btn_cancel.SetFont(font)  # Imposta il font a 12 pt
-
-        # Aggiungi i pulsanti al sizer orizzontale con spaziatura
-        btn_sizer.Add(self.btn_apply, flag=wx.RIGHT, border=10)
-        btn_sizer.Add(self.btn_cancel)
-
-        # Aggiungi il sizer dei pulsanti al sizer principale
-        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-
-        # Imposta il sizer principale per il pannello
-        self.panel.SetSizer(self.sizer)
-        self.Layout()
-
-        # Aggiorna i sottotipi in base al tipo selezionato
-        self.update_subtypes()
-
 
     def reset_filters(self):
-        """ Resetta i filtri ai valori predefiniti. """
-
-        self.search_ctrl.SetValue("")
-        self.mana_cost.SetValue("Qualsiasi")  # Imposta "Qualsiasi" come valore predefinito
-        self.card_type.SetValue("Tutti")
-        self.spell_type.SetValue("Qualsiasi")
-        self.card_subtype.SetValue("Tutti")
-        self.attack.SetValue("Qualsiasi")
-        self.health.SetValue("Qualsiasi")
-        #self.durability.SetValue("Qualsiasi")
-        self.rarity.SetValue("Tutti")
-        self.expansion.SetValue("Tutti")
+        """Resetta i filtri ai valori predefiniti."""
+        self.controls["nome"].SetValue("")
+        self.controls["costo_mana"].SetValue("Qualsiasi")
+        self.controls["tipo"].SetValue("Tutti")
+        self.controls["tipo_magia"].SetValue("Qualsiasi")
+        self.controls["sottotipo"].SetValue("Tutti")
+        self.controls["attacco"].SetValue("Qualsiasi")
+        self.controls["vita"].SetValue("Qualsiasi")
+        self.controls["rarita"].SetValue("Tutti")
+        self.controls["espansione"].SetValue("Tutti")
 
 
     def update_subtypes(self):
@@ -191,6 +120,51 @@ class FilterDialog(BasicDialog):
         self.update_subtypes()
 
 
-    def on_save(self, event):
-        """Salva i filtri e chiude la finestra di dialogo."""
+    def add_buttons(self, btn_sizer):
+        """
+        Aggiunge pulsanti alla finestra di dialogo.
+
+        :param btn_sizer: Il sizer a cui aggiungere i pulsanti.
+        """
+        # Pulsante "Applica"
+        apply_btn = wx.Button(self.panel, label="Applica")
+        apply_btn.Bind(wx.EVT_BUTTON, self.on_apply_filters)
+        btn_sizer.Add(apply_btn, flag=wx.ALL, border=5)
+
+        # Pulsante "Annulla"
+        cancel_btn = wx.Button(self.panel, label="Annulla")
+        cancel_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CANCEL))
+        btn_sizer.Add(cancel_btn, flag=wx.ALL, border=5)
+
+
+    def on_apply_filters(self, event):
+        """Gestisce l'applicazione dei filtri."""
+        filters = {
+            "name": self.controls["nome"].GetValue(),
+            "mana_cost": self.controls["costo_mana"].GetValue(),
+            "card_type": self.controls["tipo"].GetValue(),
+            "spell_type": self.controls["tipo_magia"].GetValue(),
+            "card_subtype": self.controls["sottotipo"].GetValue(),
+            "attack": self.controls["attacco"].GetValue(),
+            "health": self.controls["vita"].GetValue(),
+            "rarity": self.controls["rarita"].GetValue(),
+            "expansion": self.controls["espansione"].GetValue()
+        }
+
+        # Chiude la finestra di dialogo
+        if filters:
+            self.parent.load_cards(filters)
+
         self.EndModal(wx.ID_OK)
+
+    #def on_save(self, event):
+        #"""Salva i filtri e chiude la finestra di dialogo."""
+        #self.EndModal(wx.ID_OK)
+
+
+
+
+
+#@@@# Start del modulo
+if __name__ != "__main__":
+    log.debug(f"Carico: {__name__}")

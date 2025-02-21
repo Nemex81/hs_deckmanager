@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards_from_db
+from .view_components import create_button, create_separator, add_to_sizer
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
 from utyls import helper as hp
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
@@ -57,7 +58,6 @@ class BasicDialog(wx.Dialog):
 
 
 
-
 class BasicView(wx.Frame):
     """
         Classe base per le finestre principali dell'interfaccia utente.
@@ -73,6 +73,7 @@ class BasicView(wx.Frame):
     
     def init_ui(self):
         """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
+
         self.panel = wx.Panel(self)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel.SetSizer(self.sizer)
@@ -209,7 +210,6 @@ class ListView(BasicView):
 
 
 
-
 class CardsListView(ListView):
     """
         Classe base per la visualizzazione di elenchi di carte.
@@ -252,6 +252,196 @@ class CardsListView(ListView):
                 card.rarity if card.rarity else "-",
                 card.expansion if card.expansion else "-"
             ])
+
+
+
+class CardFormDialog(BasicDialog):
+    """
+        Classe madre per le finestre di dialogo che gestiscono form per le carte.
+        Gestisce i componenti grafici comuni tra CardEditDialog e FilterDialog.
+    """
+
+    def __init__(self, parent, title, size=(400, 500)):
+        self.controls = {}  # Dizionario per memorizzare i controlli UI
+        super().__init__(parent, title=title, size=size)
+
+    def init_ui_elements(self):
+        """Inizializza i componenti grafici comuni."""
+
+        # Creazione del sizer principale
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Sizer per i campi
+        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)  # Griglia per organizzare i campi
+
+        # Definizione dei controlli UI comuni
+        common_controls = [
+            ("nome", "Nome", wx.TextCtrl),
+            ("costo_mana", "Costo Mana", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("tipo", "Tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo_magia", "Tipo Magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
+            ("sottotipo", "Sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
+            ("attacco", "Attacco", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("vita", "Vita", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("rarita", "Rarità", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", "Espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
+        ]
+
+        # Creazione dei controlli UI e aggiunta al sizer dei campi
+        for key, label_text, control_type, *args in common_controls:
+            label = wx.StaticText(self.panel, label=label_text)
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
+
+            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
+            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+            self.controls[key] = control  # Memorizza il controllo nel dizionario
+
+        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
+
+        # Aggiungi il sizer dei campi al sizer principale
+        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Sizer per i pulsanti
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.add_buttons(btn_sizer)
+
+        # Aggiungi il sizer dei pulsanti al sizer principale
+        main_sizer.Add(btn_sizer, proportion=0, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(main_sizer)
+        main_sizer.Fit(self.panel)
+
+    def new_init_ui_elements(self):
+        """Inizializza i componenti grafici comuni."""
+
+        # Definizione dei controlli UI comuni
+        common_controls = [
+            ("nome", wx.TextCtrl),
+            ("costo_mana", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo_magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
+            ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
+            ("attacco", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("vita", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("rarita", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
+        ]
+
+        # Creazione dei controlli UI e aggiunta al sizer principale
+        for key, control_type, *args in common_controls:
+            # Crea un sizer orizzontale per ogni controllo
+            h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+            # Aggiungi un'etichetta
+            label = wx.StaticText(self.panel, label=f"{key.capitalize()}:")
+            h_sizer.Add(label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+            # Crea il controllo
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
+
+            # Aggiungi il controllo al sizer orizzontale
+            h_sizer.Add(control, 1, wx.EXPAND | wx.ALL, 5)
+
+            # Aggiungi il sizer orizzontale al sizer principale
+            self.sizer.Add(h_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+            # Memorizza il controllo nel dizionario
+            self.controls[key] = control
+
+        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(self.sizer)
+
+    def last_init_ui_elements(self):
+        """Inizializza i componenti grafici comuni."""
+
+        # Creazione del sizer principale
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Sizer per i campi
+        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)  # Griglia per organizzare i campi
+
+        # Definizione dei controlli UI comuni
+        common_controls = [
+            ("nome", "Nome", wx.TextCtrl),
+            ("costo_mana", "Costo Mana", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("tipo", "Tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo_magia", "Tipo Magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
+            ("sottotipo", "Sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
+            ("attacco", "Attacco", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("vita", "Vita", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
+            ("rarita", "Rarità", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", "Espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
+        ]
+
+        # Creazione dei controlli UI e aggiunta al sizer dei campi
+        for key, label_text, control_type, *args in common_controls:
+            label = wx.StaticText(self.panel, label=label_text)
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
+
+            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
+            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+            self.controls[key] = control  # Memorizza il controllo nel dizionario
+
+        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
+
+        # Aggiungi il sizer dei campi al sizer principale
+        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Sizer per i pulsanti
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.add_buttons(btn_sizer)
+
+        # Aggiungi il sizer dei pulsanti al sizer principale
+        main_sizer.Add(btn_sizer, proportion=0, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(main_sizer)
+        main_sizer.Fit(self.panel)
+
+    def on_type_change(self, event):
+        """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+        card_type = self.controls["tipo"].GetValue()
+        if card_type == EnuCardType.MAGIA.value:
+            subtypes = [st.value for st in EnuSpellSubType]
+        elif card_type == EnuCardType.CREATURA.value:
+            subtypes = [st.value for st in EnuPetSubType]
+        else:
+            subtypes = []
+
+        # Aggiorna i sottotipi
+        self.controls["sottotipo"].Clear()
+        self.controls["sottotipo"].AppendItems(subtypes)
+
+    def add_buttons(self, btn_sizer):
+        """
+        Aggiunge pulsanti alla finestra di dialogo.
+
+        :param btn_sizer: Il sizer a cui aggiungere i pulsanti.
+        """
+        # Pulsante "Applica"
+        apply_btn = wx.Button(self.panel, label="Applica")
+        apply_btn.Bind(wx.EVT_BUTTON, self.on_apply_filters)
+        btn_sizer.Add(apply_btn, flag=wx.ALL, border=5)
+
+        # Pulsante "Annulla"
+        cancel_btn = wx.Button(self.panel, label="Annulla")
+        cancel_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CANCEL))
+        btn_sizer.Add(cancel_btn, flag=wx.ALL, border=5)
 
 
 
