@@ -17,7 +17,8 @@ import wx
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
-from ..models import load_cards_from_db
+from ..models import load_cards
+
 from .view_components import create_button, create_separator, add_to_sizer
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
 from utyls import helper as hp
@@ -90,6 +91,10 @@ class BasicView(wx.Frame):
     def init_ui_elements(self, *args, **kwargs):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
+
+    def load_cards(self, filters=None):
+        """ carica le carte utilizzando le funzionihelper sopra definite"""
+        load_cards(filters=filters, card_list=self.card_list)
 
     def Close(self):
         """Chiude la finestra."""
