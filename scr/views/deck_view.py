@@ -14,6 +14,7 @@
 
 # lib
 import wx, pyperclip
+import wx.lib.newevent
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 #from ..models import load_deck_from_db, load_cards
@@ -24,12 +25,18 @@ from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 
+# Creazione di un evento personalizzato per la ricerca con debounce
+SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
+
 
 
 class DeckViewFrame(BasicView):
     """Finestra per gestire le carte di un mazzo."""
 
+
     def __init__(self, parent, deck_manager, deck_name):
+        """ Costruttore della classe DeckViewFrame. """
+
         # Inizializzazione delle variabili PRIMA di chiamare super().__init__
         self.parent = parent
         self.deck_manager = deck_manager
@@ -43,8 +50,124 @@ class DeckViewFrame(BasicView):
         # Chiamata al costruttore della classe base
         super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
 
+        # Timer per il debounce
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+
+
     def init_ui_elements(self):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
+        # Impostazioni finestra principale
+        self.SetBackgroundColour('yellow')
+        self.Centre()
+        self.Maximize()
+
+        # Creazione degli elementi dell'interfaccia
+        search_sizer = create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = create_search_bar(
+            self.panel,
+            placeholder="Cerca per nome...",
+            event_handler=self.on_search
+        )
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
+        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Aggiungo la barra di ricerca al layout
+        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Lista delle carte
+        self.card_list = create_list_ctrl(
+            self.panel,
+            columns=[
+                ("Nome", 250),
+                ("Mana", 50),
+                ("Quantità", 80),
+                ("Tipo", 200),
+                ("Tipo Magia", 200),
+                ("Sottotipo", 200),
+                ("Attacco", 90),
+                ("Vita", 90),
+                ("Durabilità", 90),
+                ("Rarità", 300),
+                ("Espansione", 500)
+            ]
+        )
+
+        # Aggiungo la lista alla finestra
+        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Pulsanti azione
+        btn_panel = wx.Panel(self.panel)
+        btn_sizer = create_sizer(wx.HORIZONTAL)
+
+        # Creazione dei pulsanti
+        buttons = [
+            ("Aggiorna", self.on_reset),
+            ("Aggiungi Carta", self.on_add_card),
+            ("Modifica Carta", self.on_edit_card),
+            ("Elimina Carta", self.on_delete_card),
+            ("Chiudi", lambda e: self.Close())
+        ]
+
+        for label, handler in buttons:
+            btn = create_button(btn_panel, label=label, event_handler=handler)
+            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
+
+        # Aggiungo i pulsanti al pannello
+        btn_panel.SetSizer(btn_sizer)
+        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il layout principale
+        self.Layout()
+
+        # Carica le carte SOLO se il mazzo è stato caricato correttamente
+        if hasattr(self, "deck_content") and self.deck_content:
+            self.load_cards()
+            self.set_focus_to_list()
+
+        # Aggiungo eventi
+        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+
+        # Imposta il layout principale
+        self.Layout()
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        if not search_text:
+            return
+
+        # Avvia il timer per il debounce (es. 500 ms)
+        self.timer.Stop()  # Ferma il timer precedente
+        self.timer.Start(500, oneShot=True)
+
+    def on_timer(self, event):
+        """Esegue la ricerca dopo il timeout del debounce."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
+
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+        search_text = event.search_text
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
+
+    def _apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista delle carte."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
+            self.load_cards()
+        else:
+            # Filtra le carte in base al nome
+            self.load_cards(filters={"name": search_text})
+
+    def last_init_ui_elements(self):
+        """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
+
         # Impostazioni finestra principale
         self.SetBackgroundColour('yellow')
         self.Centre()
