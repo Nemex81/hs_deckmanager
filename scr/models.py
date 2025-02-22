@@ -462,6 +462,10 @@ class DbManager:
                 return serialize_card(card)
             return None
 
+    def get_cards(self, filters=None):
+        """Restituisce le carte dal database per la finestra collezzione generale in base ai filtri."""
+        return load_cards_from_db(filters)
+
     def get_deck_statistics(self, deck_name):
         """Calcola statistiche dettagliate per un mazzo."""
         with db_session():

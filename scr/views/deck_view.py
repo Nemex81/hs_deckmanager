@@ -18,7 +18,7 @@ import wx.lib.newevent
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 #from ..models import load_deck_from_db, load_cards
-from .proto_views import BasicView
+from .proto_views import BasicView, ListView
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .card_edit_dialog import CardEditDialog
 from utyls import enu_glob as eg
@@ -30,7 +30,65 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-class DeckViewFrame(BasicView):
+class DeckViewFrame(ListView):
+    def __init__(self, parent, deck_manager, deck_name):
+        super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
+        self.parent = parent
+        self.deck_manager = deck_manager
+        self.mode = "deck"
+        self.deck_name = deck_name
+        self.deck_content = self.deck_manager.get_deck(deck_name)
+        if not self.deck_content:
+            raise ValueError(f"Mazzo non trovato: {deck_name}")
+        self.init_ui_elements()
+
+    def init_ui_elements(self):
+        """Inizializza l'interfaccia utente."""
+        super().init_ui_elements()
+        
+        # Configura le colonne della lista
+        self.list_ctrl.AppendColumn("Nome", width=250)
+        self.list_ctrl.AppendColumn("Mana", width=50)
+        self.list_ctrl.AppendColumn("Quantità", width=80)
+        self.list_ctrl.AppendColumn("Tipo", width=200)
+        self.list_ctrl.AppendColumn("Tipo Magia", width=200)
+        self.list_ctrl.AppendColumn("Sottotipo", width=200)
+        self.list_ctrl.AppendColumn("Attacco", width=90)
+        self.list_ctrl.AppendColumn("Vita", width=90)
+        self.list_ctrl.AppendColumn("Durabilità", width=90)
+        self.list_ctrl.AppendColumn("Rarità", width=300)
+        self.list_ctrl.AppendColumn("Espansione", width=500)
+
+        # Carica le carte
+        self.load_data()
+
+    def load_data(self, filters=None):
+        """Carica le carte nel mazzo, applicando eventuali filtri."""
+        if not hasattr(self, "deck_content") or not self.deck_content:
+            return
+
+        self.list_ctrl.DeleteAllItems()
+        for card_data in self.deck_content["cards"]:
+            if filters and "name" in filters:
+                if filters["name"].lower() not in card_data["name"].lower():
+                    continue
+
+            self.list_ctrl.Append([
+                card_data.get("name", "-"),
+                str(card_data.get("mana_cost", "-")) if card_data.get("mana_cost") else "-",
+                str(card_data.get("quantity", "-")) if card_data.get("quantity") else "-",
+                card_data.get("card_type", "-"),
+                card_data.get("spell_type", "-"),
+                card_data.get("card_subtype", "-"),
+                str(card_data.get("attack", "-")) if card_data.get("attack") is not None else "-",
+                str(card_data.get("health", "-")) if card_data.get("health") is not None else "-",
+                str(card_data.get("durability", "-")) if card_data.get("durability") is not None else "-",
+                card_data.get("rarity", "-"),
+                card_data.get("expansion", "-")
+            ])
+
+
+class LastDeckViewFrame(BasicView):
     """Finestra per gestire le carte di un mazzo."""
 
 

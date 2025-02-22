@@ -61,6 +61,8 @@ class CardCollectionFrame(ListView):
         self.Maximize()
 
         # Creazione degli elementi dell'interfaccia
+
+        # Barra di ricerca e filtri
         search_sizer = create_sizer(wx.HORIZONTAL)
         self.search_ctrl = create_search_bar(
             self.panel,

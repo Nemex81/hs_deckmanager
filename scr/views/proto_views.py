@@ -93,10 +93,6 @@ class BasicView(wx.Frame):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
-    def load_cards(self, filters=None):
-        """ carica le carte utilizzando le funzionihelper sopra definite"""
-        load_cards(filters=filters, card_list=self.card_list)
-
     def Close(self):
         """Chiude la finestra."""
         if self.parent:
@@ -246,6 +242,12 @@ class ListView(BasicView):
             self.load_data()
         else:
             self.load_data(filters={"name": search_text})
+
+    def on_search(self, event):
+        """Gestisce la ricerca in tempo reale."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self._apply_search_filter(search_text)
 
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
