@@ -14,18 +14,19 @@
 
 # Lib
 import wx
+import wx.lib.newevent
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards
-
 from .view_components import create_button, create_separator, add_to_sizer
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
 from utyls import helper as hp
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
 from utyls import logger as log
 
-
+# Evento personalizzato per la ricerca in tempo reale
+SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 class BasicDialog(wx.Dialog):
     """
@@ -175,14 +176,17 @@ class SingleCardView(BasicDialog):
 
 class ListView(BasicView):
     """
-        Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
-        Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
+    Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
+    Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
     """
 
     def __init__(self, parent, title, size=(800, 600)):
         super().__init__(parent, title, size)
         self.list_ctrl = None  # ListCtrl per visualizzare l'elenco
         self.data = []  # Lista dei dati da visualizzare
+        self.timer = wx.Timer(self)  # Timer per il debounce
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
     def init_ui_elements(self):
         """Inizializza la lista e i pulsanti comuni."""
@@ -209,9 +213,84 @@ class ListView(BasicView):
         """Carica i dati nell'elenco (da implementare nelle classi derivate)."""
         raise NotImplementedError("Il metodo load_data deve essere implementato nelle classi derivate.")
 
+
     def on_refresh(self, event):
         """Aggiorna l'elenco."""
         self.load_data()
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        if not search_text:
+            return
+
+        # Avvia il timer per il debounce (es. 500 ms)
+        self.timer.Stop()  # Ferma il timer precedente
+        self.timer.Start(500, oneShot=True)
+
+    def on_timer(self, event):
+        """Esegue la ricerca dopo il timeout del debounce."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
+
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+        search_text = event.search_text
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
+
+    def _apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista delle carte."""
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            self.load_data()
+        else:
+            self.load_data(filters={"name": search_text})
+
+    def set_focus_to_list(self):
+        """Imposta il focus sulla prima carta della lista carte."""
+        if hasattr(self, "list_ctrl"):
+            self.list_ctrl.SetFocus()
+            self.list_ctrl.Select(0)
+            self.list_ctrl.Focus(0)
+            self.list_ctrl.EnsureVisible(0)
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata."""
+        items = []
+        for i in range(self.list_ctrl.GetItemCount()):
+            item = [self.list_ctrl.GetItemText(i, c) for c in range(self.list_ctrl.GetColumnCount())]
+            items.append(item)
+
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        self.list_ctrl.DeleteAllItems()
+        for item in items:
+            self.list_ctrl.Append(item)
+
+    def on_column_click(self, event):
+        """Ordina le carte in base alla colonna selezionata."""
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+    def on_key_press(self, event):
+        """Gestisce i tasti premuti per ordinare la lista."""
+        key_code = event.GetKeyCode()
+        if ord('1') <= key_code <= ord('9'):
+            col = key_code - ord('1')
+            if col < self.list_ctrl.GetColumnCount():
+                self.sort_cards(col)
+
+        event.Skip()
 
 
 
