@@ -130,6 +130,33 @@ def add_to_sizer(sizer, element, proportion=0, flag=wx.ALL, border=10):
     """
     sizer.Add(element, proportion=proportion, flag=flag, border=border)
 
+def create_checklistbox(parent, choices, event_handler=None):
+    """
+    Crea un controllo CheckListBox per la selezione multipla.
+
+    :param parent: Il genitore del controllo.
+    :param choices: Lista di scelte da mostrare nel CheckListBox.
+    :param event_handler: Funzione da chiamare quando un elemento viene selezionato (opzionale).
+    :return: Un'istanza di wx.CheckListBox.
+    """
+    checklistbox = wx.CheckListBox(parent, choices=choices)
+    if event_handler:
+        checklistbox.Bind(wx.EVT_CHECKLISTBOX, event_handler)
+    return checklistbox
+
+def create_check_list_box(parent, choices, label=""):
+    """
+    Crea una casella di selezione multipla (wx.CheckListBox).
+
+    :param parent: Il genitore del controllo.
+    :param choices: Lista di opzioni da visualizzare.
+    :param label: Etichetta da visualizzare sopra la casella di selezione (opzionale).
+    :return: Un'istanza di wx.CheckListBox.
+    """
+    label_ctrl = wx.StaticText(parent, label=label)
+    check_list_box = wx.CheckListBox(parent, choices=choices)
+    return label_ctrl, check_list_box
+
 def create_separator(parent, style=wx.LI_HORIZONTAL, thickness=1, color=None):
     """
     Crea un separatore orizzontale o verticale per gli elementi dell'interfaccia utente.

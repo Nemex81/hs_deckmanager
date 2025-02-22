@@ -7,7 +7,8 @@ import wx
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card
 from ..models import load_cards
-from .proto_views import SingleCardView
+from .view_components import create_button, create_check_list_box, create_separator
+from .proto_views import CardFormDialog
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -15,212 +16,185 @@ from utyls import logger as log
 
 
 
-class CardEditDialog(SingleCardView):
+class CardEditDialog(CardFormDialog):
     """Finestra di dialogo per aggiungere o modificare una carta."""
 
     def __init__(self, parent, card=None):
-        title = "Modifica Carta" if card else "Aggiungi Carta"
         self.parent = parent
+        title = "Modifica Carta" if card else "Aggiungi Carta"
         self.card = card
-        self.card_name = card.name if card else None  # Memorizza il nome della carta per la modifica
-        super().__init__(parent, title=title, size=(400, 500))
+        super().__init__(parent, title=title, size=(400, 900))
+        #elf.init_specific_ui_elements()
 
     def init_ui_elements(self):
-        """ Inizializza l'interfaccia utente. """
+        """Inizializza i componenti specifici per CardEditDialog."""
 
-        self.SetBackgroundColour('yellow')
-        #panel = wx.Panel(self)
+        # Sizer per i campi
+        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
 
-        # Campi di input
-        fields = [
-            ("nome", wx.TextCtrl),  # Passa la classe wx.TextCtrl
-            ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),  # Passa la classe wx.SpinCtrl e i kwargs
-            ("tipo", wx.ComboBox, {"choices": [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
-            ("tipo_magia", wx.ComboBox, {"choices": [t.value for t in EnuSpellType], "style": wx.CB_READONLY}),
-            ("sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),  # Inizialmente vuoto
-            ("attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("vita", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("durability", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("rarita", wx.ComboBox, {"choices": [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
-            ("espansione", wx.ComboBox, {"choices": [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
+        # Definizione dei campi comuni
+        common_controls = [
+            ("nome", "Nome", wx.TextCtrl),
+            ("costo_mana", "Costo Mana", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("tipo", "Tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo_magia", "Tipo Magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
+            ("sottotipo", "Sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),
+            ("attacco", "Attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("vita", "Vita", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("durability", "Durabilità", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("rarita", "Rarità", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", "Espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
         ]
 
-        # Crea i controlli UI e ottieni il sizer e il dizionario dei controlli
-        self.sizer, control_dict = hp.create_ui_controls(self.panel, fields)
+        # Creazione dei controlli UI e aggiunta al sizer dei campi
+        for key, label_text, control_type, *args in common_controls:
+            label = wx.StaticText(self.panel, label=label_text)
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
 
-        # Assegna i controlli agli attributi della classe
-        self.nome = control_dict["nome"]
-        self.costo_mana = control_dict["costo_mana"]
-        self.tipo = control_dict["tipo"]
-        self.tipo_magia = control_dict["tipo_magia"]
-        self.sottotipo = control_dict["sottotipo"]
-        self.attacco = control_dict["attacco"]
-        self.vita = control_dict["vita"]
-        self.durability = control_dict["durability"]
-        self.rarità = control_dict["rarita"]
-        self.espansione = control_dict["espansione"]
+            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
+            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+            self.controls[key] = control
 
-        # Disabilito la casella "tipo_magia e integrita" di default
-        #self.tipo_magia.Disable()
-        #self.durability.Disable()
+        # Collega l'evento di selezione del tipo di carta
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
 
-        # Collego l'evento di selezione del tipo di carta al metodo update_subtypes
-        self.tipo.Bind(wx.EVT_COMBOBOX, self.on_type_change)
+        # Aggiungi il sizer dei campi al sizer principale
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Selezione multipla delle classi
-        self.classes_listbox = wx.CheckListBox(self.panel, choices=[h.value for h in EnuHero])
-        self.sizer.Add(wx.StaticText(self.panel, label="Classi:"), flag=wx.LEFT | wx.RIGHT, border=10)
-        self.sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        classes_label, self.classes_listbox = create_check_list_box(
+            self.panel,
+            choices=[h.value for h in EnuHero],
+            label="Classi:"
+        )
+        main_sizer.Add(classes_label, flag=wx.LEFT | wx.RIGHT, border=10)
+        main_sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
-        # Pulsanti
+        # Sizer per i pulsanti
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn_save = wx.Button(self.panel, label="Salva")
-        btn_close = wx.Button(self.panel, label="Chiudi")
-        btn_sizer.Add(btn_save, flag=wx.RIGHT, border=10)
-        btn_sizer.Add(btn_close)
-        
-        # Eventi
-        btn_save.Bind(wx.EVT_BUTTON, self.on_save)
-        btn_close.Bind(wx.EVT_BUTTON, self.on_close)
+        self.add_buttons(btn_sizer, [("Salva", self.on_save), ("Chiudi", self.on_close)])
 
-        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-        self.panel.SetSizer(self.sizer)
-        self.Layout()  # Forza il ridisegno del layout
+        # Aggiungi il sizer dei pulsanti al sizer principale
+        main_sizer.Add(btn_sizer, proportion=0, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(main_sizer)
+        main_sizer.Fit(self.panel)
 
         # Se è una modifica, pre-carica i dati della carta
         if self.card:
-            self.nome.SetValue(self.card.name)
-            self.costo_mana.SetValue(self.card.mana_cost)
-            self.tipo.SetValue(self.card.card_type)
-            self.tipo_magia.SetValue(self.card.spell_type) if self.card.spell_type else self.tipo_magia.SetValue("-")
+            self.load_card_data()
 
-            # Aggiorna i sottotipi in base al tipo di carta selezionato
-            self.update_subtypes()
+    def load_card_data(self):
+        """Carica i dati della carta nei controlli UI."""
+        if not self.card:
+            return
 
-            # Imposta il valore corrente del sottotipo
-            self.sottotipo.SetValue(self.card.card_subtype)
+        # Carica i dati della carta nei controlli
+        self.controls["nome"].SetValue(self.card.name or "")
+        self.controls["costo_mana"].SetValue(self.card.mana_cost or 0)
+        self.controls["tipo"].SetValue(self.card.card_type or "Tutti")
+        self.controls["tipo_magia"].SetValue(self.card.spell_type or "Qualsiasi")
+        self.update_subtypes()
+        self.controls["sottotipo"].SetValue(self.card.card_subtype or "Tutti")
+        self.controls["attacco"].SetValue(self.card.attack or 0)
+        self.controls["vita"].SetValue(self.card.health or 0)
+        self.controls["durability"].SetValue(self.card.durability or 0)
+        self.controls["rarita"].SetValue(self.card.rarity or "Tutti")
+        self.controls["espansione"].SetValue(self.card.expansion or "Tutti")
 
-            # Imposta i valori di attacco e vita (se presenti)
-            self.attacco.SetValue(self.card.attack) if self.card.attack else self.attacco.SetValue("-")
-            self.vita.SetValue(self.card.health) if self.card.health else self.vita.SetValue("-")
-
-            # Imposta il valore di integrità (se presente)
-            self.durability.SetValue(self.card.durability) if self.card.durability else self.durability.SetValue("-")
-
-            # Imposta i valori di rarità ed espansione
-            self.rarità.SetValue(self.card.rarity) if self.card.rarity else self.rarità.SetValue("-")
-            self.espansione.SetValue(self.card.expansion) if self.card.expansion else self.espansione.SetValue("-")
-
-            # Seleziona le classi associate alla carta
-            if self.card.class_name:
-                selected_classes = hp.disassemble_classes_string(self.card.class_name)
-                for i, class_name in enumerate(self.classes_listbox.GetItems()):
-                    if class_name in selected_classes:
-                        self.classes_listbox.Check(i)
-
+        # Seleziona le classi associate alla carta
+        if self.card.class_name:
+            selected_classes = hp.disassemble_classes_string(self.card.class_name)
+            for i, class_name in enumerate(self.classes_listbox.GetItems()):
+                if class_name in selected_classes:
+                    self.classes_listbox.Check(i)
 
     def update_subtypes(self):
-        """ Aggiorna i sottotipi in base al tipo di carta selezionato. """
+        """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+        card_type = self.controls["tipo"].GetValue()
+        subtypes = []
 
-        card_type = self.tipo.GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
-
         elif card_type == EnuCardType.CREATURA.value:
             subtypes = [st.value for st in EnuPetSubType]
 
-        else:
-            subtypes = []
-
         # Salva il sottotipo corrente
-        current_subtype = self.sottotipo.GetValue()
-        self.sottotipo.Clear()
-        self.sottotipo.AppendItems(subtypes)
-        
-        # Se il sottotipo corrente è valido per il nuovo tipo di carta, mantienilo
-        if current_subtype in subtypes:
-            self.sottotipo.SetValue(current_subtype)
+        current_subtype = self.controls["sottotipo"].GetValue()
+        self.controls["sottotipo"].Clear()
+        self.controls["sottotipo"].AppendItems(["Tutti"] + subtypes)
+
+        # Ripristina il sottotipo se presente nei nuovi sottotipi
+        if current_subtype and current_subtype in subtypes:
+            self.controls["sottotipo"].SetValue(current_subtype)
         else:
-            self.sottotipo.SetValue("")  # Resetta il sottotipo se non è valido
+            self.controls["sottotipo"].SetValue("Tutti")
 
-
-    def get_card_name(self):
-        """Restituisce il nome della carta modificata o aggiunta."""
-        return self.card_name
-
+        # Abilita/disabilita i campi in base al tipo di carta
+        self.on_type_change(None)
 
     def on_type_change(self, event):
         """Gestisce il cambio del tipo di carta."""
+        card_type = self.controls["tipo"].GetValue()
 
-        card_type = self.tipo.GetValue()
-
-        # Abilita o disabilita la casella "tipo_magia" in base al tipo selezionato
+        # Abilita/disabilita i campi in base al tipo di carta
         if card_type == EnuCardType.MAGIA.value:
-            self.tipo_magia.Enable()
-            self.attacco.Disable()
-            self.vita.Disable()
-            self.durability.Disable()
+            self.controls["tipo_magia"].Enable()
+            self.controls["attacco"].Disable()
+            self.controls["vita"].Disable()
+            self.controls["durability"].Disable()
+        elif card_type == EnuCardType.CREATURA.value:
+            self.controls["tipo_magia"].Disable()
+            self.controls["attacco"].Enable()
+            self.controls["vita"].Enable()
+            self.controls["durability"].Disable()
+        elif card_type == EnuCardType.ARMA.value:
+            self.controls["tipo_magia"].Disable()
+            self.controls["attacco"].Enable()
+            self.controls["vita"].Disable()
+            self.controls["durability"].Enable()
         else:
-            self.tipo_magia.Disable()
-            self.tipo_magia.SetValue("-")  # Resetta il valore se non è una magia
+            self.controls["tipo_magia"].Disable()
+            self.controls["attacco"].Disable()
+            self.controls["vita"].Disable()
+            self.controls["durability"].Disable()
 
-        # Gestisci la casella "durability" per le armi
-        if card_type == EnuCardType.ARMA.value:
-            self.durability.Enable()
-            self.attacco.Enable()
-            self.vita.Disable()
-            self.vita.SetValue("-")
-        else:
-            self.durability.Disable()
-            self.durability.SetValue("-")  # Resetta il valore se non è un'arma
+        # Imposta valori predefiniti per i campi disabilitati
+        self.controls["tipo_magia"].SetValue("Qualsiasi")
+        self.controls["attacco"].SetValue(0)
+        self.controls["vita"].SetValue(0)
+        self.controls["durability"].SetValue(0)
 
-        # Gestisci la casella "attacco" per le creature
-        if card_type == EnuCardType.CREATURA.value:
-            self.attacco.Enable()
-            self.vita.Enable()
-        else:
-            self.attacco.Disable()
-            self.vita.Disable()
-            self.attacco.SetValue("-")
-            self.vita.SetValue("-")
+    def add_buttons(self, btn_sizer, buttons):
+        """
+        Aggiunge pulsanti alla finestra di dialogo.
 
-        if card_type == EnuCardType.LUOGO.value:
-            self.attacco.Disable()
-            self.vita.Disable()
-            self.durability.Enable()
-        else:
-            self.durability.Disable()
-            self.durability.SetValue("-")
-
-        if card_type == EnuCardType.EROE.value:
-            self.attacco.Disable()
-            self.vita.Disable()
-            self.durability.Disable()
-        else:
-            self.attacco.Disable()
-            self.vita.Disable()
-            self.durability.Disable()
-
-        # Aggiorna i sottotipi
-        self.update_subtypes()
-
+        :param btn_sizer: Il sizer a cui aggiungere i pulsanti.
+        :param buttons: Lista di tuple (label, handler) per i pulsanti.
+        """
+        for label, handler in buttons:
+            btn = create_button(self.panel, label=label, event_handler=handler)
+            btn_sizer.Add(btn, flag=wx.RIGHT, border=10)
 
     def on_save(self, event):
         """Salva la carta nel database."""
-
-        self.card_name = None
         try:
             card_data = {
-                "name": self.nome.GetValue(),
-                "mana_cost": self.costo_mana.GetValue(),
-                "card_type": self.tipo.GetValue(),
-                "spell_type": self.tipo_magia.GetValue(),
-                "card_subtype": self.sottotipo.GetValue(),
-                "attack": self.attacco.GetValue(),
-                "health": self.vita.GetValue(),
-                "durability": self.durability.GetValue() if self.durability.IsEnabled() else None,
-                "rarity": self.rarità.GetValue(),
-                "expansion": self.espansione.GetValue()
+                "name": self.controls["nome"].GetValue(),
+                "mana_cost": self.controls["costo_mana"].GetValue(),
+                "card_type": self.controls["tipo"].GetValue(),
+                "spell_type": self.controls["tipo_magia"].GetValue() if self.controls["tipo_magia"].IsEnabled() else None,
+                "card_subtype": self.controls["sottotipo"].GetValue() if self.controls["sottotipo"].GetValue() != "Tutti" else None,
+                "attack": self.controls["attacco"].GetValue() if self.controls["attacco"].IsEnabled() else None,
+                "health": self.controls["vita"].GetValue() if self.controls["vita"].IsEnabled() else None,
+                "durability": self.controls["durability"].GetValue() if self.controls["durability"].IsEnabled() else None,
+                "rarity": self.controls["rarita"].GetValue(),
+                "expansion": self.controls["espansione"].GetValue()
             }
 
             # Ottieni le classi selezionate
@@ -229,63 +203,31 @@ class CardEditDialog(SingleCardView):
 
             if self.card:
                 # Modifica la carta esistente
-                self.card.name = card_data["name"]
-                self.card.mana_cost = card_data["mana_cost"]
-                self.card.card_type = card_data["card_type"]
-                self.card.spell_type = card_data["spell_type"]
-                self.card.card_subtype = card_data["card_subtype"]
-                self.card.attack = card_data["attack"]
-                self.card.health = card_data["health"]
-                self.card.durability = card_data["durability"]
-                self.card.rarity = card_data["rarity"]
-                self.card.expansion = card_data["expansion"]
-                self.card.class_name = card_data["class_name"]
-                # Aggiorno il nome della carta nella variabile locale
-                self.card_name = self.card.name 
+                for key, value in card_data.items():
+                    setattr(self.card, key, value)
             else:
                 # Aggiungi una nuova carta
                 new_card = Card(**card_data)
                 session.add(new_card)
-                self.card_name = new_card.name  # Memorizza il nome della nuova carta
 
             # Salva le modifiche nel database
             session.commit()
-            self.EndModal(wx.ID_OK)                          # Chiudi la finestra e notifica che i dati sono stati salvati
-            self.parent.load_cards()                         # Ricarica la lista delle carte
-            self.parent.select_card_by_name(self.card_name)  # Seleziona e mette a fuoco la carta modificata
+            self.EndModal(wx.ID_OK)  # Chiude la finestra
+            self.parent.load_cards()  # Ricarica la lista delle carte
+            self.parent.select_card_by_name(card_data["name"])  # Seleziona la carta appena salvata
             self.Destroy()
 
         except Exception as e:
             log.error(f"Errore durante il salvataggio: {str(e)}")
-            raise
-
-
-    def on_edit_card(self, event):
-        """Modifica la carta selezionata."""
-
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            card = session.query(Card).filter_by(name=card_name).first()
-            if card:
-                dlg = CardEditDialog(self, card)
-                if dlg.ShowModal() == wx.ID_OK:
-                    self.load_cards()  # Ricarica la lista delle carte
-                    wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
-                    self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
-
-                dlg.Destroy()
-
-            else:
-                wx.MessageBox("Carta non trovata nel database.", "Errore")
-
-        else:
-            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
-
+            wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
 
     def on_close(self, event):
         """Chiude la finestra di dialogo."""
-        self.parent.select_card_by_name(self.card_name)
+        self.parent.select_card_by_name(self.card)
         self.EndModal(wx.ID_CANCEL)
-        
-        
+
+
+
+#@@@# Start del modulo
+if __name__ != "__main__":
+    log.debug(f"Carico: {__name__}")
