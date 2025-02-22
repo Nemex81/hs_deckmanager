@@ -194,6 +194,7 @@ class DeckViewFrame(BasicView):
         """Ripristina la visualizzazione originale."""
         if hasattr(self, "search_ctrl"):
             self.search_ctrl.SetValue("")  # Resetta la barra di ricerca
+
         self.load_cards()  # Ricarica le carte senza filtri
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
         self.card_list.SetFocus()
@@ -232,9 +233,12 @@ class DeckViewFrame(BasicView):
                     self.load_cards()
                     wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                     self.select_card_by_name(card_name)
+
                 dlg.Destroy()
+
             else:
                 wx.MessageBox("Carta non trovata nel database.", "Errore")
+
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
 
@@ -248,8 +252,10 @@ class DeckViewFrame(BasicView):
                     card_data for card_data in self.deck_content["cards"]
                     if card_data["name"] != card_name
                 ]
+
                 self.load_cards()
                 wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
+
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
 
@@ -299,6 +305,7 @@ class DeckViewFrame(BasicView):
             col = key_code - ord('1')
             if col < self.card_list.GetColumnCount():
                 self.sort_cards(col)
+
         event.Skip()
 
     def on_close(self, event):
@@ -306,6 +313,7 @@ class DeckViewFrame(BasicView):
         self.parent.Show()
         self.Close()
         self.Destroy()
+
 
 
 #@@@# Start del modulo
