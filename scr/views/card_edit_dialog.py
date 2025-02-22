@@ -19,7 +19,7 @@ import wx
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card
 from ..models import load_cards
-from .view_components import create_button, create_check_list_box, create_separator
+from .view_components import create_button, create_check_list_box, create_separator, create_common_controls
 from .proto_views import CardFormDialog
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
@@ -45,18 +45,7 @@ class CardEditDialog(CardFormDialog):
         fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
 
         # Definizione dei campi comuni
-        common_controls = [
-            ("nome", "Nome", wx.TextCtrl),
-            ("costo_mana", "Costo Mana", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("tipo", "Tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
-            ("tipo_magia", "Tipo Magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
-            ("sottotipo", "Sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),
-            ("attacco", "Attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("vita", "Vita", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("durability", "Durabilità", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("rarita", "Rarità", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
-            ("espansione", "Espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
-        ]
+        common_controls = create_common_controls()
 
         # Creazione dei controlli UI e aggiunta al sizer dei campi
         for key, label_text, control_type, *args in common_controls:

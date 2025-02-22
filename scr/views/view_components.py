@@ -32,7 +32,7 @@
     6.  create_message_dialog:
         ◦  Crea una finestra di dialogo per messaggi di conferma con titolo e stile personalizzabili.
 
-    None:
+    Note:
         ◦  Questo modulo non è progettato per essere eseguito
         ◦  Le funzioni sono progettate per essere importate in altri moduli
         ◦  Le funzioni sono progettate per essere utilizzate in combinazione con wxPython
@@ -129,6 +129,28 @@ def add_to_sizer(sizer, element, proportion=0, flag=wx.ALL, border=10):
     :param border: Spazio intorno all'elemento. Default: 10.
     """
     sizer.Add(element, proportion=proportion, flag=flag, border=border)
+
+def create_common_controls():
+    """
+    Crea controlli comuni per la ricerca di carte.
+
+    :return: Un dizionario con i controlli creati.
+    """
+
+    # Definizione dei campi comuni
+    common_controls = [
+        ("nome", "Nome", wx.TextCtrl),
+        ("costo_mana", "Costo Mana", wx.SpinCtrl, {"min": 0, "max": 20}),
+        ("tipo", "Tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in eg.EnuCardType], "style": wx.CB_READONLY}),
+        ("tipo_magia", "Tipo Magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in eg.EnuSpellType], "style": wx.CB_READONLY}),
+        ("sottotipo", "Sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),
+        ("attacco", "Attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
+        ("vita", "Vita", wx.SpinCtrl, {"min": 0, "max": 20}),
+        ("durability", "Durabilità", wx.SpinCtrl, {"min": 0, "max": 20}),
+        ("rarita", "Rarità", wx.ComboBox, {"choices": ["Tutti"] + [r.value for r in eg.EnuRarity], "style": wx.CB_READONLY}),
+        ("espansione", "Espansione", wx.ComboBox, {"choices": ["Tutti"] + [e.value for e in eg.EnuExpansion], "style": wx.CB_READONLY})
+    ]
+    return common_controls
 
 def create_checklistbox(parent, choices, event_handler=None):
     """
