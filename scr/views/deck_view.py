@@ -174,11 +174,13 @@ class DeckViewFrame(BasicView):
         """Gestisce la ricerca testuale."""
         search_text = self.search_ctrl.GetValue().strip().lower()
         self._apply_search_filter(search_text)
+        self.set_focus_to_list()
 
     def on_search_text_change(self, event):
         """Gestisce la ricerca in tempo reale mentre l'utente digita."""
         search_text = self.search_ctrl.GetValue().strip().lower()
         self._apply_search_filter(search_text)
+
 
     def on_reset(self, event):
         """Ripristina la visualizzazione originale."""
