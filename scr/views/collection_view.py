@@ -140,29 +140,26 @@ class CardCollectionFrame(BasicView):
         self.load_cards()  # Ricarica la lista delle carte senza filtri
 
 
+    def set_focus_to_list(self):
+        """Imposta il focus sulla prima carta della lista carte."""
+
+        if hasattr(self, "card_list"):
+            self.card_list.SetFocus()
+            self.card_list.Select(0)
+            self.card_list.Focus(0)
+            self.card_list.EnsureVisible(0)
+
+
     def on_show_filters(self, event):
         """Mostra la finestra dei filtri avanzati."""
 
         dlg = FilterDialog(self)
-        if dlg.ShowModal() == wx.ID_OK:
-            # Applica i nuovi filtri
-            filters = {
-                "name": dlg.search_ctrl.GetValue(),
-                "mana_cost": dlg.mana_cost.GetValue(),
-                "card_type": dlg.card_type.GetValue(),
-                "spell_type": dlg.spell_type.GetValue(),
-                "card_subtype": dlg.card_subtype.GetValue(),
-                "attack": dlg.attack.GetValue(),
-                "health": dlg.health.GetValue(),
-                "rarity": dlg.rarity.GetValue(),
-                "expansion": dlg.expansion.GetValue()
-            }
-            self.load_cards(filters=filters)
-
-        else:
-            # Se l'utente annulla, resetta i filtri
+        if dlg.ShowModal() != wx.ID_OK:
+            dlg.reset_filters()
             self.load_cards(filters=None)
 
+        # sposta il focus sulla prima carta della lista carte di questa finestra
+        self.set_focus_to_list()
         dlg.Destroy()
 
 

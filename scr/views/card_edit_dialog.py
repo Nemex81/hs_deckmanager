@@ -36,7 +36,7 @@ class CardEditDialog(CardFormDialog):
         title = "Modifica Carta" if card else "Aggiungi Carta"
         self.card = card
         super().__init__(parent, title=title, size=(400, 900))
-        #elf.init_specific_ui_elements()
+        #self.init_specific_ui_elements()
 
     def init_ui_elements(self):
         """Inizializza i componenti specifici per CardEditDialog."""

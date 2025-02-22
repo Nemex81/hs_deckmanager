@@ -15,8 +15,9 @@
 # Lib
 import wx
 from .proto_views import BasicDialog, CardFormDialog
-from .view_components import create_sizer, add_to_sizer, create_button, create_separator
+from .view_components import create_check_list_box, create_common_controls
 from utyls.enu_glob import EnuCardType, EnuSpellType , EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
@@ -28,7 +29,62 @@ class FilterDialog(CardFormDialog):
     def __init__(self, parent):
         super().__init__(parent, title="Filtri di Ricerca", size=(420, 600))
         self.parent = parent
-        self.init_specific_ui_elements()
+        #elf.init_specific_ui_elements()
+
+    def init_ui_elements(self):
+        """Inizializza i componenti specifici per CardEditDialog."""
+
+        self.panel.SetBackgroundColour('blue')
+
+        # Sizer per i campi
+        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
+
+        # Definizione dei campi comuni
+        common_controls = create_common_controls()
+
+        # Creazione dei controlli UI e aggiunta al sizer dei campi
+        for key, label_text, control_type, *args in common_controls:
+            label = wx.StaticText(self.panel, label=label_text)
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
+
+            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
+            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+            self.controls[key] = control
+
+        # Collega l'evento di selezione del tipo di carta
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
+
+        # Aggiungi il sizer dei campi al sizer principale
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Selezione multipla delle classi
+        classes_label, self.classes_listbox = create_check_list_box(
+            self.panel,
+            choices=[h.value for h in EnuHero],
+            label="Classi:"
+        )
+
+        # Aggiungola lista delle classi al sizer principale
+        main_sizer.Add(classes_label, flag=wx.LEFT | wx.RIGHT, border=10)
+        main_sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Sizer per i pulsanti
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.add_buttons(btn_sizer)
+
+        # Aggiungoil sizer dei pulsanti al sizer principale
+        main_sizer.Add(btn_sizer, proportion=0, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Impostoil sizer principale per il pannello
+        self.panel.SetSizer(main_sizer)
+        main_sizer.Fit(self.panel)
+
+        # Imposta i valori predefiniti
+        self.reset_filters()
 
     def init_specific_ui_elements(self):
         """Inizializza i componenti specifici per FilterDialog."""
@@ -60,7 +116,7 @@ class FilterDialog(CardFormDialog):
         """ Aggiorna i sottotipi in base al tipo di carta selezionato. """
 
         subtypes = "-"
-        card_type = self.card_type.GetValue()
+        card_type = self.controls["tipo"].GetValue()
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
 
@@ -71,48 +127,52 @@ class FilterDialog(CardFormDialog):
             subtypes = []
 
         # Salva il sottotipo corrente
-        current_subtype = self.card_subtype.GetValue()
-        self.card_subtype.Clear()
-        self.card_subtype.AppendItems(subtypes)
+        current_subtype = self.controls["sottotipo"].GetValue()
+        self.controls["sottotipo"].Clear()
+        self.controls["sottotipo"].AppendItems(["Tutti"] + subtypes)
         # Se il sottotipo corrente è valido per il nuovo tipo di carta, mantienilo
         if current_subtype not in subtypes:
-            self.card_subtype.SetValue("")  # Resetta il sottotipo se non è valido
+            self.controls["sottotipo"].SetValue("Tutti")
 
         if card_type == EnuCardType.MAGIA.value:
-            self.spell_type.Enable()
-            self.attack.Disable()
-            self.health.Disable()
-            #self.durability.Disable()
+            self.controls["attacco"].Disable()
+            self.controls["vita"].Disable()
+            self.controls["durability"].Disable()
+            self.controls["sottotipo"].Disable()
+            self.controls["tipo_magia"].Enable()
+
 
         elif card_type == EnuCardType.CREATURA.value:
-            self.attack.Enable()
-            self.health.Enable()
-            #self.durability.Disable()
-            self.spell_type.Disable()
+            self.controls["attacco"].Enable()
+            self.controls["vita"].Enable()
+            self.controls["durability"].Disable()
+            self.controls["tipo_magia"].Disable()
 
         elif card_type == EnuCardType.LUOGO.value:
-            self.attack.Disable()
-            self.health.Disable()
-            #self.durability.Enable()
-            self.spell_type.Disable()
+            self.controls["attacco"].Disable()
+            self.controls["vita"].Disable()
+            self.controls["sottotipo"].Disable()
+            self.controls["tipo_magia"].Disable()
+            self.controls["durability"].Enable()
 
         elif card_type == EnuCardType.ARMA.value:
-            self.attack.Enable()
-            self.health.Disable()
-            #self.durability.Enable()
-            self.spell_type.Disable()
+            self.controls["attacco"].Disable()
+            self.controls["vita"].Disable()
+            self.controls["sottotipo"].Disable()
+            self.controls["tipo_magia"].Disable()
+            self.controls["durability"].Enable()
 
         elif card_type == EnuCardType.EROE.value:
-            self.attack.Enable()
-            self.health.Disable()
-            #self.durability.Disable()
-            self.spell_type.Disable()
+            self.controls["attacco"].Enable()
+            self.controls["vita"].Enable()
+            self.controls["durability"].Disable()
+            self.controls["tipo_magia"].Disable()
 
         else:
-            self.attack.Enable()
-            self.health.Enable()
-            #self.durability.Enable()
-            self.spell_type.Enable()
+            self.controls["attacco"].Enable()
+            self.controls["vita"].Enable()
+            self.controls["durability"].Enable()
+            self.controls["tipo_magia"].Enable()
 
 
     def on_type_change(self, event):
@@ -139,6 +199,7 @@ class FilterDialog(CardFormDialog):
 
     def on_apply_filters(self, event):
         """Gestisce l'applicazione dei filtri."""
+
         filters = {
             "name": self.controls["nome"].GetValue(),
             "mana_cost": self.controls["costo_mana"].GetValue(),
@@ -151,16 +212,14 @@ class FilterDialog(CardFormDialog):
             "expansion": self.controls["espansione"].GetValue()
         }
 
-        # Chiude la finestra di dialogo
+        # Chiude la finestra di dialogo e carica le carte filtrate
         if filters:
             self.parent.load_cards(filters)
+        else:
+            # Resetta i filtri
+            self.reset_filters()
 
         self.EndModal(wx.ID_OK)
-
-    #def on_save(self, event):
-        #"""Salva i filtri e chiude la finestra di dialogo."""
-        #self.EndModal(wx.ID_OK)
-
 
 
 
