@@ -59,6 +59,7 @@ class CardCollectionFrame(BasicView):
             placeholder="Cerca per nome...",
             event_handler=self.on_search
         )
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
         add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsante filtri avanzati
@@ -129,49 +130,43 @@ class CardCollectionFrame(BasicView):
         # Imposta il layout principale
         self.Layout()
 
-
     def load_cards(self, filters=None):
-        """ carica le carte utilizzando le funzionihelper sopra definite"""
+        """Carica le carte utilizzando le funzioni helper sopra definite."""
         load_cards(filters=filters, card_list=self.card_list)
 
-
     def reset_filters(self):
+        """Resetta i filtri e ricarica la lista delle carte."""
         self.search_ctrl.SetValue("")
         self.load_cards()  # Ricarica la lista delle carte senza filtri
 
-
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
-
         if hasattr(self, "card_list"):
             self.card_list.SetFocus()
             self.card_list.Select(0)
             self.card_list.Focus(0)
             self.card_list.EnsureVisible(0)
 
-
     def on_show_filters(self, event):
         """Mostra la finestra dei filtri avanzati."""
-
         dlg = FilterDialog(self)
         if dlg.ShowModal() != wx.ID_OK:
             dlg.reset_filters()
             self.load_cards(filters=None)
 
-        # sposta il focus sulla prima carta della lista carte di questa finestra
+        # Sposta il focus sulla prima carta della lista carte di questa finestra
         self.set_focus_to_list()
         dlg.Destroy()
 
-
     def on_reset(self, event):
         """Ripristina la visualizzazione originale, rimuovendo i filtri e riordinando le colonne."""
-
         # Rimuovi i filtri
         if hasattr(self, "search_ctrl"):
             self.search_ctrl.SetValue("")  # Resetta la barra di ricerca
 
         if hasattr(self, "filters"):
             del self.filters  # Libera la memoria occupata dai filtri precedenti
+
         # Ricarica le carte senza filtri
         self.load_cards()
 
@@ -182,10 +177,8 @@ class CardCollectionFrame(BasicView):
         self.card_list.Focus(0)
         self.card_list.EnsureVisible(0)
 
-
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
-
         # Ottieni i dati dalla lista
         items = []
         for i in range(self.card_list.GetItemCount()):
@@ -203,7 +196,6 @@ class CardCollectionFrame(BasicView):
         # Ordina i dati in base alla colonna selezionata
         if col == 1:  # Colonna "Mana" (numerica)
             items.sort(key=lambda x: safe_int(x[col]))
-
         else:  # Altre colonne (testuali)
             items.sort(key=lambda x: x[col])
 
@@ -213,32 +205,26 @@ class CardCollectionFrame(BasicView):
             self.card_list.Append(item)
 
     def select_card_by_name(self, card_name):
-        """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga.
-
-        :param card_name: Nome della carta da selezionare
-        """
-
+        """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga."""
         if not card_name:
             return
 
         # Trova l'indice della carta nella lista
         for i in range(self.card_list.GetItemCount()):
             if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)                            # Seleziona la riga
-                self.card_list.Focus(i)                             # Sposta il focus alla riga selezionata
-                self.card_list.EnsureVisible(i)                     # Assicurati che la riga sia visibile
-                self.card_list.SetFocus()                           # Imposta il focus sulla lista
+                self.card_list.Select(i)  # Seleziona la riga
+                self.card_list.Focus(i)  # Sposta il focus alla riga selezionata
+                self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
+                self.card_list.SetFocus()  # Imposta il focus sulla lista
                 break
 
     def on_column_click(self, event):
         """Gestisce il clic sulle intestazioni delle colonne per ordinare la lista."""
-
         col = event.GetColumn()
         self.sort_cards(col)
 
     def on_key_press(self, event):
         """Gestisce i tasti premuti per ordinare la lista."""
-
         key_code = event.GetKeyCode()
         if key_code >= ord('1') and key_code <= ord('9'):
             col = key_code - ord('1')  # Converti il tasto premuto in un indice di colonna (0-8)
@@ -247,21 +233,34 @@ class CardCollectionFrame(BasicView):
 
         event.Skip()
 
-    def on_search(self, event):
+    def search_from_name(self, search_text , event):
         """Gestisce la ricerca testuale."""
 
-        search_text = self.search_ctrl.GetValue().strip().lower()
         # Se la casella di ricerca è vuota o contiene "tutti" o "all", ripristina la visualizzazione
-        if search_text is None or search_text == "" or search_text in ["tutti", "tutto", "all"]:
+        if search_text is None or search_text in ["Tutti", "tutti", "all", "Qualsiasi", "qualsiasi", "-", " ", ""]:
             self.on_reset(event)
-
         else:
             # Altrimenti, applica la ricerca
             self.load_cards(filters={"name": search_text})
 
+
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self.search_from_name(search_text, event)
+        self.set_focus_to_list()    # Sposta il focus sulla prima carta della lista carte di questa finestra            
+
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        if not search_text:
+            return
+
+        self.search_from_name(search_text, event)
+
     def on_add_card(self, event):
         """Aggiunge una nuova carta (alla collezione o al mazzo)."""
-
         dlg = CardEditDialog(self)
         if dlg.ShowModal() == wx.ID_OK:
             card_name = dlg.get_card_name()
@@ -271,17 +270,13 @@ class CardCollectionFrame(BasicView):
                     card = session.query(Card).filter_by(name=card_name).first()
                     if not card:
                         wx.MessageBox("La carta non esiste nel database.", "Errore")
-
                     else:
                         self.load_cards()
                         wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
-
         dlg.Destroy()
-
 
     def on_edit_card(self, event):
         """Modifica la carta selezionata."""
-
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             card_name = self.card_list.GetItemText(selected)
@@ -292,19 +287,14 @@ class CardCollectionFrame(BasicView):
                     self.load_cards()  # Ricarica la lista delle carte
                     wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                     self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
-
                 dlg.Destroy()
-
             else:
                 wx.MessageBox("Carta non trovata nel database.", "Errore")
-
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
 
-
     def on_delete_card(self, event):
         """Elimina la carta selezionata (dalla collezione o dal mazzo)."""
-
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             card_name = self.card_list.GetItemText(selected)
@@ -318,14 +308,11 @@ class CardCollectionFrame(BasicView):
                             session.commit()
                             self.load_cards()
                             wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
-
                         else:
                             wx.MessageBox("Carta non trovata nel database.", "Errore", wx.OK | wx.ICON_ERROR)
-
                 except Exception as e:
                     log.error(f"Errore durante l'eliminazione della carta: {str(e)}")
                     wx.MessageBox(f"Errore durante l'eliminazione della carta: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
-
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore", wx.OK | wx.ICON_ERROR)
 
