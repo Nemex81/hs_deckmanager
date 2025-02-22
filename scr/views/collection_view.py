@@ -336,9 +336,12 @@ class CardCollectionFrame(BasicView):
                     self.load_cards()  # Ricarica la lista delle carte
                     wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                     self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
+
                 dlg.Destroy()
+
             else:
                 wx.MessageBox("Carta non trovata nel database.", "Errore")
+
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
 
@@ -361,9 +364,11 @@ class CardCollectionFrame(BasicView):
                             wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
                         else:
                             wx.MessageBox("Carta non trovata nel database.", "Errore", wx.OK | wx.ICON_ERROR)
+
                 except Exception as e:
                     log.error(f"Errore durante l'eliminazione della carta: {str(e)}")
                     wx.MessageBox(f"Errore durante l'eliminazione della carta: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
+
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore", wx.OK | wx.ICON_ERROR)
 
