@@ -1,4 +1,16 @@
 """
+    card_edit_dialog.py
+
+    Modulo contenente la finestra di dialogo per aggiungere o modificare una carta.
+
+    path:
+        ./scr/views/card_edit_dialog.py
+
+    Descrizione:
+
+        Questo modulo contiene la classe CardEditDialog, una finestra di dialogo per aggiungere o modificare una carta.
+        La finestra di dialogo permette all'utente di inserire i dettagli di una carta, come il nome, il costo in mana, il tipo, l'attacco, la vita, la durabilità, la rarità e l'espansione.
+        La finestra di dialogo include anche un elenco di controllo per selezionare le classi associate alla carta e pulsanti per salvare le modifiche o chiudere la finestra.
 
 """
 
