@@ -36,7 +36,7 @@ class CardEditDialog(SingleCardView):
         title = "Modifica Carta" if card else "Aggiungi Carta"
         self.card = card
         super().__init__(parent, title=title, size=(400, 900))
-        #self.init_specific_ui_elements()
+
 
     def init_ui_elements(self):
         """Inizializza i componenti specifici per CardEditDialog."""
@@ -92,6 +92,7 @@ class CardEditDialog(SingleCardView):
 
     def load_card_data(self):
         """Carica i dati della carta nei controlli UI."""
+
         if not self.card:
             return
 
@@ -117,11 +118,13 @@ class CardEditDialog(SingleCardView):
 
     def update_subtypes(self):
         """Aggiorna i sottotipi in base al tipo di carta selezionato."""
+
         card_type = self.controls["tipo"].GetValue()
         subtypes = []
 
         if card_type == EnuCardType.MAGIA.value:
             subtypes = [st.value for st in EnuSpellSubType]
+
         elif card_type == EnuCardType.CREATURA.value:
             subtypes = [st.value for st in EnuPetSubType]
 
@@ -136,29 +139,33 @@ class CardEditDialog(SingleCardView):
         else:
             self.controls["sottotipo"].SetValue("Tutti")
 
-        # Abilita/disabilita i campi in base al tipo di carta
-        self.on_type_change(None)
 
     def on_type_change(self, event):
         """Gestisce il cambio del tipo di carta."""
+
         card_type = self.controls["tipo"].GetValue()
+        self.update_subtypes()
 
         # Abilita/disabilita i campi in base al tipo di carta
         if card_type == EnuCardType.MAGIA.value:
             self.controls["tipo_magia"].Enable()
+            self.controls["sottotipo"].Enable()
             self.controls["attacco"].Disable()
             self.controls["vita"].Disable()
             self.controls["durability"].Disable()
+
         elif card_type == EnuCardType.CREATURA.value:
             self.controls["tipo_magia"].Disable()
+            self.controls["durability"].Disable()
             self.controls["attacco"].Enable()
             self.controls["vita"].Enable()
-            self.controls["durability"].Disable()
+
         elif card_type == EnuCardType.ARMA.value:
             self.controls["tipo_magia"].Disable()
-            self.controls["attacco"].Enable()
             self.controls["vita"].Disable()
+            self.controls["attacco"].Enable()
             self.controls["durability"].Enable()
+
         else:
             self.controls["tipo_magia"].Disable()
             self.controls["attacco"].Disable()
@@ -166,10 +173,10 @@ class CardEditDialog(SingleCardView):
             self.controls["durability"].Disable()
 
         # Imposta valori predefiniti per i campi disabilitati
-        self.controls["tipo_magia"].SetValue("Qualsiasi")
-        self.controls["attacco"].SetValue(0)
-        self.controls["vita"].SetValue(0)
-        self.controls["durability"].SetValue(0)
+        self.controls["tipo_magia"].SetValue("-")
+        self.controls["attacco"].SetValue("-")
+        self.controls["vita"].SetValue("-")
+        self.controls["durability"].SetValue("-")
 
     def add_buttons(self, btn_sizer, buttons):
         """
@@ -211,12 +218,8 @@ class CardEditDialog(SingleCardView):
                 new_card = Card(**card_data)
                 session.add(new_card)
 
-            # Salva le modifiche nel database
-            session.commit()
-            self.EndModal(wx.ID_OK)  # Chiude la finestra
-            self.parent.load_cards()  # Ricarica la lista delle carte
-            self.parent.select_card_by_name(card_data["name"])  # Seleziona la carta appena salvata
-            self.Destroy()
+            session.commit()            # Salva le modifiche nel database
+            self.EndModal(wx.ID_OK)     # Chiude la finestra
 
         except Exception as e:
             log.error(f"Errore durante il salvataggio: {str(e)}")
