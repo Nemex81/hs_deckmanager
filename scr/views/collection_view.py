@@ -19,12 +19,12 @@
 """
 
 # lib
-import wx, pyperclip
+import wx#, pyperclip
 import wx.lib.newevent
-from sqlalchemy.exc import SQLAlchemyError
+#from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
-from .proto_views import BasicView, CollectionsListView
+from .proto_views import BasicView, ListView, CollectionsListView
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
@@ -41,11 +41,12 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class CardCollectionFrame(BasicView):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent, db_manager):
+    def __init__(self, parent, controller):
         self.mode = "collection"
-        super().__init__(parent, title="Collezione")
         self.parent = parent
-        self.db_manager = db_manager
+        self.controller = controller
+        self.db_manager = self.controller.db_manager
+        super().__init__(parent, title="Collezione")
         self.timer = wx.Timer(self)  # Timer per il debounce
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
@@ -137,12 +138,13 @@ class CardCollectionFrame(BasicView):
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
-        # Imposta il layout principale
-        self.Layout()
-
 
     def load_cards(self, filters=None):
         """Carica le carte utilizzando le funzioni helper sopra definite."""
+        if not self.card_list:
+            log.error("La lista delle carte non è stata inizializzata.")
+            raise ValueError("La lista delle carte non è stata inizializzata.")
+
         load_cards(filters=filters, card_list=self.card_list)
 
 
@@ -196,6 +198,7 @@ class CardCollectionFrame(BasicView):
 
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
+
         # Ottieni i dati dalla lista
         items = []
         for i in range(self.card_list.GetItemCount()):
@@ -257,6 +260,7 @@ class CardCollectionFrame(BasicView):
 
 
     def on_timer(self, event):
+        """ Esegue la ricerca dopo il timeout del debounce."""
 
         """Esegue la ricerca dopo il timeout del debounce."""
 
@@ -276,9 +280,9 @@ class CardCollectionFrame(BasicView):
             self.load_cards(filters={"name": search_text})
 
 
-
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
+
         search_text = self.search_ctrl.GetValue().strip().lower()
         self._apply_search_filter(search_text)
         self.set_focus_to_list()
@@ -298,6 +302,7 @@ class CardCollectionFrame(BasicView):
 
     def on_search_event(self, event):
         """Gestisce l'evento di ricerca con debounce."""
+
         search_text = event.search_text
         self._apply_search_filter(search_text)
         self.set_focus_to_list()

@@ -15,11 +15,11 @@
 # lib
 import wx, pyperclip
 import wx.lib.newevent
-from sqlalchemy.exc import SQLAlchemyError
+#from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 #from ..models import load_deck_from_db, load_cards
-from .proto_views import BasicView, ListView
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
+from .proto_views import BasicView#, ListView
 from .card_edit_dialog import CardEditDialog
 from utyls import enu_glob as eg
 from utyls import helper as hp
@@ -34,16 +34,17 @@ class DeckViewFrame(BasicView):
     """Finestra per gestire le carte di un mazzo."""
 
 
-    def __init__(self, parent, deck_manager, deck_name):
+    def __init__(self, parent, controller, deck_name):
         """ Costruttore della classe DeckViewFrame. """
 
         # Inizializzazione delle variabili PRIMA di chiamare super().__init__
         self.parent = parent
-        self.deck_manager = deck_manager
+        self.controller = controller
+        self.deck_manager = self.controller.db_manager
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.card_list = None
         self.deck_name = deck_name
-        self.deck_content = self.deck_manager.get_deck(deck_name)  # Carica il mazzo
+        self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
         # Se il mazzo non esiste, solleva un'eccezione
         if not self.deck_content:
             raise ValueError(f"Mazzo non trovato: {deck_name}")

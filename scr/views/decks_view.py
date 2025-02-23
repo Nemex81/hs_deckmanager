@@ -33,11 +33,12 @@ from utyls import logger as log
 class DecksManagerFrame(BasicView):
     """ Finestra di gestione dei mazzi. """
 
-    def __init__(self, parent, db_manager):
+    def __init__(self, parent, controller):
         title = "Gestione Mazzi"
         super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
-        self.db_manager = db_manager
+        self.controller = controller
+        self.db_manager = self.controller.db_manager
 
     def init_ui_elements(self):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
@@ -256,6 +257,22 @@ class DecksManagerFrame(BasicView):
 
 
     def on_view_deck(self, event):
+        """Mostra il mazzo selezionato in una finestra dettagliata."""
+
+        deck_name = self.get_selected_deck()
+        if deck_name:
+            deck_content = self.db_manager.get_deck(deck_name)
+            if deck_content:
+                # Apri la finestra di visualizzazione del mazzo
+                self.controller.run_dec_frame(parent=self, controller=self.controller, deck_name=deck_name)
+
+            else:
+                wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
+
+        else:
+            wx.MessageBox("Seleziona un mazzo prima di visualizzarlo.", "Errore")
+
+    def last_on_view_deck(self, event):
         """Mostra il mazzo selezionato in una finestra dettagliata."""
 
         deck_name = self.get_selected_deck()

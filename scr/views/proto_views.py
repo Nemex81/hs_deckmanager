@@ -68,20 +68,34 @@ class BasicView(wx.Frame):
     def __init__(self, parent, title, size=(500, 400)):
         super().__init__(parent=parent, title=title, size=size)
         self.parent = parent          # Finestra genitore
+        self.controller = None        # Controller per l'interfaccia
+        self.db_manager = None        # Gestore del database
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
         self.init_ui()                # Inizializza l'interfaccia utente
         self.Show()
-    
+
+
+    def set_controller(self, controller=None):
+        """ Imposta il controller per l'interfaccia. """
+        self.controller = controller
+
+    def set_db_manager(self, db_manager=None):
+        """ Imposta il controller del database. """
+        self.db_manager = db_manager
+
+
     def init_ui(self):
         """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
 
         self.panel = wx.Panel(self)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel.SetSizer(self.sizer)
+
         # imposta i colori di spondo giallo per finestra e pannello
         self.BackgroundColour = 'black'
         self.panel.BackgroundColour = 'black'
+
         # imposta il font per il titolo
         font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         title = wx.StaticText(self.panel, label=self.Title)
@@ -204,11 +218,28 @@ class ListView(BasicView):
 
     def __init__(self, parent, title, size=(800, 600)):
         super().__init__(parent, title, size)
-        self.card_list= None  # ListCtrl per visualizzare l'elenco
-        self.data = []  # Lista dei dati da visualizzare
-        self.timer = wx.Timer(self)  # Timer per il debounce
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+        self.mode = None                                    # Modalità di visualizzazione (es. "collection", "deck")
+        self.card_list= None                                # ListCtrl per visualizzare l'elenco
+        self.data = []                                      # Lista dei dati da visualizzare
+        self.timer = wx.Timer(self)                         # Timer per il debounce
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)  # Aggiunge l'evento per il timer
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)   # Aggiunge l'evento per la ricerca
+
+    def init_ui(self):
+        """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
+
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.panel.SetSizer(self.sizer)
+
+        # imposta i colori di spondo giallo per finestra e pannello
+        self.BackgroundColour = 'black'
+        self.panel.BackgroundColour = 'black'
+
+        # imposta il font per il titolo
+        font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        title = wx.StaticText(self.panel, label=self.Title)
+        title.SetFont(font)
 
 
     def init_ui_elements(self):
@@ -216,22 +247,81 @@ class ListView(BasicView):
         Inizializza gli elementi dell'interfaccia utente.
         Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
         """
-        #raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
-        pass
+        # Barra di ricerca e filtri
+        search_sizer = create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = create_search_bar(
+            self.panel,
+            placeholder="Cerca per nome...",
+            event_handler=self.on_search
+        )
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
+        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
+        # Pulsante filtri avanzati
+        self.btn_filters = create_button(
+            self.panel,
+            label="Filtri Avanzati",
+            event_handler=self.on_show_filters
+        )
+        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
 
-    def load_data(self, filters=None):
+        # Aggiungo la barra di ricerca e i filtri al layout
+        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Lista delle carte
+        self.card_list = create_list_ctrl(
+            self.panel,
+            columns=[
+                ("Nome", 250),
+                ("Mana", 50),
+                ("Classe", 120),
+                ("Tipo", 120),
+                ("Tipo Magia", 120),
+                ("Sottotipo", 120),
+                ("Attacco", 50),
+                ("Vita", 50),
+                ("Durabilità", 50),
+                ("Rarità", 120),
+                ("Espansione", 500)
+            ]
+        )
+        self.card_list.SetBackgroundColour('yellow')
+        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Pulsanti azione
+        btn_panel = wx.Panel(self.panel)
+        btn_sizer = create_sizer(wx.HORIZONTAL)
+
+        buttons = [
+            ("Aggiorna", self.on_reset),
+            ("Aggiungi Carta", self.on_add_card),
+            ("Modifica Carta", self.on_edit_card),
+            ("Elimina Carta", self.on_delete_card),
+            ("Chiudi", lambda e: self.Close())
+        ]
+
+        for label, handler in buttons:
+            btn = create_button(btn_panel, label=label, event_handler=handler)
+            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
+
+        btn_panel.SetSizer(btn_sizer)
+        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        #self.load_cards()
+        self.Layout()
+
+    def load_cards(self, filters=None):
         """
         Carica i dati nell'elenco.
         Deve essere implementato nelle classi derivate.
         """
-        raise NotImplementedError("Il metodo load_data deve essere implementato nelle classi derivate.")
+        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
+        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
 
 
     def on_refresh(self, event):
         """Aggiorna l'elenco."""
 
-        self.load_data()
+        self.load_cards()
 
 
     def on_search(self, event):
@@ -288,9 +378,9 @@ class ListView(BasicView):
         Se il testo di ricerca è vuoto, reimposta i dati originali.
         """
         if not search_text or search_text in ["tutti", "tutto", "all"]:
-            self.load_data()
+            self.load_cards()
         else:
-            self.load_data(filters={"name": search_text})
+            self.load_cards(filters={"name": search_text})
 
 
     def set_focus_to_list(self):
@@ -364,19 +454,31 @@ class CollectionsListView(ListView):
 
     def __init__(self, parent, title="Collezione Carte", size=(1200, 800)):
         super().__init__(parent, title, size)
+        self.mode = "collection"
+
+
+    def init_ui(self):
+        """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
+
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.panel.SetSizer(self.sizer)
+
+        # imposta i colori di spondo giallo per finestra e pannello
+        self.BackgroundColour = 'black'
+        self.panel.BackgroundColour = 'black'
+
+        # imposta il font per il titolo
+        font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        title = wx.StaticText(self.panel, label=self.Title)
+        title.SetFont(font)
 
 
     def init_ui_elements(self):
-        """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
-
-        # Impostazioni finestra principale
-        self.SetBackgroundColour('yellow')
-        self.panel.SetBackgroundColour('blue')
-        self.Centre()
-        self.Maximize()
-
-        # Creazione degli elementi dell'interfaccia
-
+        """
+        Inizializza gli elementi dell'interfaccia utente.
+        Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
+        """
         # Barra di ricerca e filtri
         search_sizer = create_sizer(wx.HORIZONTAL)
         self.search_ctrl = create_search_bar(
@@ -416,15 +518,12 @@ class CollectionsListView(ListView):
             ]
         )
         self.card_list.SetBackgroundColour('yellow')
-
-        # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
         btn_sizer = create_sizer(wx.HORIZONTAL)
 
-        # Creazione dei pulsanti
         buttons = [
             ("Aggiorna", self.on_reset),
             ("Aggiungi Carta", self.on_add_card),
@@ -437,22 +536,9 @@ class CollectionsListView(ListView):
             btn = create_button(btn_panel, label=label, event_handler=handler)
             add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
 
-        # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
         add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-
-        # Imposta il layout principale
-        self.Layout()
-
-        # Carica le carte
-        self.load_cards()
-
-        # Aggiungi eventi
-        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
-        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
-        self.Bind(wx.EVT_CLOSE, self.on_close)
-
-        # Imposta il layout principale
+        #self.load_cards()
         self.Layout()
 
 

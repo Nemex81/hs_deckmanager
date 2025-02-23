@@ -10,23 +10,17 @@
     Note:
         - Questo modulo contiene la classe HearthstoneAppFrame, che rappresenta la finestra principale dell'applicazione.
         - La finestra principale include pulsanti per accedere alla gestione della collezione di carte, alla gestione dei mazzi, alla palestra e alle impostazioni.
-        - Questo modulo utilizza la libreria wxPython per la creazione delle finestre di dialogo dell'interfaccia utente.
 
 """
 
 # lib
 import wx, pyperclip
-from sqlalchemy.exc import SQLAlchemyError
 from .proto_views import BasicView
-from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer
-from .collection_view import CardCollectionFrame
-from .decks_view import DecksManagerFrame
+from .view_components import create_button
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
-
-
 
 
 
@@ -35,15 +29,8 @@ class HearthstoneAppFrame(BasicView):
 
     def __init__(self, parent, title):
         super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
-        self.db_manager = None
         font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
-        self.SetBackgroundColour(wx.BLACK)                                                      # Imposta il colore di sfondo della finestra principale
-        self.Maximize()                                                                         # Massimizza la finestra principale
 
-
-    def set_db_manager(self, db_manager=None):
-        """ Imposta il controller del database. """
-        self.db_manager = db_manager
 
     def init_ui_elements(self):
         """ Inizializza gli elementi dell'interfaccia utente. """
@@ -91,18 +78,12 @@ class HearthstoneAppFrame(BasicView):
 
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
-        collection_frame = CardCollectionFrame(self, self.db_manager)
-        #collection_frame = CardsListView(parent=self)     # Crea un'istanza della finestra di gestione della collezione
-        self.Hide()                     # Nasconde la finestra principale
-        collection_frame.Show()         # Mostra la finestra di gestione della collezione 
-        
+        self.controller.run_collection_frame(parent=self)
+
 
     def on_decks_button_click(self, event):
-        """ Metodo per gestire il click sul pulsante 'Gestione Mazzi'. """
-        #decks_frame = DecksManagerDialog(self, self.db_manager)
-        decks_frame = DecksManagerFrame(parent=self, db_manager=self.db_manager)     # Crea un'istanza della finestra di gestione dei mazzi
-        self.Hide()                                                 # nascondo la finestra principale
-        decks_frame.Show()                                          # Mostro la finestra
+        """ Metodo per gestire il click sul pulsante 'Collezione'. """
+        self.controller.run_decks_frame(parent=self, controller=self.controller)
 
 
     #def on_match_button_click(self, event):

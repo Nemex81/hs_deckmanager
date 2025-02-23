@@ -44,6 +44,7 @@ from utyls import logger as log
 filters_options = ["tutti", "Tutti", "qualsiasi", "Qualsiasi", "", "all", "All", "", None]
 
 
+
 def serialize_card(card):
     """Serializza un oggetto Card in un dizionario."""
 
