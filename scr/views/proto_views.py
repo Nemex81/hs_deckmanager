@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards
-from .view_components import create_button, create_separator, add_to_sizer
+from .view_components import create_button, create_separator, add_to_sizer, create_list_ctrl, create_search_bar, create_sizer
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
 from utyls import helper as hp
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
@@ -216,7 +216,8 @@ class ListView(BasicView):
         Inizializza gli elementi dell'interfaccia utente.
         Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
         """
-        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
+        #raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
+        pass
 
 
     def load_data(self, filters=None):
@@ -358,7 +359,7 @@ class ListView(BasicView):
 
 class CollectionsListView(ListView):
     """
-        Classe base per la visualizzazione di elenchi di carte.
+        Classe per la visualizzazione della collezzione generale  di carte.
     """
 
     def __init__(self, parent, title="Collezione Carte", size=(1200, 800)):
@@ -366,8 +367,93 @@ class CollectionsListView(ListView):
 
 
     def init_ui_elements(self):
-        """Inizializza gli elementi dell'interfaccia utente specifici per la visualizzazione delle carte."""
-        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
+        """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
+
+        # Impostazioni finestra principale
+        self.SetBackgroundColour('yellow')
+        self.panel.SetBackgroundColour('blue')
+        self.Centre()
+        self.Maximize()
+
+        # Creazione degli elementi dell'interfaccia
+
+        # Barra di ricerca e filtri
+        search_sizer = create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = create_search_bar(
+            self.panel,
+            placeholder="Cerca per nome...",
+            event_handler=self.on_search
+        )
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
+        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Pulsante filtri avanzati
+        self.btn_filters = create_button(
+            self.panel,
+            label="Filtri Avanzati",
+            event_handler=self.on_show_filters
+        )
+        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+
+        # Aggiungo la barra di ricerca e i filtri al layout
+        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Lista delle carte
+        self.card_list = create_list_ctrl(
+            self.panel,
+            columns=[
+                ("Nome", 250),
+                ("Mana", 50),
+                ("Classe", 120),
+                ("Tipo", 120),
+                ("Tipo Magia", 120),
+                ("Sottotipo", 120),
+                ("Attacco", 50),
+                ("Vita", 50),
+                ("Durabilità", 50),
+                ("Rarità", 120),
+                ("Espansione", 500)
+            ]
+        )
+        self.card_list.SetBackgroundColour('yellow')
+
+        # Aggiungo la lista alla finestra
+        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Pulsanti azione
+        btn_panel = wx.Panel(self.panel)
+        btn_sizer = create_sizer(wx.HORIZONTAL)
+
+        # Creazione dei pulsanti
+        buttons = [
+            ("Aggiorna", self.on_reset),
+            ("Aggiungi Carta", self.on_add_card),
+            ("Modifica Carta", self.on_edit_card),
+            ("Elimina Carta", self.on_delete_card),
+            ("Chiudi", lambda e: self.Close())
+        ]
+
+        for label, handler in buttons:
+            btn = create_button(btn_panel, label=label, event_handler=handler)
+            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
+
+        # Aggiungo i pulsanti al pannello
+        btn_panel.SetSizer(btn_sizer)
+        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il layout principale
+        self.Layout()
+
+        # Carica le carte
+        self.load_cards()
+
+        # Aggiungi eventi
+        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+
+        # Imposta il layout principale
+        self.Layout()
 
 
 
