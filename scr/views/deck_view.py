@@ -41,6 +41,7 @@ class DeckViewFrame(BasicView):
         self.parent = parent
         self.deck_manager = deck_manager
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
+        self.card_list = None
         self.deck_name = deck_name
         self.deck_content = self.deck_manager.get_deck(deck_name)  # Carica il mazzo
         # Se il mazzo non esiste, solleva un'eccezione
@@ -60,9 +61,9 @@ class DeckViewFrame(BasicView):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
 
         # Impostazioni finestra principale
-        self.SetBackgroundColour('black')
-        self.panel.SetBackgroundColour('green')
-        self.card_list.SetBackgroundColour('yellow')
+
+        # coloro il bg del pannello 
+        self.panel.SetBackgroundColour('blue')
 
         # Creazione degli elementi dell'interfaccia
         search_sizer = create_sizer(wx.HORIZONTAL)
@@ -94,6 +95,9 @@ class DeckViewFrame(BasicView):
                 ("Espansione", 500)
             ]
         )
+
+        # coloro il bg della lista
+        self.card_list.SetBackgroundColour('yellow')
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)

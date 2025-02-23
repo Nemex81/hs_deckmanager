@@ -38,7 +38,7 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-class CardCollectionFrame(ListView):
+class CardCollectionFrame(BasicView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, db_manager):
@@ -56,7 +56,7 @@ class CardCollectionFrame(ListView):
 
         # Impostazioni finestra principale
         self.SetBackgroundColour('yellow')
-        self.panel.SetBackgroundColour('yellow')
+        self.panel.SetBackgroundColour('blue')
         self.Centre()
         self.Maximize()
 
