@@ -8,8 +8,8 @@
 
 # lib
 import wx
-from .proto_views import BasicDialog
 from .view_components import create_sizer, add_to_sizer, create_button
+from .proto_views import BasicDialog
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log

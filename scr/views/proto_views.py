@@ -108,241 +108,6 @@ class BasicView(wx.Frame):
 
 class SingleCardView(BasicDialog):
     """
-        Classe base per finestre che gestiscono i campi di una singola carta.
-        Utilizzata per finestre come "Aggiungi Carta", "Modifica Carta" o "Filtri".
-    """
-
-    def __init__(self, parent, title, size=(400, 500)):
-        super().__init__(parent, title, size)
-        self.card_data = {}  # Dizionario per memorizzare i dati della carta
-
-    def init_ui_elements(self):
-        """Inizializza i campi comuni per una singola carta."""
-
-        self.fields = [
-            ("nome", wx.TextCtrl),
-            ("costo_mana", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("tipo", wx.ComboBox, {"choices": [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
-            ("tipo_magia", wx.ComboBox, {"choices": [t.value for t in EnuSpellType], "style": wx.CB_READONLY}),
-            ("sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),
-            ("attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("vita", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("durability", wx.SpinCtrl, {"min": 0, "max": 20}),
-            ("rarita", wx.ComboBox, {"choices": [r.value for r in EnuRarity], "style": wx.CB_READONLY}),
-            ("espansione", wx.ComboBox, {"choices": [e.value for e in EnuExpansion], "style": wx.CB_READONLY})
-        ]
-
-        self.sizer, self.control_dict = hp.create_ui_controls(self.panel, self.fields)
-
-        # Collega l'evento di selezione del tipo di carta al metodo update_subtypes
-        self.control_dict["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
-
-    def on_type_change(self, event):
-        """Aggiorna i sottotipi in base al tipo di carta selezionato."""
-
-        card_type = self.control_dict["tipo"].GetValue()
-        if card_type == EnuCardType.MAGIA.value:
-            subtypes = [st.value for st in EnuSpellSubType]
-        elif card_type == EnuCardType.CREATURA.value:
-            subtypes = [st.value for st in EnuPetSubType]
-        else:
-            subtypes = []
-
-        # Aggiorna i sottotipi
-        self.control_dict["sottotipo"].Clear()
-        self.control_dict["sottotipo"].AppendItems(subtypes)
-
-    def get_card_data(self):
-        """Restituisce i dati della carta inseriti dall'utente."""
-
-        return {
-            "name": self.control_dict["nome"].GetValue(),
-            "mana_cost": self.control_dict["costo_mana"].GetValue(),
-            "card_type": self.control_dict["tipo"].GetValue(),
-            "spell_type": self.control_dict["tipo_magia"].GetValue(),
-            "card_subtype": self.control_dict["sottotipo"].GetValue(),
-            "attack": self.control_dict["attacco"].GetValue(),
-            "health": self.control_dict["vita"].GetValue(),
-            "durability": self.control_dict["durability"].GetValue(),
-            "rarity": self.control_dict["rarita"].GetValue(),
-            "expansion": self.control_dict["espansione"].GetValue()
-        }
-
-
-
-class ListView(BasicView):
-    """
-    Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
-    Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
-    """
-
-    def __init__(self, parent, title, size=(800, 600)):
-        super().__init__(parent, title, size)
-        self.list_ctrl = None  # ListCtrl per visualizzare l'elenco
-        self.data = []  # Lista dei dati da visualizzare
-        self.timer = wx.Timer(self)  # Timer per il debounce
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
-
-    def init_ui_elements(self):
-        """Inizializza la lista e i pulsanti comuni."""
-
-        self.list_ctrl = wx.ListCtrl(
-            self.panel,
-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
-        )
-        self.sizer.Add(self.list_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Pulsanti comuni
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        for label in ["Aggiorna", "Chiudi"]:
-            btn = wx.Button(self.panel, label=label)
-            btn_sizer.Add(btn, flag=wx.RIGHT, border=5)
-            if label == "Aggiorna":
-                btn.Bind(wx.EVT_BUTTON, self.on_refresh)
-            elif label == "Chiudi":
-                btn.Bind(wx.EVT_BUTTON, self.on_close)
-
-        self.sizer.Add(btn_sizer, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-
-    def load_data(self):
-        """Carica i dati nell'elenco (da implementare nelle classi derivate)."""
-        raise NotImplementedError("Il metodo load_data deve essere implementato nelle classi derivate.")
-
-
-    def on_refresh(self, event):
-        """Aggiorna l'elenco."""
-        self.load_data()
-
-    def on_search_text_change(self, event):
-        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        if not search_text:
-            return
-
-        # Avvia il timer per il debounce (es. 500 ms)
-        self.timer.Stop()  # Ferma il timer precedente
-        self.timer.Start(500, oneShot=True)
-
-    def on_timer(self, event):
-        """Esegue la ricerca dopo il timeout del debounce."""
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        evt = SearchEvent(search_text=search_text)
-        wx.PostEvent(self, evt)
-
-    def on_search_event(self, event):
-        """Gestisce l'evento di ricerca con debounce."""
-        search_text = event.search_text
-        self._apply_search_filter(search_text)
-        self.set_focus_to_list()
-
-    def _apply_search_filter(self, search_text):
-        """Applica il filtro di ricerca alla lista delle carte."""
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            self.load_data()
-        else:
-            self.load_data(filters={"name": search_text})
-
-    def on_search(self, event):
-        """Gestisce la ricerca in tempo reale."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        self._apply_search_filter(search_text)
-
-    def set_focus_to_list(self):
-        """Imposta il focus sulla prima carta della lista carte."""
-        if hasattr(self, "list_ctrl"):
-            self.list_ctrl.SetFocus()
-            self.list_ctrl.Select(0)
-            self.list_ctrl.Focus(0)
-            self.list_ctrl.EnsureVisible(0)
-
-    def sort_cards(self, col):
-        """Ordina le carte in base alla colonna selezionata."""
-        items = []
-        for i in range(self.list_ctrl.GetItemCount()):
-            item = [self.list_ctrl.GetItemText(i, c) for c in range(self.list_ctrl.GetColumnCount())]
-            items.append(item)
-
-        def safe_int(value):
-            try:
-                return int(value)
-            except ValueError:
-                return float('inf') if value == "-" else value
-
-        if col == 1:  # Colonna "Mana" (numerica)
-            items.sort(key=lambda x: safe_int(x[col]))
-        else:  # Altre colonne (testuali)
-            items.sort(key=lambda x: x[col])
-
-        self.list_ctrl.DeleteAllItems()
-        for item in items:
-            self.list_ctrl.Append(item)
-
-    def on_column_click(self, event):
-        """Ordina le carte in base alla colonna selezionata."""
-        col = event.GetColumn()
-        self.sort_cards(col)
-
-    def on_key_press(self, event):
-        """Gestisce i tasti premuti per ordinare la lista."""
-        key_code = event.GetKeyCode()
-        if ord('1') <= key_code <= ord('9'):
-            col = key_code - ord('1')
-            if col < self.list_ctrl.GetColumnCount():
-                self.sort_cards(col)
-
-        event.Skip()
-
-
-
-class CardsListView(ListView):
-    """
-        Classe base per la visualizzazione di elenchi di carte.
-    """
-
-    def __init__(self, parent, title="Collezione Carte", size=(1200, 800)):
-        super().__init__(parent, title, size)
-        #self.init_ui_elements()
-
-    def init_ui_elements(self):
-        """Inizializza gli elementi dell'interfaccia utente specifici per la visualizzazione delle carte."""
-        super().init_ui_elements()
-        self.list_ctrl.AppendColumn("Nome", width=250)
-        self.list_ctrl.AppendColumn("Mana", width=50)
-        self.list_ctrl.AppendColumn("Classe", width=120)
-        self.list_ctrl.AppendColumn("Tipo", width=120)
-        self.list_ctrl.AppendColumn("Tipo Magia", width=120)
-        self.list_ctrl.AppendColumn("Sottotipo", width=120)
-        self.list_ctrl.AppendColumn("Attacco", width=50)
-        self.list_ctrl.AppendColumn("Vita", width=50)
-        self.list_ctrl.AppendColumn("Integrità", width=50)
-        self.list_ctrl.AppendColumn("Rarità", width=120)
-        self.list_ctrl.AppendColumn("Espansione", width=500)
-
-    def load_data(self, filters=None):
-        """Carica le carte nella lista."""
-        cards = load_cards_from_db(filters)
-        self.list_ctrl.DeleteAllItems()
-        for card in cards:
-            self.list_ctrl.Append([
-                card.name,
-                str(card.mana_cost) if card.mana_cost else "-",
-                card.class_name if card.class_name else "-",
-                card.card_type if card.card_type else "-",
-                card.spell_type if card.spell_type else "-",
-                card.card_subtype if card.card_subtype else "-",
-                str(card.attack) if card.attack is not None else "-",
-                str(card.health) if card.health is not None else "-",
-                str(card.durability) if card.durability is not None else "-",
-                card.rarity if card.rarity else "-",
-                card.expansion if card.expansion else "-"
-            ])
-
-
-
-class CardFormDialog(BasicDialog):
-    """
         Classe madre per le finestre di dialogo che gestiscono form per le carte.
         Gestisce i componenti grafici comuni tra CardEditDialog e FilterDialog.
     """
@@ -428,6 +193,181 @@ class CardFormDialog(BasicDialog):
         cancel_btn = wx.Button(self.panel, label="Annulla")
         cancel_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CANCEL))
         btn_sizer.Add(cancel_btn, flag=wx.ALL, border=5)
+
+
+
+class ListView(BasicView):
+    """
+    Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
+    Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
+    """
+
+    def __init__(self, parent, title, size=(800, 600)):
+        super().__init__(parent, title, size)
+        self.card_list= None  # ListCtrl per visualizzare l'elenco
+        self.data = []  # Lista dei dati da visualizzare
+        self.timer = wx.Timer(self)  # Timer per il debounce
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+
+
+    def init_ui_elements(self):
+        """
+        Inizializza gli elementi dell'interfaccia utente.
+        Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
+        """
+        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
+
+
+    def load_data(self, filters=None):
+        """
+        Carica i dati nell'elenco.
+        Deve essere implementato nelle classi derivate.
+        """
+        raise NotImplementedError("Il metodo load_data deve essere implementato nelle classi derivate.")
+
+
+    def on_refresh(self, event):
+        """Aggiorna l'elenco."""
+
+        self.load_data()
+
+
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
+
+
+    def on_search_text_change(self, event):
+        """
+        Gestisce la ricerca in tempo reale mentre l'utente digita.
+        Avvia un timer per il debounce.
+        """
+
+        search_text = getattr(self, "search_ctrl", None)
+        if search_text:
+            search_text = search_text.GetValue().strip().lower()
+            if not search_text:
+                return
+
+            # Ferma il timer precedente e avvia un nuovo debounce
+            self.timer.Stop()
+            self.timer.Start(500, oneShot=True)
+
+
+    def on_timer(self, event):
+        """
+        Esegue la ricerca dopo il timeout del debounce.
+        Genera un evento personalizzato per la ricerca.
+        """
+
+        search_text = getattr(self, "search_ctrl", None)
+        if search_text:
+            search_text = search_text.GetValue().strip().lower()
+            evt = SearchEvent(search_text=search_text)
+            wx.PostEvent(self, evt)
+
+
+    def on_search_event(self, event):
+        """
+        Gestisce l'evento di ricerca con debounce.
+        Applica il filtro di ricerca e imposta il focus sulla prima voce.
+        """
+
+        search_text = event.search_text
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
+
+
+    def _apply_search_filter(self, search_text):
+        """
+        Applica il filtro di ricerca alla lista delle carte.
+        Se il testo di ricerca è vuoto, reimposta i dati originali.
+        """
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            self.load_data()
+        else:
+            self.load_data(filters={"name": search_text})
+
+
+    def set_focus_to_list(self):
+        """
+        Imposta il focus sulla prima voce della lista.
+        Deve essere chiamato solo dopo aver creato il ListCtrl.
+        """
+
+        list_ctrl = getattr(self, "list_ctrl", None)
+        if list_ctrl and list_ctrl.GetItemCount() > 0:
+            list_ctrl.SetFocus()
+            list_ctrl.Select(0)
+            list_ctrl.Focus(0)
+            list_ctrl.EnsureVisible(0)
+
+
+    def sort_cards(self, col):
+        """
+        Ordina le carte in base alla colonna selezionata.
+        Funziona sia per colonne numeriche che testuali.
+        """
+
+        list_ctrl = getattr(self, "list_ctrl", None)
+        if not list_ctrl:
+            return
+
+        items = []
+        for i in range(list_ctrl.GetItemCount()):
+            item = [list_ctrl.GetItemText(i, c) for c in range(list_ctrl.GetColumnCount())]
+            items.append(item)
+
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+        if col == 1:  # Colonna numerica (es. "Mana")
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Colonnes testuali
+            items.sort(key=lambda x: x[col])
+
+        list_ctrl.DeleteAllItems()
+        for item in items:
+            list_ctrl.Append(item)
+
+
+    def on_column_click(self, event):
+        """
+        Gestisce il clic sulle intestazioni delle colonne per ordinare la lista.
+        """
+
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+    def on_key_press(self, event):
+        """
+        Gestisce i tasti premuti per ordinare la lista.
+        """
+        key_code = event.GetKeyCode()
+        if ord('1') <= key_code <= ord('9'):
+            col = key_code - ord('1')
+            self.sort_cards(col)
+
+
+
+class CollectionsListView(ListView):
+    """
+        Classe base per la visualizzazione di elenchi di carte.
+    """
+
+    def __init__(self, parent, title="Collezione Carte", size=(1200, 800)):
+        super().__init__(parent, title, size)
+
+
+    def init_ui_elements(self):
+        """Inizializza gli elementi dell'interfaccia utente specifici per la visualizzazione delle carte."""
+        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
 
 
 

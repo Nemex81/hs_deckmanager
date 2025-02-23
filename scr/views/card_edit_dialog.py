@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card
 from ..models import load_cards
 from .view_components import create_button, create_check_list_box, create_separator, create_common_controls
-from .proto_views import CardFormDialog
+from .proto_views import SingleCardView
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
 from utyls import logger as log
@@ -28,7 +28,7 @@ from utyls import logger as log
 
 
 
-class CardEditDialog(CardFormDialog):
+class CardEditDialog(SingleCardView):
     """Finestra di dialogo per aggiungere o modificare una carta."""
 
     def __init__(self, parent, card=None):

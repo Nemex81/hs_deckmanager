@@ -276,7 +276,7 @@ class CardCollectionFrame(BasicView):
             self.load_cards(filters={"name": search_text})
 
 
-        
+
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
         search_text = self.search_ctrl.GetValue().strip().lower()

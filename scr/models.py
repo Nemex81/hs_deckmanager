@@ -41,7 +41,7 @@ from utyls import logger as log
 #import pdb
 
 
-filters_options = ["tutti", "Tutti", "qualsiasi", "Qualsiasi", "", None]
+filters_options = ["tutti", "Tutti", "qualsiasi", "Qualsiasi", "", "all", "All", "", None]
 
 
 def serialize_card(card):
