@@ -191,10 +191,7 @@ class CardCollectionFrame(ListView):
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
-        self.card_list.SetFocus()
-        self.card_list.Select(0)
-        self.card_list.Focus(0)
-        self.card_list.EnsureVisible(0)
+        self.set_focus_to_list()  # Sposta il focus sulla prima carta della lista carte di questa finestra
 
 
     def sort_cards(self, col):
@@ -259,6 +256,15 @@ class CardCollectionFrame(ListView):
         event.Skip()
 
 
+    def on_timer(self, event):
+
+        """Esegue la ricerca dopo il timeout del debounce."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
+
+
     def search_from_name(self, search_text , event):
         """Gestisce la ricerca testuale."""
 
@@ -270,12 +276,12 @@ class CardCollectionFrame(ListView):
             self.load_cards(filters={"name": search_text})
 
 
+        
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
-
         search_text = self.search_ctrl.GetValue().strip().lower()
-        self.search_from_name(search_text, event)
-        self.set_focus_to_list()    # Sposta il focus sulla prima carta della lista carte di questa finestra            
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
 
 
     def on_search_text_change(self, event):
@@ -283,28 +289,29 @@ class CardCollectionFrame(ListView):
 
         search_text = self.search_ctrl.GetValue().strip().lower()
         if not search_text:
-            return
+            self.load_cards()
 
-        #self.search_from_name(search_text, event)
         # Avvia il timer per il debounce (es. 300 ms)
         self.timer.Stop()  # Ferma il timer precedente
         self.timer.Start(500, oneShot=True)
 
 
-    def on_timer(self, event):
-        """Esegue la ricerca dopo il timeout del debounce."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        evt = SearchEvent(search_text=search_text)
-        wx.PostEvent(self, evt)
-
-
     def on_search_event(self, event):
         """Gestisce l'evento di ricerca con debounce."""
-
         search_text = event.search_text
-        self.search_from_name(search_text, event)
+        self._apply_search_filter(search_text)
         self.set_focus_to_list()
+
+
+    def _apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista delle carte."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
+            self.load_cards()
+        else:
+            # Filtra le carte in base al nome
+            self.load_cards(filters={"name": search_text})
 
 
     def on_add_card(self, event):
