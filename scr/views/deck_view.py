@@ -171,14 +171,6 @@ class DeckViewFrame(BasicView):
         self.timer.Start(500, oneShot=True)
 
 
-    def last_on_search_text_change(self, event):
-        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        self._apply_search_filter(search_text)
-        self.set_focus_to_list()
-
-
-
     def on_search_event(self, event):
         """Gestisce l'evento di ricerca con debounce."""
         search_text = event.search_text
@@ -199,6 +191,7 @@ class DeckViewFrame(BasicView):
 
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
+
         if hasattr(self, "card_list"):
             self.card_list.SetFocus()
             self.card_list.Select(0)
@@ -208,6 +201,7 @@ class DeckViewFrame(BasicView):
 
     def _add_card_to_list(self, card_data):
         """Aggiunge una singola carta alla lista."""
+
         self.card_list.Append([
             card_data.get("name", "-"),
             str(card_data.get("mana_cost", "-")) if card_data.get("mana_cost") else "-",
@@ -222,8 +216,10 @@ class DeckViewFrame(BasicView):
             card_data.get("expansion", "-")
         ])
 
+
     def load_cards(self, filters=None):
         """Carica le carte nel mazzo, applicando eventuali filtri."""
+
         if not hasattr(self, "deck_content") or not self.deck_content:
             return  # Esce se il mazzo non è stato caricato correttamente
 
@@ -239,8 +235,10 @@ class DeckViewFrame(BasicView):
             # Aggiunge la carta alla lista
             self._add_card_to_list(card_data)
 
+
     def _apply_search_filter(self, search_text):
         """Applica il filtro di ricerca alla lista delle carte."""
+
         if not search_text or search_text in ["tutti", "tutto", "all"]:
             # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
             self.load_cards()
@@ -248,11 +246,14 @@ class DeckViewFrame(BasicView):
             # Filtra le carte in base al nome
             self.load_cards(filters={"name": search_text})
 
+
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
+
         search_text = self.search_ctrl.GetValue().strip().lower()
         self._apply_search_filter(search_text)
         self.set_focus_to_list()
+
 
     def on_reset(self, event):
         """Ripristina la visualizzazione originale."""
@@ -271,6 +272,7 @@ class DeckViewFrame(BasicView):
 
     def _add_card_to_deck(self, card_name):
         """Aggiunge una nuova carta al mazzo."""
+
         card = session.query(Card).filter_by(name=card_name).first()
         if card:
             self.deck_content["cards"].append({
@@ -283,8 +285,10 @@ class DeckViewFrame(BasicView):
         else:
             wx.MessageBox("Carta non trovata nel database.", "Errore")
 
+
     def _edit_card_in_deck(self, card_name):
         """Modifica la carta selezionata."""
+
         card = session.query(Card).filter_by(name=card_name).first()
         if card:
             dlg = CardEditDialog(self, card)
@@ -292,62 +296,82 @@ class DeckViewFrame(BasicView):
                 self.load_cards()
                 wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                 self.select_card_by_name(card_name)
+
             dlg.Destroy()
+
         else:
             wx.MessageBox("Carta non trovata nel database.", "Errore")
 
+
     def _delete_card_from_deck(self, card_name):
         """Elimina la carta selezionata."""
+
         self.deck_content["cards"] = [
             card_data for card_data in self.deck_content["cards"]
             if card_data["name"] != card_name
         ]
+
         self.load_cards()
         wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
 
+
     def on_add_card(self, event):
         """Aggiunge una nuova carta al mazzo."""
+
         dlg = CardEditDialog(self)
         if dlg.ShowModal() == wx.ID_OK:
             card_name = dlg.get_card_name()
             if card_name:
                 self._add_card_to_deck(card_name)
+
         dlg.Destroy()
+
 
     def on_edit_card(self, event):
         """Modifica la carta selezionata."""
+
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             card_name = self.card_list.GetItemText(selected)
             self._edit_card_in_deck(card_name)
+
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
 
+
     def on_delete_card(self, event):
         """Elimina la carta selezionata."""
+
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             card_name = self.card_list.GetItemText(selected)
             if wx.MessageBox(f"Eliminare la carta '{card_name}'?", "Conferma", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
                 self._delete_card_from_deck(card_name)
+
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
 
+
     def _sort_items(self, items, col):
         """Ordina gli elementi in base alla colonna selezionata."""
+
         def safe_int(value):
             try:
                 return int(value)
+
             except ValueError:
                 return float('inf') if value == "-" else value
 
         if col == 1:  # Colonna "Mana" (numerica)
             items.sort(key=lambda x: safe_int(x[col]))
+
         else:  # Altre colonne (testuali)
             items.sort(key=lambda x: x[col])
 
+
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
+
         items = []
         for i in range(self.card_list.GetItemCount()):
             item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
@@ -359,15 +383,20 @@ class DeckViewFrame(BasicView):
         for item in items:
             self.card_list.Append(item)
 
+
     def on_column_click(self, event):
         """Ordina le carte in base alla colonna selezionata."""
+
         col = event.GetColumn()
         self.sort_cards(col)
 
+
     def select_card_by_name(self, card_name):
         """Seleziona una carta nella lista in base al nome."""
+
         if not card_name:
             return
+
         for i in range(self.card_list.GetItemCount()):
             if self.card_list.GetItemText(i) == card_name:
                 self.card_list.Select(i)
@@ -376,8 +405,10 @@ class DeckViewFrame(BasicView):
                 self.card_list.SetFocus()
                 break
 
+
     def on_key_press(self, event):
         """Gestisce i tasti premuti per ordinare la lista."""
+
         key_code = event.GetKeyCode()
         if ord('1') <= key_code <= ord('9'):
             col = key_code - ord('1')
@@ -385,6 +416,7 @@ class DeckViewFrame(BasicView):
                 self.sort_cards(col)
 
         event.Skip()
+
 
     def on_close(self, event):
         """Chiude la finestra."""
