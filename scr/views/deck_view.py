@@ -205,7 +205,7 @@ class DeckViewFrame(BasicView):
 
         self.card_list.Append([
             card_data.get("name", "-"),
-            str(card_data.get("mana_cost", "-")) if card_data.get("mana_cost") else "-",
+            str(card_data.get("mana_cost", "-")) if card_data.get("mana_cost") is not None else "-",
             str(card_data.get("quantity", "-")) if card_data.get("quantity") else "-",
             card_data.get("card_type", "-"),
             card_data.get("spell_type", "-"),
