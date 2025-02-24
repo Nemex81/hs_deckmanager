@@ -72,6 +72,7 @@ class CardEditDialog(SingleCardView):
             choices=[h.value for h in EnuHero],
             label="Classi:"
         )
+
         main_sizer.Add(classes_label, flag=wx.LEFT | wx.RIGHT, border=10)
         main_sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
@@ -94,20 +95,21 @@ class CardEditDialog(SingleCardView):
         """Carica i dati della carta nei controlli UI."""
 
         if not self.card:
+            log.error("Impossibile caricare i dati della carta: nessuna carta specificata.")
             return
 
         # Carica i dati della carta nei controlli
         self.controls["nome"].SetValue(self.card.name or "")
         self.controls["costo_mana"].SetValue(self.card.mana_cost or 0)
-        self.controls["tipo"].SetValue(self.card.card_type or "Tutti")
-        self.controls["tipo_magia"].SetValue(self.card.spell_type or "Qualsiasi")
+        self.controls["tipo"].SetValue(self.card.card_type or "-")
+        self.controls["tipo_magia"].SetValue(self.card.spell_type or "-")
         self.update_subtypes()
-        self.controls["sottotipo"].SetValue(self.card.card_subtype or "Tutti")
-        self.controls["attacco"].SetValue(self.card.attack or 0)
-        self.controls["vita"].SetValue(self.card.health or 0)
-        self.controls["durability"].SetValue(self.card.durability or 0)
-        self.controls["rarita"].SetValue(self.card.rarity or "Tutti")
-        self.controls["espansione"].SetValue(self.card.expansion or "Tutti")
+        self.controls["sottotipo"].SetValue(self.card.card_subtype or "-")
+        self.controls["attacco"].SetValue(self.card.attack or "-")
+        self.controls["vita"].SetValue(self.card.health or "-")
+        self.controls["durability"].SetValue(self.card.durability or "-")
+        self.controls["rarita"].SetValue(self.card.rarity or "-")
+        self.controls["espansione"].SetValue(self.card.expansion or "-")
 
         # Seleziona le classi associate alla carta
         if self.card.class_name:
@@ -131,13 +133,13 @@ class CardEditDialog(SingleCardView):
         # Salva il sottotipo corrente
         current_subtype = self.controls["sottotipo"].GetValue()
         self.controls["sottotipo"].Clear()
-        self.controls["sottotipo"].AppendItems(["Tutti"] + subtypes)
+        self.controls["sottotipo"].AppendItems(subtypes)
 
         # Ripristina il sottotipo se presente nei nuovi sottotipi
         if current_subtype and current_subtype in subtypes:
             self.controls["sottotipo"].SetValue(current_subtype)
         else:
-            self.controls["sottotipo"].SetValue("Tutti")
+            self.controls["sottotipo"].SetValue("-")
 
 
     def on_type_change(self, event):
@@ -188,6 +190,7 @@ class CardEditDialog(SingleCardView):
         for label, handler in buttons:
             btn = create_button(self.panel, label=label, event_handler=handler)
             btn_sizer.Add(btn, flag=wx.RIGHT, border=10)
+
 
     def on_save(self, event):
         """Salva la carta nel database."""
