@@ -55,6 +55,68 @@ class CardEditDialog(SingleCardView):
             else:
                 control = control_type(self.panel)
 
+            # Aggiungi il controllo al dizionario per accedervi facilmente
+            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
+            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+            self.controls[key] = control
+
+        # Collega l'evento di selezione del tipo di carta
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
+
+        # Aggiungi il sizer dei campi al sizer principale
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Selezione multipla delle classi
+        classes_label, self.classes_listbox = create_check_list_box(
+            self.panel,
+            choices=[h.value for h in EnuHero],
+            label="Classi:"
+        )
+
+        # Aggiungi il sizer delle classi al sizer principale
+        main_sizer.Add(classes_label, flag=wx.LEFT | wx.RIGHT, border=10)
+        main_sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Sizer per i pulsanti
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.add_buttons(btn_sizer, [("Salva", self.on_save), ("Chiudi", self.on_close)])
+
+        # Aggiungi il sizer dei pulsanti al sizer principale
+        main_sizer.Add(btn_sizer, proportion=0, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(main_sizer)
+        main_sizer.Fit(self.panel)
+
+        # Se è una modifica, pre-carica i dati della carta
+        if self.card:
+            self.load_card_data()
+
+        # aggiorno i sottotipo della carta
+        self.update_subtypes()
+        self.apply_type_change()
+
+        # importo il layout
+        self.Layout()
+
+    def last_init_ui_elements(self):
+        """Inizializza i componenti specifici per CardEditDialog."""
+
+        # Sizer per i campi
+        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
+
+        # Definizione dei campi comuni
+        common_controls = create_common_controls()
+
+        # Creazione dei controlli UI e aggiunta al sizer dei campi
+        for key, label_text, control_type, *args in common_controls:
+            label = wx.StaticText(self.panel, label=label_text)
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
+
             fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
             fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
             self.controls[key] = control
@@ -142,11 +204,10 @@ class CardEditDialog(SingleCardView):
             self.controls["sottotipo"].SetValue("-")
 
 
-    def on_type_change(self, event):
-        """Gestisce il cambio del tipo di carta."""
+    def apply_type_change(self):
+        """ Applica il cambio del tipo di carta. """
 
         card_type = self.controls["tipo"].GetValue()
-        self.update_subtypes()
 
         # Abilita/disabilita i campi in base al tipo di carta
         if card_type == EnuCardType.MAGIA.value:
@@ -175,10 +236,18 @@ class CardEditDialog(SingleCardView):
             self.controls["durability"].Disable()
 
         # Imposta valori predefiniti per i campi disabilitati
-        self.controls["tipo_magia"].SetValue("-")
-        self.controls["attacco"].SetValue("-")
-        self.controls["vita"].SetValue("-")
-        self.controls["durability"].SetValue("-")
+        #self.controls["tipo_magia"].SetValue("-")
+        #self.controls["attacco"].SetValue("-")
+        #self.controls["vita"].SetValue("-")
+        #self.controls["durability"].SetValue("-")
+
+
+    def on_type_change(self, event):
+        """Gestisce il cambio del tipo di carta."""
+
+        #card_type = self.controls["tipo"].GetValue()
+        self.update_subtypes()
+        self.apply_type_change()
 
     def add_buttons(self, btn_sizer, buttons):
         """
@@ -200,12 +269,12 @@ class CardEditDialog(SingleCardView):
                 "mana_cost": self.controls["costo_mana"].GetValue(),
                 "card_type": self.controls["tipo"].GetValue(),
                 "spell_type": self.controls["tipo_magia"].GetValue() if self.controls["tipo_magia"].IsEnabled() else None,
-                "card_subtype": self.controls["sottotipo"].GetValue() if self.controls["sottotipo"].GetValue() != "Tutti" else None,
+                "card_subtype": self.controls["sottotipo"].GetValue() if self.controls["sottotipo"].GetValue() else None,
                 "attack": self.controls["attacco"].GetValue() if self.controls["attacco"].IsEnabled() else None,
                 "health": self.controls["vita"].GetValue() if self.controls["vita"].IsEnabled() else None,
                 "durability": self.controls["durability"].GetValue() if self.controls["durability"].IsEnabled() else None,
-                "rarity": self.controls["rarita"].GetValue(),
-                "expansion": self.controls["espansione"].GetValue()
+                "rarity": self.controls["rarita"].GetValue() if self.controls["rarita"].GetValue() else None,
+                "expansion": self.controls["espansione"].GetValue() if self.controls["espansione"].GetValue() else None,
             }
 
             # Ottieni le classi selezionate

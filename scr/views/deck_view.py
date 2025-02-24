@@ -136,27 +136,12 @@ class DeckViewFrame(BasicView):
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
 
-        # Imposta il layout principale
-        self.Layout()
-
 
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
         search_text = self.search_ctrl.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
-
-
-    def new_on_search_text_change(self, event):
-        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        if not search_text:
-            return
-
-        # Avvia il timer per il debounce (es. 500 ms)
-        self.timer.Stop()  # Ferma il timer precedente
-        self.timer.Start(500, oneShot=True)
 
 
     def on_search_text_change(self, event):
