@@ -208,7 +208,7 @@ class DeckViewFrame(BasicView):
 
 
     def last_load_cards(self, filters=None):
-        """Carica le carte nel mazzo, applicando eventuali filtri."""
+        """vecchia versioen del metodo che Carica le carte nel mazzo, applicando eventuali filtri."""
 
         if not hasattr(self, "deck_content") or not self.deck_content:
             return  # Esce se il mazzo non è stato caricato correttamente
