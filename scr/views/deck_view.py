@@ -164,17 +164,6 @@ class DeckViewFrame(BasicView):
         self.set_focus_to_list()
 
 
-    def _apply_search_filter(self, search_text):
-        """Applica il filtro di ricerca alla lista delle carte."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
-            self.load_cards()
-        else:
-            # Filtra le carte in base al nome
-            self.load_cards(filters={"name": search_text})
-
-
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
 
@@ -224,6 +213,20 @@ class DeckViewFrame(BasicView):
 
             # Aggiunge la carta alla lista
             self._add_card_to_list(card_data)
+
+
+    def refresh_card_list(self):
+        """Aggiorna la lista delle carte con i dati più recenti dal database."""
+
+        log.debug("Aggiornamento della lista delle carte...")        
+
+        # Ricarica il contenuto del mazzo dal database
+        self.deck_content = self.controller.db_manager.get_deck(self.deck_name)
+
+         # Ricarica le carte nella lista
+        self.load_cards()
+        
+        log.debug("Lista delle carte aggiornata.")
 
 
     def _apply_search_filter(self, search_text):
