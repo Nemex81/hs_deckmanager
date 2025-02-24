@@ -35,7 +35,7 @@ class CardEditDialog(SingleCardView):
         self.parent = parent
         title = "Modifica Carta" if card else "Aggiungi Carta"
         self.card = card
-        super().__init__(parent, title=title, size=(400, 900))
+        super().__init__(parent, title=title, size=(400, 700))
 
 
     def init_ui_elements(self):

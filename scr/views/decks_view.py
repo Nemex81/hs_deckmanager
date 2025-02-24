@@ -44,7 +44,7 @@ class DecksManagerFrame(BasicView):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Impostazioni finestra principale
-        self.SetBackgroundColour('green')
+        self.panel.SetBackgroundColour('blue')
         self.Centre()
         self.Maximize()
 
@@ -54,6 +54,9 @@ class DecksManagerFrame(BasicView):
             self.panel,
             columns=[("Mazzo", 260), ("Classe", 200), ("Formato", 120)]
         )
+
+        # coloro la lista dei mazzi
+        self.deck_list.SetBackgroundColour('yellow')
 
         # Carichiamo i mazzi
         self.load_decks()
