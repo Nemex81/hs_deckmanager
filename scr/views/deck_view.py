@@ -17,7 +17,7 @@ import wx, pyperclip
 import wx.lib.newevent
 #from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
-#from ..models import load_deck_from_db, load_cards
+from ..models import load_deck_from_db, load_cards
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .proto_views import BasicView#, ListView
 from .card_edit_dialog import CardEditDialog
@@ -219,6 +219,10 @@ class DeckViewFrame(BasicView):
 
 
     def load_cards(self, filters=None):
+        load_cards(self.card_list, self.deck_content, self.mode, filters)
+
+
+    def last_load_cards(self, filters=None):
         """Carica le carte nel mazzo, applicando eventuali filtri."""
 
         if not hasattr(self, "deck_content") or not self.deck_content:
