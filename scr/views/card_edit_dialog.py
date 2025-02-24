@@ -41,6 +41,9 @@ class CardEditDialog(SingleCardView):
     def init_ui_elements(self):
         """Inizializza i componenti specifici per CardEditDialog."""
 
+        # coloro di verde il bg del pannello
+        self.panel.SetBackgroundColour('green')
+
         # Sizer per i campi
         fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
 

@@ -85,21 +85,21 @@ class HearthstoneManager():
     def run_decks_frame(self, parent=None, controller=None, deck_name=None):
         """ carica l'interfaccia per la gestione dei mazzi. """
 
-        frame = DecksManagerFrame(parent, controller=self.decks_controller)
+        frame = DecksManagerFrame(parent, controller=self)
         frame.Show()
 
 
     def run_dec_frame(self, parent=None, controller=None, deck_name=None):
         """ carica l'interfaccia per la gestione di un mazzo. """
 
-        frame = DeckViewFrame(parent, controller=self.deck_controller, deck_name=deck_name)
+        frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
         frame.Show()
 
 
     def run_collection_frame(self, parent=None):
         """ carica l'interfaccia pe rla collezzione completa di carte. """
 
-        frame = CardCollectionFrame(parent, controller=self.collection_controller)
+        frame = CardCollectionFrame(parent, controller=self)
         frame.Show()
 
 
@@ -108,9 +108,9 @@ class HearthstoneManager():
 
         app = wx.App(False)
 
-        self.set_collection_controller(CollectionController(parent=self, db_manager=self.db_manager))
-        self.set_decks_controller(DecksController(parent=self, db_manager=self.db_manager))
-        self.set_deck_controller(DeckController(parent=self, db_manager=self.db_manager))
+        #self.set_collection_controller(CollectionController(parent=self, db_manager=self.db_manager))
+        #self.set_decks_controller(DecksController(parent=self, db_manager=self.db_manager))
+        #self.set_deck_controller(DeckController(parent=self, db_manager=self.db_manager))
 
         frame = HearthstoneAppFrame(None, title="Hearthstone Deck Manager, by Nemex81")
         frame.set_controller(self)

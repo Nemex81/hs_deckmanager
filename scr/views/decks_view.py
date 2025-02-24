@@ -375,10 +375,10 @@ class DecksManagerFrame(BasicView):
 
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
-        #collection_dialog = CardCollectionDialog(self, self.db_manager)
-        collection_dialog = CardCollectionFrame(self, self.db_manager)
+        self.controller.run_collection_frame(parent=self)
+        #collection_dialog = CardCollectionFrame(self, self.db_manager)
         self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
-        collection_dialog.Show()                                            # Mostra la finestra come modale
+        #collection_dialog.Show()                                            # Mostra la finestra come modale
 
 
     def on_delete_deck(self, event):
