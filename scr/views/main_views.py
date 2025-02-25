@@ -37,7 +37,7 @@ class HearthstoneAppFrame(BasicView):
             raise ValueError("Il controller non può essere nullo.")
 
         self.parent=parent
-        self.controller = controller  # Controller dell'applicazione
+        self.controller = controller
 
 
     def init_ui_elements(self):
@@ -86,12 +86,12 @@ class HearthstoneAppFrame(BasicView):
 
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
-        self.controller.run_collection_frame(parent=self, controller=self.controller)
+        self.controller.run_collection_frame(parent=self)
 
 
     def on_decks_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
-        self.controller.run_decks_frame(parent=self, controller=self.controller)
+        self.controller.run_decks_frame(parent=self)
 
 
     #def on_match_button_click(self, event):

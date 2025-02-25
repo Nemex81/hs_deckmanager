@@ -27,7 +27,7 @@
 # lib
 import wx
 from scr.models import DbManager
-from scr.controller import MainController, CollectionController, DeckController, DecksController
+from scr.controller import MainController
 
 
 

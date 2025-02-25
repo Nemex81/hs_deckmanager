@@ -516,6 +516,46 @@ class DbManager:
             return stats
 
 
+    def get_decks(self, filters=None):
+        """Restituisce tutti i mazzi con opzioni di filtro."""
+
+        with db_session() as session:
+            query = session.query(Deck)
+            if filters:
+                if filters.get("name"):
+                    query = query.filter(Deck.name.ilike(f"%{filters['name']}%"))
+                if filters.get("player_class"):
+                    query = query.filter(Deck.player_class.ilike(f"%{filters['player_class']}%"))
+                if filters.get("game_format"):
+                    query = query.filter(Deck.game_format.ilike(f"%{filters['game_format']}%"))
+            return query.all()
+
+
+    def get_deck_details(self, deck_name):
+        """Restituisce i dettagli di un mazzo specifico."""
+
+        with db_session() as session:
+            deck = session.query(Deck).filter_by(name=deck_name).first()
+            if deck:
+                deck_cards = session.query(DeckCard).filter_by(deck_id=deck.id).all()
+                cards = []
+                for deck_card in deck_cards:
+                    card = session.query(Card).filter_by(id=deck_card.card_id).first()
+                    if card:
+                        cards.append({
+                            "name": card.name,
+                            "mana_cost": card.mana_cost,
+                            "quantity": deck_card.quantity
+                        })
+                return {
+                    "name": deck.name,
+                    "player_class": deck.player_class,
+                    "game_format": deck.game_format,
+                    "cards": cards
+                }
+            return None
+
+
     def load_collection(filters=None, card_list=None):
         """Carica le carte nella lista."""
         load_cards(filters=filters, card_list=card_list)

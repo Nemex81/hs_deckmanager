@@ -150,7 +150,7 @@ class CardCollectionFrame(BasicView):
             raise ValueError("La lista delle carte non è stata inizializzata.")
 
         load_cards(filters=filters, card_list=self.card_list)
-        #self.controller.collection_controller.load_collection(filters=filters, card_list=self.card_list)
+        #self.controller.collection_controller.load_cards(filters=filters, card_list=self.card_list)
 
 
     def reset_filters(self):

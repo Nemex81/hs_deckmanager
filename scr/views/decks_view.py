@@ -109,12 +109,20 @@ class DecksManagerFrame(BasicView):
         self.Layout()
 
 
+    def new_load_decks(self):
+        """Carica i mazzi dal database."""
+
+        decks = self.db_manager.get_decks()
+        for deck in decks:
+            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
+            self.deck_list.SetItem(index, 1, deck.player_class)
+            self.deck_list.SetItem(index, 2, deck.game_format)
+
     def load_decks(self):
         """Carica i mazzi ."""
 
         # carichiamo i mazzi
         decks = session.query(Deck).all()
-        # utilizzando insert
         for deck in decks:
             Index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
             self.deck_list.SetItem(Index, 1, deck.player_class)
@@ -264,10 +272,10 @@ class DecksManagerFrame(BasicView):
 
         deck_name = self.get_selected_deck()
         if deck_name:
-            deck_content = self.db_manager.get_deck(deck_name)
+            deck_content = self.db_manager.get_deck_details(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                self.controller.run_deck_frame(parent=self, controller=self.controller, deck_name=deck_name)
+                self.controller.run_deck_frame(parent=self, deck_name=deck_name)
 
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
