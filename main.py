@@ -32,11 +32,12 @@ from scr.controller import MainController
 
 
 def start_app():
-    """ Start dell'applicazione. """
+    """ Start dell'applicazione Hearthstone Deck Manager. """
 
     db_manager = DbManager()
     app = MainController(db_manager=db_manager)
-    app.run()
+    if app:
+        app.run()
 
 
 
