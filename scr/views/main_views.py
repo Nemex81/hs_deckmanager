@@ -15,8 +15,8 @@
 
 # lib
 import wx, pyperclip
-from .proto_views import BasicView
 from .view_components import create_button
+from .proto_views import BasicView
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
@@ -27,9 +27,11 @@ from utyls import logger as log
 class HearthstoneAppFrame(BasicView):
     """ Finestra principale dell'applicazione. """
 
-    def __init__(self, parent, title):
+    def __init__(self, parent, controller):
+        title = "earthstone Deck Manager by Nemex81"
         super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
         font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
+        self.controller = controller  # Controller dell'applicazione
 
 
     def init_ui_elements(self):

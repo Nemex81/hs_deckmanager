@@ -208,7 +208,7 @@ class CardEditDialog(SingleCardView):
 
 
     def apply_type_change(self):
-        """ Applica il cambio del tipo di carta. """
+        """Applica il cambio del tipo di carta."""
 
         card_type = self.controls["tipo"].GetValue()
 
@@ -238,12 +238,6 @@ class CardEditDialog(SingleCardView):
             self.controls["vita"].Disable()
             self.controls["durability"].Disable()
 
-        # Imposta valori predefiniti per i campi disabilitati
-        #self.controls["tipo_magia"].SetValue("-")
-        #self.controls["attacco"].SetValue("-")
-        #self.controls["vita"].SetValue("-")
-        #self.controls["durability"].SetValue("-")
-
 
     def on_type_change(self, event):
         """Gestisce il cambio del tipo di carta."""
@@ -251,6 +245,7 @@ class CardEditDialog(SingleCardView):
         #card_type = self.controls["tipo"].GetValue()
         self.update_subtypes()
         self.apply_type_change()
+
 
     def add_buttons(self, btn_sizer, buttons):
         """
@@ -299,6 +294,7 @@ class CardEditDialog(SingleCardView):
         except Exception as e:
             log.error(f"Errore durante il salvataggio: {str(e)}")
             wx.MessageBox(f"Errore durante il salvataggio: {str(e)}", "Errore", wx.OK | wx.ICON_ERROR)
+
 
     def on_close(self, event):
         """Chiude la finestra di dialogo."""

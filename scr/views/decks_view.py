@@ -45,8 +45,8 @@ class DecksManagerFrame(BasicView):
 
         # Impostazioni finestra principale
         self.panel.SetBackgroundColour('blue')
-        self.Centre()
-        self.Maximize()
+        #elf.Centre()
+        #elf.Maximize()
 
         # Creazione degli elementi dell'interfaccia
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
@@ -267,25 +267,7 @@ class DecksManagerFrame(BasicView):
             deck_content = self.db_manager.get_deck(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                self.controller.run_dec_frame(parent=self, controller=self.controller, deck_name=deck_name)
-
-            else:
-                wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
-
-        else:
-            wx.MessageBox("Seleziona un mazzo prima di visualizzarlo.", "Errore")
-
-    def last_on_view_deck(self, event):
-        """Mostra il mazzo selezionato in una finestra dettagliata."""
-
-        deck_name = self.get_selected_deck()
-        if deck_name:
-            deck_content = self.db_manager.get_deck(deck_name)
-            if deck_content:
-                # Apri la finestra di visualizzazione del mazzo
-                deck_view_dialog = DeckViewFrame(self, self.db_manager, deck_name=deck_name)
-                self.Hide()
-                deck_view_dialog.Show()
+                self.controller.run_deck_frame(parent=self, controller=self.controller, deck_name=deck_name)
 
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
@@ -408,7 +390,7 @@ class DecksManagerFrame(BasicView):
     def on_search(self, event):
         """Filtra i mazzi in base al testo di ricerca."""
 
-        # cerchiamo la parola richiesta dall0utente sia nei nomi dei mazzi sia nella classe
+        # cerchiamo la parola richiesta dall'utente sia nei nomi dei mazzi sia nella classe
         search_text = self.search_bar.GetValue()
         self.deck_list.DeleteAllItems()
         decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()

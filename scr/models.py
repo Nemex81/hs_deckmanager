@@ -378,6 +378,7 @@ class DbManager:
 
     def add_card_to_database(self, card):
         """Aggiunge una nuova carta al database."""
+
         with db_session():
             new_card = Card(
                 id=card["id"],
@@ -390,6 +391,7 @@ class DbManager:
                 rarity="Unknown",
                 expansion="Unknown"
             )
+
             session.add(new_card)
             session.commit()
             log.info(f"Carta '{card['name']}' aggiunta al database.")
@@ -397,6 +399,7 @@ class DbManager:
 
     def get_deck(self, deck_name):
         """Restituisce il contenuto di un mazzo dal database."""
+
         with db_session():
             deck = session.query(Deck).filter_by(name=deck_name).first()
             if deck:
@@ -428,7 +431,7 @@ class DbManager:
                     "game_format": deck.game_format,
                     "cards": cards
                 }
-            #return None
+
 
     def delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """
@@ -511,6 +514,12 @@ class DbManager:
                     stats[key] = round(value, 2)
 
             return stats
+
+
+    def load_collection(filters=None, card_list=None):
+        """Carica le carte nella lista."""
+        load_cards(filters=filters, card_list=card_list)
+
 
 
 #@@@# Fine del modulo

@@ -27,7 +27,7 @@
 # lib
 import wx
 from scr.models import DbManager
-from scr.controller import HearthstoneManager
+from scr.controller import MainController, CollectionController, DeckController, DecksController
 
 
 
@@ -35,7 +35,7 @@ def start_app():
     """ Start dell'applicazione. """
 
     db_manager = DbManager()
-    app = HearthstoneManager(db_manager=db_manager)
+    app = MainController(db_manager=db_manager)
     app.run()
 
 

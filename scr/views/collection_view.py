@@ -42,10 +42,14 @@ class CardCollectionFrame(BasicView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller):
+        if not controller:
+            log.error("Il controller non può essere None.")
+            raise ValueError("Il controller non può essere None.")
+
         self.mode = "collection"
         self.parent = parent
         self.controller = controller
-        self.db_manager = self.controller.db_manager
+        #self.controller = self.controller.collection_controller
         super().__init__(parent, title="Collezione")
         self.timer = wx.Timer(self)  # Timer per il debounce
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
@@ -141,6 +145,7 @@ class CardCollectionFrame(BasicView):
 
     def load_cards(self, filters=None):
         """Carica le carte utilizzando le funzioni helper sopra definite."""
+
         if not self.card_list:
             log.error("La lista delle carte non è stata inizializzata.")
             raise ValueError("La lista delle carte non è stata inizializzata.")
