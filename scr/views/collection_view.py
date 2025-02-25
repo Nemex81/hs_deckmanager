@@ -60,7 +60,7 @@ class CardCollectionFrame(BasicView):
 
         # Impostazioni finestra principale
         self.SetBackgroundColour('yellow')
-        self.panel.SetBackgroundColour('blue')
+        self.panel.SetBackgroundColour('black')
         self.Centre()
         self.Maximize()
 
@@ -83,6 +83,7 @@ class CardCollectionFrame(BasicView):
             event_handler=self.on_show_filters
         )
         add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+        self.bind_focus_events(self.btn_filters)  # Collega gli eventi di focus
 
         # Aggiungo la barra di ricerca e i filtri al layout
         add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
@@ -125,10 +126,17 @@ class CardCollectionFrame(BasicView):
         for label, handler in buttons:
             btn = create_button(btn_panel, label=label, event_handler=handler)
             add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
+            self.bind_focus_events(btn)  # Collega gli eventi di focus
+
+        #resetto i colori di tutti i pulsanti
+        self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
         add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+
+        # Separatore tra pulsanti e fondo finestra
+        add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Imposta il layout principale
         self.Layout()

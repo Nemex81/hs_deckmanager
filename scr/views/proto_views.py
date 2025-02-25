@@ -72,6 +72,13 @@ class BasicView(wx.Frame):
         self.parent = parent          # Finestra genitore
         self.controller = None        # Controller per l'interfaccia
         self.db_manager = None        # Gestore del database
+
+        # Colori personalizzati per lo stato attivo e inattivo
+        self.FOCUS_BG_COLOR = 'white'  # Colore di sfondo quando l'elemento ha il focus
+        self.FOCUS_TEXT_COLOR = 'blue'      # Colore del testo quando l'elemento ha il focus
+        self.DEFAULT_BG_COLOR = 'blue'  # Colore di sfondo predefinito
+        self.DEFAULT_TEXT_COLOR = 'yellow'      # Colore del testo predefinito
+
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
         self.init_ui()                # Inizializza l'interfaccia utente
@@ -87,6 +94,48 @@ class BasicView(wx.Frame):
         """ Imposta il controller del database. """
         self.db_manager = db_manager
 
+
+    def bind_focus_events(self, element):
+        """
+        Collega gli eventi di focus a un elemento dell'interfaccia grafica.
+        """
+
+        element.Bind(wx.EVT_SET_FOCUS, lambda e: self.set_focus_style(element))
+        element.Bind(wx.EVT_KILL_FOCUS, lambda e: self.reset_focus_style(element))
+
+
+    def set_focus_style(self, element):
+        """
+        Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
+        """
+
+        self.reset_focus_style_for_all_buttons()
+        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
+        element.SetBackgroundColour(self.FOCUS_BG_COLOR)
+        element.SetForegroundColour(self.FOCUS_TEXT_COLOR)
+        element.Refresh()  # Forza il ridisegno dell'elemento
+
+    def reset_focus_style(self, element):
+        """
+        Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
+        """
+        log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
+        element.SetBackgroundColour(self.DEFAULT_BG_COLOR)
+        element.SetForegroundColour(self.DEFAULT_TEXT_COLOR)
+        element.Refresh()  # Forza il ridisegno dell'elemento
+
+
+    def reset_focus_style_for_all_buttons(self, btn_sizer=None):
+        """ Ripristina il colore di sfondo e del font per tutti i pulsanti. """
+        if not btn_sizer:
+            for child in self.panel.GetChildren():
+                if isinstance(child, wx.Button):
+                    self.reset_focus_style(child)
+
+        else:
+            for i in range(btn_sizer.GetItemCount()):
+                btn = btn_sizer.GetItem(i).GetWindow()
+                self.reset_focus_style(btn)
 
     def init_ui(self):
         """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""

@@ -72,6 +72,11 @@ def create_button(parent, label, size=DEFAULT_BUTTON_SIZE, font_size=DEFAULT_FON
     button.SetFont(wx.Font(font_size, wx.DEFAULT, wx.NORMAL, wx.BOLD))
     if event_handler:
         button.Bind(wx.EVT_BUTTON, event_handler)
+
+    # Collega gli eventi di focus
+    button.Bind(wx.EVT_SET_FOCUS, lambda e: parent.set_focus_style(button))
+    button.Bind(wx.EVT_KILL_FOCUS, lambda e: parent.reset_focus_style(button))
+
     return button
 
 

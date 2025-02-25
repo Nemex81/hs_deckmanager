@@ -54,7 +54,7 @@ class DecksManagerFrame(BasicView):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Impostazioni finestra principale
-        self.panel.SetBackgroundColour('blue')
+        self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
@@ -102,7 +102,11 @@ class DecksManagerFrame(BasicView):
         # Layout pulsanti
         btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
         for btn in [btn_add, btn_copy, btn_view, btn_stats, btn_update, btn_delete, btn_collection, btn_exit]:
+            self.bind_focus_events(btn)  # Collega gli eventi di focus
             btn_sizer.Add(btn, flag=wx.EXPAND | wx.ALL, border=5)
+
+        #resetto i colori di tutti i pulsanti
+        self.reset_focus_style_for_all_buttons(btn_sizer)
 
         add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
@@ -113,8 +117,8 @@ class DecksManagerFrame(BasicView):
         self.panel.SetSizer(main_sizer)
 
         # Barra di stato
-        self.status_bar = self.CreateStatusBar()
-        self.status_bar.SetStatusText("Pronto")
+        #self.status_bar = self.CreateStatusBar()
+        #self.status_bar.SetStatusText("Pronto")
 
         # Imposta il focus sul search bar
         self.search_bar.SetFocus()
