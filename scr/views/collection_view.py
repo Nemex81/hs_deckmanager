@@ -125,11 +125,11 @@ class CardCollectionFrame(BasicView):
 
         for label, handler in buttons:
             btn = create_button(btn_panel, label=label, event_handler=handler)
-            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
+            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
+        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
 
         # Imposta il layout principale
         self.Layout()
@@ -151,6 +151,7 @@ class CardCollectionFrame(BasicView):
             raise ValueError("La lista delle carte non è stata inizializzata.")
 
         load_cards(filters=filters, card_list=self.card_list)
+        #self.controller.load_collection(filters=filters, card_list=self.card_list)
 
 
     def reset_filters(self):

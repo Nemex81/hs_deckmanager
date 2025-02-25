@@ -15,6 +15,7 @@
 
 # lib
 import wx
+from .models import load_cards
 from .views.main_views import HearthstoneAppFrame
 from .views.collection_view import CardCollectionFrame
 from .views.deck_view import DeckViewFrame
@@ -220,33 +221,11 @@ class MainController():
 
         app = wx.App(False)
         frame = HearthstoneAppFrame(parent=None, controller=self)
-        frame.set_controller(self)
         frame.Show()
         app.MainLoop()
 
 
-    def load_collection(self, filters=None, card_list=None):
-        """
-        Carica la collezione di carte dal database, applicando eventuali filtri.
 
-        Args:
-            filters (dict, optional): Dizionario di filtri da applicare. Default è None.
-
-        Returns:
-            list: Lista di carte che soddisfano i filtri.
-
-        """
-
-        try:
-            # Utilizza il DbManager per caricare le carte
-            #cards = self.db_manager.get_cards(filters=filters)
-            #return cards
-            load_cards(filters=filters, card_list=self.card_list)
-            return
-
-        except Exception as e:
-            log.error(f"Errore durante il caricamento della collezione: {str(e)}")
-            return []
 
 
 #@@@# Start del modulo
