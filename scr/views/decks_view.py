@@ -15,6 +15,7 @@
 
 # lib
 import wx, pyperclip
+import wx.lib.newevent
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards_from_db, load_deck_from_db, load_cards
@@ -28,6 +29,9 @@ from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 
+# Creazione di un evento personalizzato per la ricerca con debounce
+SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
+
 
 
 class DecksManagerFrame(BasicView):
@@ -40,13 +44,17 @@ class DecksManagerFrame(BasicView):
         self.controller = controller
         self.db_manager = self.controller.db_manager
 
+        # Timer per il debounce
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+
+
     def init_ui_elements(self):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Impostazioni finestra principale
         self.panel.SetBackgroundColour('blue')
-        #elf.Centre()
-        #elf.Maximize()
 
         # Creazione degli elementi dell'interfaccia
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
@@ -67,6 +75,7 @@ class DecksManagerFrame(BasicView):
             placeholder="Cerca mazzo...",
             event_handler=self.on_search
         )
+        self.search_bar.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
 
         # Pulsanti
         btn_add = create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
@@ -106,7 +115,12 @@ class DecksManagerFrame(BasicView):
         # Barra di stato
         self.status_bar = self.CreateStatusBar()
         self.status_bar.SetStatusText("Pronto")
-        self.Layout()
+
+        # Imposta il focus sul search bar
+        self.search_bar.SetFocus()
+
+        # forza il layout (facoltativo, forza la riscrittura e impaginazione degli elementi grafici)
+        #self.Layout()
 
 
     def new_load_decks(self):
@@ -117,6 +131,18 @@ class DecksManagerFrame(BasicView):
             index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
             self.deck_list.SetItem(index, 1, deck.player_class)
             self.deck_list.SetItem(index, 2, deck.game_format)
+
+
+    def set_focus_to_list(self):
+        """
+        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
+        """
+        if hasattr(self, "deck_list") and self.deck_list.GetItemCount() > 0:
+            self.deck_list.SetFocus()  # Imposta il focus sulla lista
+            self.deck_list.Select(0)   # Seleziona il primo elemento
+            self.deck_list.Focus(0)    # Sposta il focus sul primo elemento
+            self.deck_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
+
 
     def load_decks(self):
         """Carica i mazzi ."""
@@ -176,7 +202,51 @@ class DecksManagerFrame(BasicView):
                 break
 
 
+    def _apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
+            self.load_decks()
+        else:
+            # Filtra i mazzi in base al nome o alla classe
+            self.deck_list.DeleteAllItems()
+            decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
+            for deck in decks:
+                index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
+                self.deck_list.SetItem(index, 1, deck.player_class)
+                self.deck_list.SetItem(index, 2, deck.game_format)
+
+        self.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
+
+    def on_timer(self, event):
+        """Esegue la ricerca dopo il timeout del debounce."""
+
+        search_text = self.search_bar.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+
+        search_text = self.search_bar.GetValue().strip().lower()
+        if not search_text:
+            self.load_decks()  # Ricarica tutti i mazzi se la casella di ricerca è vuota
+
+        # Avvia il timer per il debounce (es. 500 ms)
+        self.timer.Stop()  # Ferma il timer precedente
+        self.timer.Start(500, oneShot=True)
+
+
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+
+        search_text = event.search_text
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
+
+
     def on_add_deck(self, event):
+
         """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
  
         try:
@@ -396,6 +466,12 @@ class DecksManagerFrame(BasicView):
 
 
     def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+        search_text = self.search_bar.GetValue().strip().lower()
+        self._apply_search_filter(search_text)
+
+
+    def last_on_search(self, event):
         """Filtra i mazzi in base al testo di ricerca."""
 
         # cerchiamo la parola richiesta dall'utente sia nei nomi dei mazzi sia nella classe

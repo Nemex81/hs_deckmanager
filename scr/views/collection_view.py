@@ -267,8 +267,6 @@ class CardCollectionFrame(BasicView):
     def on_timer(self, event):
         """ Esegue la ricerca dopo il timeout del debounce."""
 
-        """Esegue la ricerca dopo il timeout del debounce."""
-
         search_text = self.search_ctrl.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
