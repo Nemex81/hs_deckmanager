@@ -197,6 +197,11 @@ class MainController():
         app.MainLoop()
 
 
+    def load_decks(self):
+        """ carica i mazzi dal database. """
+
+        return self.db_manager.get_decks()
+
 
 
 

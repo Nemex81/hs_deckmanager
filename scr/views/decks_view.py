@@ -130,7 +130,7 @@ class DecksManagerFrame(BasicView):
     def new_load_decks(self):
         """Carica i mazzi dal database."""
 
-        decks = self.db_manager.get_decks()
+        decks = self.controller.load_decks()
         for deck in decks:
             index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
             self.deck_list.SetItem(index, 1, deck.player_class)

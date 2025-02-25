@@ -528,6 +528,7 @@ class DbManager:
                     query = query.filter(Deck.player_class.ilike(f"%{filters['player_class']}%"))
                 if filters.get("game_format"):
                     query = query.filter(Deck.game_format.ilike(f"%{filters['game_format']}%"))
+
             return query.all()
 
 

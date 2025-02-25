@@ -140,7 +140,7 @@ class CardCollectionFrame(BasicView):
         add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Imposta il layout principale
-        self.Layout()
+        #self.Layout()
 
         # Carica le carte
         self.load_cards()
@@ -221,6 +221,8 @@ class CardCollectionFrame(BasicView):
 
         # Funzione lambda per gestire la conversione sicura a intero
         def safe_int(value):
+            """ Converte il valore in intero, restituendo infinito per i valori non numerici. """
+
             try:
                 return int(value)
             except ValueError:
