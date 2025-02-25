@@ -15,7 +15,6 @@
 
 # lib
 import wx
-#from .models import load_cards
 from .views.main_views import HearthstoneAppFrame
 from .views.collection_view import CardCollectionFrame
 from .views.deck_view import DeckViewFrame

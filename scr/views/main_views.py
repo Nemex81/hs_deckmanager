@@ -84,6 +84,7 @@ class HearthstoneAppFrame(BasicView):
 
     #@@# sezione metodi collegati agli eventi
 
+
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
         self.controller.run_collection_frame(parent=self)
