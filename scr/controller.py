@@ -209,10 +209,10 @@ class MainController():
         frame.Show()
 
 
-    def run_collection_frame(self, parent=None):
+    def run_collection_frame(self, parent=None, controller=None):
         """ carica l'interfaccia pe rla collezzione completa di carte. """
 
-        frame = CardCollectionFrame(parent=parent, controller=self)
+        frame = CardCollectionFrame(parent=parent, controller=controller)
         frame.Show()
 
 

@@ -30,7 +30,13 @@ class HearthstoneAppFrame(BasicView):
     def __init__(self, parent, controller):
         title = "earthstone Deck Manager by Nemex81"
         super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
-        font = wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
+        #font = wx.Font(24, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
+        #self.SetFont(font)
+        if not controller:
+            log.error("Errore: controller non definito.")
+            raise ValueError("Il controller non può essere nullo.")
+
+        self.parent=parent
         self.controller = controller  # Controller dell'applicazione
 
 
@@ -80,7 +86,7 @@ class HearthstoneAppFrame(BasicView):
 
     def on_collection_button_click(self, event):
         """ Metodo per gestire il click sul pulsante 'Collezione'. """
-        self.controller.run_collection_frame(parent=self)
+        self.controller.run_collection_frame(parent=self, controller=self.controller)
 
 
     def on_decks_button_click(self, event):

@@ -47,13 +47,12 @@ class CardCollectionFrame(BasicView):
             raise ValueError("Il controller non può essere None.")
 
         self.mode = "collection"
+        super().__init__(parent, title="Collezione")
         self.parent = parent
         self.controller = controller
-        #self.controller = self.controller.collection_controller
-        super().__init__(parent, title="Collezione")
-        self.timer = wx.Timer(self)  # Timer per il debounce
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+        self.timer = wx.Timer(self)                                 # Timer per il debounce
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)          # Aggiungi un gestore per il timer
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)           # Aggiungi un gestore per l'evento di ricerca
 
 
     def init_ui_elements(self):
@@ -151,7 +150,7 @@ class CardCollectionFrame(BasicView):
             raise ValueError("La lista delle carte non è stata inizializzata.")
 
         load_cards(filters=filters, card_list=self.card_list)
-        #self.controller.load_collection(filters=filters, card_list=self.card_list)
+        #self.controller.collection_controller.load_collection(filters=filters, card_list=self.card_list)
 
 
     def reset_filters(self):

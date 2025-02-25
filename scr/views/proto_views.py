@@ -28,6 +28,8 @@ from utyls import logger as log
 # Evento personalizzato per la ricerca in tempo reale
 SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
+
+
 class BasicDialog(wx.Dialog):
     """
         Classe base per le finestre di dialogo dell'interfaccia utente.
@@ -80,6 +82,7 @@ class BasicView(wx.Frame):
         """ Imposta il controller per l'interfaccia. """
         self.controller = controller
 
+
     def set_db_manager(self, db_manager=None):
         """ Imposta il controller del database. """
         self.db_manager = db_manager
@@ -102,10 +105,12 @@ class BasicView(wx.Frame):
         title.SetFont(font)
         self.init_ui_elements()
 
+
     @abstractmethod
     def init_ui_elements(self, *args, **kwargs):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
+
 
     def Close(self):
         """Chiude la finestra."""
