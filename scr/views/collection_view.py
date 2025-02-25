@@ -59,7 +59,7 @@ class CardCollectionFrame(BasicView):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
 
         # Impostazioni finestra principale
-        self.SetBackgroundColour('yellow')
+        self.SetBackgroundColour('black')
         self.panel.SetBackgroundColour('black')
         self.Centre()
         self.Maximize()
@@ -82,8 +82,9 @@ class CardCollectionFrame(BasicView):
             label="Filtri Avanzati",
             event_handler=self.on_show_filters
         )
-        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+        self.reset_focus_style(self.btn_filters)
         self.bind_focus_events(self.btn_filters)  # Collega gli eventi di focus
+        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
 
         # Aggiungo la barra di ricerca e i filtri al layout
         add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
@@ -125,8 +126,8 @@ class CardCollectionFrame(BasicView):
 
         for label, handler in buttons:
             btn = create_button(btn_panel, label=label, event_handler=handler)
-            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
+            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         #resetto i colori di tutti i pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)

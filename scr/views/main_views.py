@@ -54,27 +54,28 @@ class HearthstoneAppFrame(BasicView):
             label="Collezione", 
             event_handler=self.on_collection_button_click
         )
-        self.bind_focus_events(self.collection_button)  # Collega gli eventi di focus
 
         self.decks_button = create_button(
             self.panel, 
             label="Gestione Mazzi", 
             event_handler=self.on_decks_button_click
         )
-        self.bind_focus_events(self.decks_button)  # Collega gli eventi di focus
 
         self.quit_button = create_button(
             self.panel,
             label="Esci",
             event_handler=self.on_quit_button_click
         )
-        self.bind_focus_events(self.quit_button)  # Collega gli eventi di focus
 
         # Aggiungo un sizer per allineare i pulsanti verticalmente
         button_sizer = wx.BoxSizer(wx.VERTICAL)
         button_sizer.Add(self.collection_button, 0, wx.ALL, 20)
         button_sizer.Add(self.decks_button, 0, wx.ALL, 20)
         button_sizer.Add(self.quit_button, 0, wx.ALL, 20)
+
+        for child in button_sizer.GetChildren():
+            button = child.GetWindow()
+            self.bind_focus_events(button)  # Collega gli eventi di focus
 
         # Creazione sizer principale orizzontale per allineare l'immagine e i pulsanti
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)

@@ -69,15 +69,15 @@ class BasicView(wx.Frame):
     
     def __init__(self, parent, title, size=(500, 400)):
         super().__init__(parent=parent, title=title, size=size)
-        self.parent = parent          # Finestra genitore
-        self.controller = None        # Controller per l'interfaccia
-        self.db_manager = None        # Gestore del database
+        self.parent = parent               # Finestra genitore
+        self.controller = None             # Controller per l'interfaccia
+        self.db_manager = None             # Gestore del database
 
         # Colori personalizzati per lo stato attivo e inattivo
-        self.FOCUS_BG_COLOR = 'white'  # Colore di sfondo quando l'elemento ha il focus
+        self.FOCUS_BG_COLOR = 'yellow'      # Colore di sfondo quando l'elemento ha il focus
         self.FOCUS_TEXT_COLOR = 'blue'      # Colore del testo quando l'elemento ha il focus
-        self.DEFAULT_BG_COLOR = 'blue'  # Colore di sfondo predefinito
-        self.DEFAULT_TEXT_COLOR = 'yellow'      # Colore del testo predefinito
+        self.DEFAULT_BG_COLOR = 'blue'      # Colore di sfondo predefinito
+        self.DEFAULT_TEXT_COLOR = 'yellow'  # Colore del testo predefinito
 
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
