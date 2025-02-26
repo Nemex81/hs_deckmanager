@@ -106,6 +106,9 @@ class CardCollectionFrame(BasicView):
             ]
         )
 
+        # Imposta il colore di sfondo della lista
+        #self.card_list.SetBackgroundColour('black')
+
         # Collega gli eventi di focus alla lista
         #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
@@ -151,7 +154,7 @@ class CardCollectionFrame(BasicView):
         #self.card_list.Refresh()
 
         # Imposta il layout principale
-        self.Layout()
+        #self.Layout()
 
         # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)

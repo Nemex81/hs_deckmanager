@@ -129,8 +129,8 @@ def create_list_ctrl(parent, columns, style=DEFAULT_LIST_STYLE):
 
     list_ctrl = CustomListCtrl(
         parent,
-        focus_bg_color='blue',          # Colore di sfondo predefinito per la riga selezionata
-        focus_text_color='white',       # Colore del testo predefinito per la riga selezionata
+        focus_bg_color='yellow',          # Colore di sfondo predefinito per la riga selezionata
+        focus_text_color='black',       # Colore del testo predefinito per la riga selezionata
         default_bg_color='white',        # Colore di sfondo predefinito
         default_text_color='black',      # Colore del testo predefinito
         style=style

@@ -65,8 +65,8 @@ class DeckViewFrame(BasicView):
         # Impostazioni finestra principale
 
         # coloro il bg del pannello 
-        self.SetBackgroundColour('black')
-        self.panel.SetBackgroundColour('black')
+        #self.SetBackgroundColour('black')
+        #self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
         search_sizer = create_sizer(wx.HORIZONTAL)
@@ -100,7 +100,7 @@ class DeckViewFrame(BasicView):
         )
 
         # coloro il bg della lista
-        self.card_list.SetBackgroundColour('white')
+        #self.card_list.SetBackgroundColour('black')
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)

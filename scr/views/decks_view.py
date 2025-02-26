@@ -55,8 +55,8 @@ class DecksManagerFrame(BasicView):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Impostazioni finestra principale
-        self.SetBackgroundColour('black')
-        self.panel.SetBackgroundColour('black')
+        #self.SetBackgroundColour('black')
+        #self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
@@ -66,7 +66,7 @@ class DecksManagerFrame(BasicView):
         )
 
         # coloro la lista dei mazzi
-        self.deck_list.SetBackgroundColour('white')
+        #self.deck_list.SetBackgroundColour('black')
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -127,6 +127,9 @@ class DecksManagerFrame(BasicView):
 
         # Imposta il focus sul search bar
         self.search_bar.SetFocus()
+
+        # Imposta il focus sulla lista delle carte
+        self.set_focus_to_list()
 
         # forza il layout (facoltativo, forza la riscrittura e impaginazione degli elementi grafici)
         #self.Layout()
