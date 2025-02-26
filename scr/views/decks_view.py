@@ -18,13 +18,14 @@ import wx, pyperclip
 import wx.lib.newevent
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
-from ..models import load_cards_from_db, load_deck_from_db, load_cards
-from .proto_views import BasicView
+#from ..models import load_cards_from_db, load_deck_from_db, load_cards
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
+from .proto_views import BasicView
 from .deck_stats_dialog import DeckStatsDialog
 from .collection_view import CardCollectionFrame
 from .deck_view import DeckViewFrame
-from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+#from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
@@ -440,7 +441,6 @@ class DecksManagerFrame(BasicView):
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
         self.controller.run_collection_frame(parent=self)
-        #collection_dialog = CardCollectionFrame(self, self.db_manager)
         self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
         #collection_dialog.Show()                                            # Mostra la finestra come modale
 

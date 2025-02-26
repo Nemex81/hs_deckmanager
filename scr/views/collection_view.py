@@ -39,6 +39,7 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 class CardCollectionFrame(BasicView):
+#class LastCardCollectionFrame(CollectionsListView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller):
@@ -47,9 +48,9 @@ class CardCollectionFrame(BasicView):
             raise ValueError("Il controller non può essere None.")
 
         self.mode = "collection"
-        super().__init__(parent, title="Collezione")
         self.parent = parent
         self.controller = controller
+        super().__init__(parent, title="Collezione")
         self.timer = wx.Timer(self)                                 # Timer per il debounce
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)          # Aggiungi un gestore per il timer
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)           # Aggiungi un gestore per l'evento di ricerca
@@ -59,10 +60,10 @@ class CardCollectionFrame(BasicView):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
 
         # Impostazioni finestra principale
-        self.SetBackgroundColour('black')
-        self.panel.SetBackgroundColour('black')
-        self.Centre()
-        self.Maximize()
+        #self.SetBackgroundColour('black')
+        #self.panel.SetBackgroundColour('black')
+        #self.Centre()
+        #self.Maximize()
 
         # Creazione degli elementi dell'interfaccia
 
@@ -106,7 +107,9 @@ class CardCollectionFrame(BasicView):
                 ("Espansione", 500)
             ]
         )
-        self.card_list.SetBackgroundColour('yellow')
+
+        # Collega gli eventi di focus alla lista
+        self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -124,6 +127,7 @@ class CardCollectionFrame(BasicView):
             ("Chiudi", lambda e: self.Close())
         ]
 
+        # Aggiungi i pulsanti al pannello
         for label, handler in buttons:
             btn = create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
@@ -139,16 +143,51 @@ class CardCollectionFrame(BasicView):
         # Separatore tra pulsanti e fondo finestra
         add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
-        # Imposta il layout principale
-        #self.Layout()
-
         # Carica le carte
         self.load_cards()
+
+        # Imposta il colore di sfondo della lista
+        #self.card_list.SetBackgroundColour('green')  # Usa il colore predefinito
+        #self.card_list.SetForegroundColour(self.DEFAULT_TEXT_COLOR)  # Usa il colore del testo 
+        self.card_list.Refresh()
+
+        # Imposta il layout principale
+        self.Layout()
 
         # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
         self.Bind(wx.EVT_CLOSE, self.on_close)
+
+        # Imposta il focus sulla lista delle carte
+        #self.set_focus_to_list()
+        #self.reset_focus_style_for_card_list()
+
+
+    def reset_focus_style_for_card_list(self):
+        """ Resetta lo stile di tutte le righe. """
+
+        for i in range(self.card_list.GetItemCount()):
+            self.card_list.SetItemBackgroundColour(i, 'green')
+            self.card_list.SetItemTextColour(i, 'black')
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
+
+
+    def on_item_focused(self, event):
+        """Gestisce l'evento di focus su una riga della lista."""
+
+        # Resetta lo stile di tutte le righe
+        self.reset_focus_style_for_card_list()
+
+        # Imposta lo stile della riga selezionata
+        selected_item = event.GetIndex()
+        self.card_list.SetItemBackgroundColour(selected_item, 'green')
+        self.card_list.SetItemTextColour(selected_item, self.FOCUS_TEXT_COLOR)
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
 
 
     def load_cards(self, filters=None):
@@ -160,6 +199,12 @@ class CardCollectionFrame(BasicView):
 
         load_cards(filters=filters, card_list=self.card_list)
         #self.controller.collection_controller.load_cards(filters=filters, card_list=self.card_list)
+
+        # Imposta il colore di sfondo predefinito per tutte le righe
+        self.reset_focus_style_for_card_list()
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
 
 
     def reset_filters(self):
@@ -177,6 +222,7 @@ class CardCollectionFrame(BasicView):
             self.card_list.Select(0)
             self.card_list.Focus(0)
             self.card_list.EnsureVisible(0)
+            self.reset_focus_style_for_card_list()
 
 
     def on_show_filters(self, event):
@@ -399,6 +445,12 @@ class CardCollectionFrame(BasicView):
 
         else:
             wx.MessageBox("Seleziona una carta da eliminare.", "Errore", wx.OK | wx.ICON_ERROR)
+
+
+
+
+
+
 
 
 

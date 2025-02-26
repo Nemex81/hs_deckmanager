@@ -23,6 +23,7 @@ from .view_components import create_button, create_separator, add_to_sizer, crea
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
 from utyls import helper as hp
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
+from utyls import enu_glob as eg
 from utyls import logger as log
 
 # Evento personalizzato per la ricerca in tempo reale
@@ -74,10 +75,10 @@ class BasicView(wx.Frame):
         self.db_manager = None             # Gestore del database
 
         # Colori personalizzati per lo stato attivo e inattivo
-        self.FOCUS_BG_COLOR = 'yellow'      # Colore di sfondo quando l'elemento ha il focus
-        self.FOCUS_TEXT_COLOR = 'blue'      # Colore del testo quando l'elemento ha il focus
-        self.DEFAULT_BG_COLOR = 'blue'      # Colore di sfondo predefinito
-        self.DEFAULT_TEXT_COLOR = 'yellow'  # Colore del testo predefinito
+        self.FOCUS_BG_COLOR = eg.WHITE      # Colore di sfondo quando l'elemento ha il focus
+        self.FOCUS_TEXT_COLOR = eg.BLACK      # Colore del testo quando l'elemento ha il focus
+        self.DEFAULT_BG_COLOR = eg.YELLOW      # Colore di sfondo predefinito
+        self.DEFAULT_TEXT_COLOR = eg.BLACK  # Colore del testo predefinito
 
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
@@ -115,6 +116,7 @@ class BasicView(wx.Frame):
         element.SetForegroundColour(self.FOCUS_TEXT_COLOR)
         element.Refresh()  # Forza il ridisegno dell'elemento
 
+
     def reset_focus_style(self, element):
         """
         Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
@@ -137,8 +139,9 @@ class BasicView(wx.Frame):
                 btn = btn_sizer.GetItem(i).GetWindow()
                 self.reset_focus_style(btn)
 
+
     def init_ui(self):
-        """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
+        """ Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre. """
 
         self.panel = wx.Panel(self)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -273,27 +276,6 @@ class ListView(BasicView):
     def __init__(self, parent, title, size=(800, 600)):
         super().__init__(parent, title, size)
         self.mode = None                                    # Modalità di visualizzazione (es. "collection", "deck")
-        self.card_list= None                                # ListCtrl per visualizzare l'elenco
-        self.data = []                                      # Lista dei dati da visualizzare
-        self.timer = wx.Timer(self)                         # Timer per il debounce
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)  # Aggiunge l'evento per il timer
-        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)   # Aggiunge l'evento per la ricerca
-
-    def init_ui(self):
-        """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
-
-        self.panel = wx.Panel(self)
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.panel.SetSizer(self.sizer)
-
-        # imposta i colori di spondo giallo per finestra e pannello
-        self.BackgroundColour = 'black'
-        self.panel.BackgroundColour = 'black'
-
-        # imposta il font per il titolo
-        font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-        title = wx.StaticText(self.panel, label=self.Title)
-        title.SetFont(font)
 
 
     def init_ui_elements(self):
@@ -301,67 +283,9 @@ class ListView(BasicView):
         Inizializza gli elementi dell'interfaccia utente.
         Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
         """
-        # Barra di ricerca e filtri
-        search_sizer = create_sizer(wx.HORIZONTAL)
-        self.search_ctrl = create_search_bar(
-            self.panel,
-            placeholder="Cerca per nome...",
-            event_handler=self.on_search
-        )
-        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
-        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
+        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
 
-        # Pulsante filtri avanzati
-        self.btn_filters = create_button(
-            self.panel,
-            label="Filtri Avanzati",
-            event_handler=self.on_show_filters
-        )
-        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
-
-        # Aggiungo la barra di ricerca e i filtri al layout
-        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Lista delle carte
-        self.card_list = create_list_ctrl(
-            self.panel,
-            columns=[
-                ("Nome", 250),
-                ("Mana", 50),
-                ("Classe", 120),
-                ("Tipo", 120),
-                ("Tipo Magia", 120),
-                ("Sottotipo", 120),
-                ("Attacco", 50),
-                ("Vita", 50),
-                ("Durabilità", 50),
-                ("Rarità", 120),
-                ("Espansione", 500)
-            ]
-        )
-        self.card_list.SetBackgroundColour('yellow')
-        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Pulsanti azione
-        btn_panel = wx.Panel(self.panel)
-        btn_sizer = create_sizer(wx.HORIZONTAL)
-
-        buttons = [
-            ("Aggiorna", self.on_reset),
-            ("Aggiungi Carta", self.on_add_card),
-            ("Modifica Carta", self.on_edit_card),
-            ("Elimina Carta", self.on_delete_card),
-            ("Chiudi", lambda e: self.Close())
-        ]
-
-        for label, handler in buttons:
-            btn = create_button(btn_panel, label=label, event_handler=handler)
-            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
-
-        btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-        #self.load_cards()
-        self.Layout()
 
     def load_cards(self, filters=None):
         """
@@ -378,137 +302,16 @@ class ListView(BasicView):
         self.load_cards()
 
 
-    def on_search(self, event):
-        """Gestisce la ricerca testuale."""
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        self._apply_search_filter(search_text)
-        self.set_focus_to_list()
 
-
-    def on_search_text_change(self, event):
-        """
-        Gestisce la ricerca in tempo reale mentre l'utente digita.
-        Avvia un timer per il debounce.
-        """
-
-        search_text = getattr(self, "search_ctrl", None)
-        if search_text:
-            search_text = search_text.GetValue().strip().lower()
-            if not search_text:
-                return
-
-            # Ferma il timer precedente e avvia un nuovo debounce
-            self.timer.Stop()
-            self.timer.Start(500, oneShot=True)
-
-
-    def on_timer(self, event):
-        """
-        Esegue la ricerca dopo il timeout del debounce.
-        Genera un evento personalizzato per la ricerca.
-        """
-
-        search_text = getattr(self, "search_ctrl", None)
-        if search_text:
-            search_text = search_text.GetValue().strip().lower()
-            evt = SearchEvent(search_text=search_text)
-            wx.PostEvent(self, evt)
-
-
-    def on_search_event(self, event):
-        """
-        Gestisce l'evento di ricerca con debounce.
-        Applica il filtro di ricerca e imposta il focus sulla prima voce.
-        """
-
-        search_text = event.search_text
-        self._apply_search_filter(search_text)
-        self.set_focus_to_list()
-
-
-    def _apply_search_filter(self, search_text):
-        """
-        Applica il filtro di ricerca alla lista delle carte.
-        Se il testo di ricerca è vuoto, reimposta i dati originali.
-        """
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            self.load_cards()
-        else:
-            self.load_cards(filters={"name": search_text})
-
-
-    def set_focus_to_list(self):
-        """
-        Imposta il focus sulla prima voce della lista.
-        Deve essere chiamato solo dopo aver creato il ListCtrl.
-        """
-
-        list_ctrl = getattr(self, "list_ctrl", None)
-        if list_ctrl and list_ctrl.GetItemCount() > 0:
-            list_ctrl.SetFocus()
-            list_ctrl.Select(0)
-            list_ctrl.Focus(0)
-            list_ctrl.EnsureVisible(0)
-
-
-    def sort_cards(self, col):
-        """
-        Ordina le carte in base alla colonna selezionata.
-        Funziona sia per colonne numeriche che testuali.
-        """
-
-        list_ctrl = getattr(self, "list_ctrl", None)
-        if not list_ctrl:
-            return
-
-        items = []
-        for i in range(list_ctrl.GetItemCount()):
-            item = [list_ctrl.GetItemText(i, c) for c in range(list_ctrl.GetColumnCount())]
-            items.append(item)
-
-        def safe_int(value):
-            try:
-                return int(value)
-            except ValueError:
-                return float('inf') if value == "-" else value
-
-        if col == 1:  # Colonna numerica (es. "Mana")
-            items.sort(key=lambda x: safe_int(x[col]))
-        else:  # Colonnes testuali
-            items.sort(key=lambda x: x[col])
-
-        list_ctrl.DeleteAllItems()
-        for item in items:
-            list_ctrl.Append(item)
-
-
-    def on_column_click(self, event):
-        """
-        Gestisce il clic sulle intestazioni delle colonne per ordinare la lista.
-        """
-
-        col = event.GetColumn()
-        self.sort_cards(col)
-
-    def on_key_press(self, event):
-        """
-        Gestisce i tasti premuti per ordinare la lista.
-        """
-        key_code = event.GetKeyCode()
-        if ord('1') <= key_code <= ord('9'):
-            col = key_code - ord('1')
-            self.sort_cards(col)
-
-
-
-class CollectionsListView(ListView):
+class CollectionsListView(BasicView):
     """
         Classe per la visualizzazione della collezzione generale  di carte.
     """
 
-    def __init__(self, parent, title="Collezione Carte", size=(1200, 800)):
+    def __init__(self, parent, controller, title="Collezione Carte", size=(1200, 800)):
         super().__init__(parent, title, size)
         self.mode = "collection"
+        self.card_list = None       # Lista delle carte
 
 
     def init_ui(self):
@@ -526,6 +329,7 @@ class CollectionsListView(ListView):
         font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         title = wx.StaticText(self.panel, label=self.Title)
         title.SetFont(font)
+        self.init_ui_elements()
 
 
     def init_ui_elements(self):
@@ -533,67 +337,8 @@ class CollectionsListView(ListView):
         Inizializza gli elementi dell'interfaccia utente.
         Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
         """
-        # Barra di ricerca e filtri
-        search_sizer = create_sizer(wx.HORIZONTAL)
-        self.search_ctrl = create_search_bar(
-            self.panel,
-            placeholder="Cerca per nome...",
-            event_handler=self.on_search
-        )
-        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
-        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-
-        # Pulsante filtri avanzati
-        self.btn_filters = create_button(
-            self.panel,
-            label="Filtri Avanzati",
-            event_handler=self.on_show_filters
-        )
-        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
-
-        # Aggiungo la barra di ricerca e i filtri al layout
-        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Lista delle carte
-        self.card_list = create_list_ctrl(
-            self.panel,
-            columns=[
-                ("Nome", 250),
-                ("Mana", 50),
-                ("Classe", 120),
-                ("Tipo", 120),
-                ("Tipo Magia", 120),
-                ("Sottotipo", 120),
-                ("Attacco", 50),
-                ("Vita", 50),
-                ("Durabilità", 50),
-                ("Rarità", 120),
-                ("Espansione", 500)
-            ]
-        )
-        self.card_list.SetBackgroundColour('yellow')
-        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Pulsanti azione
-        btn_panel = wx.Panel(self.panel)
-        btn_sizer = create_sizer(wx.HORIZONTAL)
-
-        buttons = [
-            ("Aggiorna", self.on_reset),
-            ("Aggiungi Carta", self.on_add_card),
-            ("Modifica Carta", self.on_edit_card),
-            ("Elimina Carta", self.on_delete_card),
-            ("Chiudi", lambda e: self.Close())
-        ]
-
-        for label, handler in buttons:
-            btn = create_button(btn_panel, label=label, event_handler=handler)
-            add_to_sizer(btn_sizer, btn, flag=wx.RIGHT, border=5)
-
-        btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-        #self.load_cards()
-        self.Layout()
+        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
+        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
 
 
 

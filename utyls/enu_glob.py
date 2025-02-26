@@ -17,14 +17,28 @@ from sqlalchemy import Enum as SQLEnum
 from utyls import logger as log
 #import pdb
 
-# colori rgb
+ # colori rgb
+
+WHITE = 'white'
+BLACK = 'black'
+RED = 'red'
+GREEN = 'green'
+YELLOW = 'yellow'
+GREY = 'grey'
+ORANGE = 'orange'
+BLUE = 'blue'
+
+
 class EnuColors(Enum):
-    BLACK = 'black'
-    WHITE = 'white'
-    RED = 'red'
-    GREEN = 'green'
-    BLUE = 'blue'
-    YELLOW = 'yellow'
+    YELLOW = YELLOW
+    BLACK = BLACK
+    WHITE = WHITE
+    GREEN = GREEN
+    BLUE = BLUE
+    RED = RED    
+    GREY = GREY
+    ORANGE = ORANGE
+
 
 class ENUCARD(Enum):
     """ info base obblicagorie delel carte pe rl'interazione con il db. """

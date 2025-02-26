@@ -45,6 +45,7 @@ class DeckViewFrame(BasicView):
         self.card_list = None
         self.deck_name = deck_name
         self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+
         # Se il mazzo non esiste, solleva un'eccezione
         if not self.deck_content:
             raise ValueError(f"Mazzo non trovato: {deck_name}")
