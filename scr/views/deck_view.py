@@ -65,8 +65,8 @@ class DeckViewFrame(BasicView):
         # Impostazioni finestra principale
 
         # coloro il bg del pannello 
-        #self.SetBackgroundColour('black')
-        #self.panel.SetBackgroundColour('black')
+        self.SetBackgroundColour('black')
+        self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
         search_sizer = create_sizer(wx.HORIZONTAL)
@@ -98,6 +98,10 @@ class DeckViewFrame(BasicView):
                 ("Espansione", 500)
             ]
         )
+
+        # Collega gli eventi di focus alla lista
+        self.bind_focus_events(self.card_list)
+        #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # coloro il bg della lista
         #self.card_list.SetBackgroundColour('black')
@@ -140,7 +144,7 @@ class DeckViewFrame(BasicView):
             self.set_focus_to_list()
 
         #coloro il bg del pannello
-        self.card_list.SetBackgroundColour('black')
+        self.card_list.SetBackgroundColour('blue')
         self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.card_list.SetForegroundColour('white')
 
@@ -155,6 +159,7 @@ class DeckViewFrame(BasicView):
 
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
+
         search_text = self.search_ctrl.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)

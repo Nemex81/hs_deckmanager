@@ -42,15 +42,18 @@ class CardCollectionFrame(BasicView):
 #class LastCardCollectionFrame(CollectionsListView):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent, controller):
-        if not controller:
+    def __init__(self, parent):#, controller):
+        super().__init__(parent, title="Collezione")
+        self.mode = "collection"
+        self.parent = parent
+        self.controller = self.parent.controller
+        if not self.controller:
             log.error("Il controller non può essere None.")
             raise ValueError("Il controller non può essere None.")
 
-        self.mode = "collection"
-        self.parent = parent
-        self.controller = controller
-        super().__init__(parent, title="Collezione")
+        
+
+        # Inizializza il timer per il debounce
         self.timer = wx.Timer(self)                                 # Timer per il debounce
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)          # Aggiungi un gestore per il timer
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)           # Aggiungi un gestore per l'evento di ricerca
@@ -107,7 +110,8 @@ class CardCollectionFrame(BasicView):
         )
 
         # Collega gli eventi di focus alla lista
-        self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+        self.bind_focus_events(self.card_list)
+        #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -208,6 +212,9 @@ class CardCollectionFrame(BasicView):
         # Forza il ridisegno della lista
         self.card_list.Refresh()
 
+        # forza il ridisegno della lista
+        self.Layout()
+
 
     def load_cards(self, filters=None):
         """Carica le carte utilizzando le funzioni helper sopra definite."""
@@ -217,7 +224,7 @@ class CardCollectionFrame(BasicView):
             raise ValueError("La lista delle carte non è stata inizializzata.")
 
         load_cards(filters=filters, card_list=self.card_list)
-        #self.controller.collection_controller.load_cards(filters=filters, card_list=self.card_list)
+        #self.parent.controller.collection_controller.load_collection(filters=filters, card_list=self.card_list)
 
         # Imposta il colore di sfondo predefinito per tutte le righe
         self.reset_focus_style_for_card_list()
