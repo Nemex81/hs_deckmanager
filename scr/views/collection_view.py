@@ -62,8 +62,6 @@ class CardCollectionFrame(BasicView):
         # Impostazioni finestra principale
         #self.SetBackgroundColour('black')
         #self.panel.SetBackgroundColour('black')
-        #self.Centre()
-        #self.Maximize()
 
         # Creazione degli elementi dell'interfaccia
 
@@ -109,7 +107,7 @@ class CardCollectionFrame(BasicView):
         )
 
         # Collega gli eventi di focus alla lista
-        self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+        #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -131,6 +129,7 @@ class CardCollectionFrame(BasicView):
         for label, handler in buttons:
             btn = create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
+            self.reset_focus_style(btn)
             add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         #resetto i colori di tutti i pulsanti
@@ -149,7 +148,7 @@ class CardCollectionFrame(BasicView):
         # Imposta il colore di sfondo della lista
         #self.card_list.SetBackgroundColour('green')  # Usa il colore predefinito
         #self.card_list.SetForegroundColour(self.DEFAULT_TEXT_COLOR)  # Usa il colore del testo 
-        self.card_list.Refresh()
+        #self.card_list.Refresh()
 
         # Imposta il layout principale
         self.Layout()
@@ -160,31 +159,49 @@ class CardCollectionFrame(BasicView):
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
         # Imposta il focus sulla lista delle carte
-        #self.set_focus_to_list()
-        #self.reset_focus_style_for_card_list()
+        self.set_focus_to_list()
 
+        
 
-    def reset_focus_style_for_card_list(self):
+    def reset_focus_style_for_card_list(self, selected_item=None):
         """ Resetta lo stile di tutte le righe. """
 
+
         for i in range(self.card_list.GetItemCount()):
-            self.card_list.SetItemBackgroundColour(i, 'green')
+            if i == selected_item:
+                continue
+
+            self.card_list.SetItemBackgroundColour(i, 'white')
             self.card_list.SetItemTextColour(i, 'black')
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()
 
 
+    def select_element(self, row):
+        """ Seleziona l'elemento attivo. """
+
+        if hasattr(self, "card_list"):
+            self.card_list.SetItemBackgroundColour(row, 'blue')
+            self.card_list.SetItemTextColour(row, 'white')
+            #self.card_list.Refresh()
+
+
     def on_item_focused(self, event):
         """Gestisce l'evento di focus su una riga della lista."""
 
-        # Resetta lo stile di tutte le righe
-        self.reset_focus_style_for_card_list()
-
         # Imposta lo stile della riga selezionata
         selected_item = event.GetIndex()
-        self.card_list.SetItemBackgroundColour(selected_item, 'green')
-        self.card_list.SetItemTextColour(selected_item, self.FOCUS_TEXT_COLOR)
+
+        # Resetta lo stile di tutte le righe
+        self.reset_focus_style_for_card_list(selected_item)
+
+        # Imposta lo stile della riga selezionata
+        #self.card_list.SetItemBackgroundColour(selected_item, 'white')
+        #self.card_list.SetItemTextColour(selected_item, 'black')
+
+        # Imposta lo stile della riga selezionata
+        self.select_element(selected_item)
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()

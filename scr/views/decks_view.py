@@ -55,6 +55,7 @@ class DecksManagerFrame(BasicView):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Impostazioni finestra principale
+        self.SetBackgroundColour('black')
         self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
@@ -65,7 +66,7 @@ class DecksManagerFrame(BasicView):
         )
 
         # coloro la lista dei mazzi
-        self.deck_list.SetBackgroundColour('yellow')
+        self.deck_list.SetBackgroundColour('white')
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -95,6 +96,8 @@ class DecksManagerFrame(BasicView):
 
         # Separatore tra barra di ricerca e lista dei mazzi
         add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+
+        # Aggiungi la lista dei mazzi al sizer
         add_to_sizer(main_sizer, self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
@@ -109,6 +112,7 @@ class DecksManagerFrame(BasicView):
         #resetto i colori di tutti i pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
+        # Aggiungi i pulsanti al sizer principale
         add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra pulsanti e barra di stato

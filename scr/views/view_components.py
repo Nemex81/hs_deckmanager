@@ -46,12 +46,49 @@ from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 
-
+#@@# sezioni costanti per la configurazione predefinita degli elementi dell'interfaccia utente
 
 # Configurazione di default
 DEFAULT_BUTTON_SIZE = (250, 90)
 DEFAULT_FONT_SIZE = 20
 DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
+
+
+#@@# sezione classi personalizzate per la gestione degli elementi dell'interfaccia utente
+
+
+class CustomListCtrl(wx.ListCtrl):
+    def __init__(self, parent, focus_bg_color='blue', focus_text_color='white', 
+                 default_bg_color='WHITE', default_text_color='BLACK', *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        
+        # Colori personalizzati
+        self.FOCUS_BG_COLOR = focus_bg_color       # Colore di sfondo quando la riga è selezionata
+        self.FOCUS_TEXT_COLOR = focus_text_color   # Colore del testo quando la riga è selezionata
+        self.DEFAULT_BG_COLOR = default_bg_color   # Colore di sfondo predefinito
+        self.DEFAULT_TEXT_COLOR = default_text_color  # Colore del testo predefinito
+
+        # Collega l'evento di focus
+        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+
+    def on_item_focused(self, event):
+        """Gestisce l'evento di focus su una riga della lista."""
+        selected_item = event.GetIndex()
+        self.reset_focus_style_for_all_items(selected_item)
+        self.SetItemBackgroundColour(selected_item, self.FOCUS_BG_COLOR)
+        self.SetItemTextColour(selected_item, self.FOCUS_TEXT_COLOR)
+        self.Refresh()
+
+    def reset_focus_style_for_all_items(self, selected_item=None):
+        """Resetta lo stile di tutte le righe tranne quella selezionata."""
+        for i in range(self.GetItemCount()):
+            if i == selected_item:
+                continue
+            self.SetItemBackgroundColour(i, self.DEFAULT_BG_COLOR)
+            self.SetItemTextColour(i, self.DEFAULT_TEXT_COLOR)
+
+        self.Refresh()
+
 
 
 #@@# sezione funzioni helper per la creazione di elementi dell'interfaccia utente
@@ -81,6 +118,32 @@ def create_button(parent, label, size=DEFAULT_BUTTON_SIZE, font_size=DEFAULT_FON
 
 
 def create_list_ctrl(parent, columns, style=DEFAULT_LIST_STYLE):
+    """
+    Crea una lista (wx.ListCtrl) con colonne personalizzabili.
+
+    :param parent: Il genitore della lista.
+    :param columns: Lista di tuple (nome_colonna, larghezza). Esempio: [("Nome", 250), ("Mana", 50)].
+    :param style: Stile della lista. Default: wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN.
+    :return: Un'istanza di wx.ListCtrl.
+    """
+
+    list_ctrl = CustomListCtrl(
+        parent,
+        focus_bg_color='blue',          # Colore di sfondo predefinito per la riga selezionata
+        focus_text_color='white',       # Colore del testo predefinito per la riga selezionata
+        default_bg_color='white',        # Colore di sfondo predefinito
+        default_text_color='black',      # Colore del testo predefinito
+        style=style
+    )
+    
+    # Aggiungi le colonne alla lista
+    for idx, (col_name, width) in enumerate(columns):
+        list_ctrl.InsertColumn(idx, col_name, width=width)
+    
+    return list_ctrl
+
+
+def last_create_list_ctrl(parent, columns, style=DEFAULT_LIST_STYLE):
     """
     Crea una lista (wx.ListCtrl) con colonne predefinite.
 

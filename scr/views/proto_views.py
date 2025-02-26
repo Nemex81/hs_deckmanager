@@ -75,8 +75,8 @@ class BasicView(wx.Frame):
         self.db_manager = None             # Gestore del database
 
         # Colori personalizzati per lo stato attivo e inattivo
-        self.FOCUS_BG_COLOR = eg.WHITE      # Colore di sfondo quando l'elemento ha il focus
-        self.FOCUS_TEXT_COLOR = eg.BLACK      # Colore del testo quando l'elemento ha il focus
+        self.FOCUS_BG_COLOR = eg.BLUE      # Colore di sfondo quando l'elemento ha il focus
+        self.FOCUS_TEXT_COLOR = eg.WHITE      # Colore del testo quando l'elemento ha il focus
         self.DEFAULT_BG_COLOR = eg.YELLOW      # Colore di sfondo predefinito
         self.DEFAULT_TEXT_COLOR = eg.BLACK  # Colore del testo predefinito
 

@@ -65,6 +65,7 @@ class DeckViewFrame(BasicView):
         # Impostazioni finestra principale
 
         # coloro il bg del pannello 
+        self.SetBackgroundColour('black')
         self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
@@ -99,7 +100,7 @@ class DeckViewFrame(BasicView):
         )
 
         # coloro il bg della lista
-        self.card_list.SetBackgroundColour('yellow')
+        self.card_list.SetBackgroundColour('white')
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
