@@ -71,19 +71,24 @@ class CustomListCtrl(wx.ListCtrl):
         # Collega l'evento di focus
         self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
+
     def on_item_focused(self, event):
         """Gestisce l'evento di focus su una riga della lista."""
+
         selected_item = event.GetIndex()
         self.reset_focus_style_for_all_items(selected_item)
         self.SetItemBackgroundColour(selected_item, self.FOCUS_BG_COLOR)
         self.SetItemTextColour(selected_item, self.FOCUS_TEXT_COLOR)
         self.Refresh()
 
+
     def reset_focus_style_for_all_items(self, selected_item=None):
         """Resetta lo stile di tutte le righe tranne quella selezionata."""
+
         for i in range(self.GetItemCount()):
             if i == selected_item:
                 continue
+
             self.SetItemBackgroundColour(i, self.DEFAULT_BG_COLOR)
             self.SetItemTextColour(i, self.DEFAULT_TEXT_COLOR)
 
@@ -129,10 +134,10 @@ def create_list_ctrl(parent, columns, style=DEFAULT_LIST_STYLE):
 
     list_ctrl = CustomListCtrl(
         parent,
-        focus_bg_color='yellow',          # Colore di sfondo predefinito per la riga selezionata
-        focus_text_color='black',       # Colore del testo predefinito per la riga selezionata
-        default_bg_color='white',        # Colore di sfondo predefinito
-        default_text_color='black',      # Colore del testo predefinito
+        focus_bg_color='blue',          # Colore di sfondo predefinito per la riga selezionata
+        focus_text_color='white',       # Colore del testo predefinito per la riga selezionata
+        default_bg_color='black',        # Colore di sfondo predefinito
+        default_text_color='white',      # Colore del testo predefinito
         style=style
     )
     

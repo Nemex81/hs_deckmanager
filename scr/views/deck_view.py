@@ -133,13 +133,20 @@ class DeckViewFrame(BasicView):
         # Separatore tra pulsanti e fondo finestra
         add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
-        # Imposta il layout principale
-        self.Layout()
 
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
             self.load_cards()
             self.set_focus_to_list()
+
+        #coloro il bg del pannello
+        self.card_list.SetBackgroundColour('black')
+        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.card_list.SetForegroundColour('white')
+
+        # Imposta il layout principale
+        self.Layout()
+
 
         # Aggiungo eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)

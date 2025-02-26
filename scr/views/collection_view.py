@@ -106,11 +106,8 @@ class CardCollectionFrame(BasicView):
             ]
         )
 
-        # Imposta il colore di sfondo della lista
-        #self.card_list.SetBackgroundColour('black')
-
         # Collega gli eventi di focus alla lista
-        #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+        self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -148,22 +145,24 @@ class CardCollectionFrame(BasicView):
         # Carica le carte
         self.load_cards()
 
+        # sposta il focus sulla lista
+        self.set_focus_to_list()
+
         # Imposta il colore di sfondo della lista
-        #self.card_list.SetBackgroundColour('green')  # Usa il colore predefinito
-        #self.card_list.SetForegroundColour(self.DEFAULT_TEXT_COLOR)  # Usa il colore del testo 
-        #self.card_list.Refresh()
+        self.card_list.SetBackgroundColour('blue')
+        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.card_list.SetForegroundColour('white')
+
+        #aggiorna la lista
+        self.card_list.Refresh()
 
         # Imposta il layout principale
-        #self.Layout()
+        self.Layout()
 
         # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
         self.Bind(wx.EVT_CLOSE, self.on_close)
-
-        # Imposta il focus sulla lista delle carte
-        self.set_focus_to_list()
-
         
 
     def reset_focus_style_for_card_list(self, selected_item=None):

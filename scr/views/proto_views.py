@@ -25,6 +25,7 @@ from utyls import helper as hp
 from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
 from utyls import enu_glob as eg
 from utyls import logger as log
+#import pdb
 
 # Evento personalizzato per la ricerca in tempo reale
 SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
@@ -77,8 +78,8 @@ class BasicView(wx.Frame):
         # Colori personalizzati per lo stato attivo e inattivo
         self.FOCUS_BG_COLOR = eg.BLUE      # Colore di sfondo quando l'elemento ha il focus
         self.FOCUS_TEXT_COLOR = eg.WHITE      # Colore del testo quando l'elemento ha il focus
-        self.DEFAULT_BG_COLOR = eg.YELLOW      # Colore di sfondo predefinito
-        self.DEFAULT_TEXT_COLOR = eg.BLACK  # Colore del testo predefinito
+        self.DEFAULT_BG_COLOR = eg.BLACK      # Colore di sfondo predefinito
+        self.DEFAULT_TEXT_COLOR = eg.WHITE  # Colore del testo predefinito
 
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra

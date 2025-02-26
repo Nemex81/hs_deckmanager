@@ -43,7 +43,7 @@ class DecksManagerFrame(BasicView):
         super().__init__(parent, title=title, size=(800, 600))
         self.parent = parent
         self.controller = controller
-        self.db_manager = self.controller.db_manager
+        self.db_manager = self.parent.controller.db_manager
 
         # Timer per il debounce
         self.timer = wx.Timer(self)
@@ -59,14 +59,20 @@ class DecksManagerFrame(BasicView):
         #self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
+
+        # titolo della finestra
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
         self.deck_list = create_list_ctrl(
             self.panel,
-            columns=[("Mazzo", 260), ("Classe", 200), ("Formato", 120)]
+            #columns=[("Mazzo", 390), ("Classe", 360), ("Formato", 320, ("Carte Totali", 100)]  # 
+            columns=[("Mazzo", 500), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
 
         # coloro la lista dei mazzi
         #self.deck_list.SetBackgroundColour('black')
+
+        # Collega gli eventi di focus alla lista
+        self.bind_focus_events(self.deck_list)
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -126,13 +132,21 @@ class DecksManagerFrame(BasicView):
         #self.status_bar.SetStatusText("Pronto")
 
         # Imposta il focus sul search bar
-        self.search_bar.SetFocus()
+        #self.search_bar.SetFocus()
 
         # Imposta il focus sulla lista delle carte
         self.set_focus_to_list()
 
-        # forza il layout (facoltativo, forza la riscrittura e impaginazione degli elementi grafici)
-        #self.Layout()
+        # Imposta il colore di sfondo della lista
+        #self.deck_list.SetBackgroundColour('black')
+        self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.deck_list.SetForegroundColour('white')
+
+        #aggiorna la lista
+        self.deck_list.Refresh()
+
+        # Imposta il layout principale
+        self.Layout()
 
 
     def new_load_decks(self):
@@ -157,6 +171,24 @@ class DecksManagerFrame(BasicView):
 
 
     def load_decks(self):
+        """Carica i mazzi."""
+
+        # carichiamo i mazzi
+        decks = session.query(Deck).all()
+        for deck in decks:
+            log.info(f"Caricamento deck: {deck.name}")
+            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
+            self.deck_list.SetItem(index, 1, deck.player_class)
+            self.deck_list.SetItem(index, 2, deck.game_format)
+            
+            # Calcola e visualizza il numero totale di carte
+            deck_name = deck.name
+            stats = self.parent.controller.db_manager.get_deck_statistics(deck_name)
+            total_cards = stats["Numero Carte"]
+            log.info(f"Totale carte per {deck.name}: {total_cards}")
+            self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+    def last_load_decks(self):
         """Carica i mazzi ."""
 
         # carichiamo i mazzi
@@ -167,7 +199,38 @@ class DecksManagerFrame(BasicView):
             self.deck_list.SetItem(Index, 2, deck.game_format)
 
 
+    def get_total_cards_in_deck(self, deck_name):
+        """Calcola il numero totale di carte in un mazzo."""
+
+        try:
+            with db_session() as session:
+                deck = self.db_manager.get_deck(deck_name)
+                if deck:
+                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
+                    total_cards = sum(card["quantity"] for card in deck["cards"])
+                    return total_cards
+                else:
+                    return 0
+        except Exception as e:
+            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
+            return 0
+
+
     def update_deck_list(self):
+        """Aggiorna la lista dei mazzi."""
+
+        self.deck_list.DeleteAllItems()  # Pulisce la lista
+        decks = session.query(Deck).all()
+        for deck in decks:
+            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
+            self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+            self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+            
+            # Calcola e visualizza il numero totale di carte
+            total_cards = self.get_total_cards_in_deck(deck.name)
+            self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+    def last_update_deck_list(self):
         """Aggiorna la lista dei mazzi."""
 
         self.deck_list.DeleteAllItems()  # Pulisce la lista
@@ -230,12 +293,14 @@ class DecksManagerFrame(BasicView):
 
         self.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
 
+
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
 
         search_text = self.search_bar.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
+
 
     def on_search_text_change(self, event):
         """Gestisce la ricerca in tempo reale mentre l'utente digita."""
