@@ -87,14 +87,14 @@ class DeckViewFrame(BasicView):
             columns=[
                 ("Nome", 250),
                 ("Mana", 50),
-                ("Quantità", 80),
+                ("Quantità", 50),
                 ("Tipo", 200),
                 ("Tipo Magia", 200),
                 ("Sottotipo", 200),
-                ("Attacco", 90),
-                ("Vita", 90),
-                ("Durabilità", 90),
-                ("Rarità", 300),
+                ("Attacco", 50),
+                ("Vita", 50),
+                ("Durabilità", 50),
+                ("Rarità", 120),
                 ("Espansione", 500)
             ]
         )
