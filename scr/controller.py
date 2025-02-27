@@ -236,82 +236,77 @@ class DecksController:
                 break
 
 
-    def add_deck(self, event=None):
-        """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
- 
+    def question_for_add_deck(self, parent=None):
+        """ Chiede all'utente se vuole aggiungere un mazzo. """
+
+        deck_string = pyperclip.paste()
+        if not self.db_manager.is_valid_deck(deck_string):
+            wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
+            return False
+
+        # Estrae i metadati del mazzo
+        metadata = self.db_manager.parse_deck_metadata(deck_string)
+        deck_name = metadata["name"]
+
+        # Verifica se il mazzo esiste già
+        if self.db_manager.get_deck(deck_name):
+            log.error("Il mazzo è già presente nella collezione.")
+            wx.MessageBox("Il mazzo è già presente nella collezione.", "Errore")
+            return False
+
+        # Mostra una finestra di conferma con i dati estratti
+        confirm_message = (
+            f"È stato rilevato un mazzo valido negli appunti.\n\n"
+            f"Nome: {deck_name}\n"
+            f"Classe: {metadata['player_class']}\n"
+            f"Formato: {metadata['game_format']}\n\n"
+            f"Vuoi utilizzare questi dati per creare il mazzo?"
+        )
+
+        confirm_dialog = wx.MessageDialog(
+            parent,
+            confirm_message,
+            "Conferma Creazione Mazzo",
+            wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION
+        )
+
+        result = confirm_dialog.ShowModal()
+        if result == wx.ID_YES:
+            return wx.ID_YES
+
+
+    def add_deck(self):
+        """Aggiunge un mazzo dagli appunti."""
+
         try:
             deck_string = pyperclip.paste()
             if not self.db_manager.is_valid_deck(deck_string):
                 wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
-                return
+                return False
 
-            #metadata = parse_deck_metadata(deck_string)
+            # Estrae i metadati del mazzo
             metadata = self.db_manager.parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
 
-            # Mostra una finestra di conferma con i dati estratti
-            confirm_message = (
-                f"È stato rilevato un mazzo valido negli appunti.\n\n"
-                f"Nome: {deck_name}\n"
-                f"Classe: {metadata['player_class']}\n"
-                f"Formato: {metadata['game_format']}\n\n"
-                f"Vuoi utilizzare questi dati per creare il mazzo?"
-            )
+            # Verifica se il mazzo esiste già
+            if self.db_manager.get_deck(deck_name):
+                log.error("Il mazzo è già presente nella collezione.")
+                wx.MessageBox("Il mazzo è già presente nella collezione.", "Errore")
+                return False
 
-            # Mostra una finestra di conferma con i dati estratti
-            confirm_dialog = wx.MessageDialog(
-                self,
-                confirm_message,
-                "Conferma Creazione Mazzo",
-                wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION
-            )
-
-            # Gestione della risposta
-            result = confirm_dialog.ShowModal()
-            if result == wx.ID_YES:
-                success = self.db_manager.add_deck_from_clipboard()
-                if success:
-                    self.update_deck_list()
-                    #self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
-                    wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
-                    self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
-                    return True
-
-            elif result == wx.ID_NO:
-                name_dialog = wx.TextEntryDialog(
-                    self,
-                    "Inserisci il nome per il nuovo mazzo:",
-                    "Nome del Mazzo",
-                    deck_name
-                )
-
-                if name_dialog.ShowModal() == wx.ID_OK:
-                    new_name = name_dialog.GetValue()
-                    if new_name:
-                        metadata["name"] = new_name
-                        success = self.db_manager.add_deck_from_clipboard()
-                        if success:
-                            self.update_deck_list()
-                            #self.update_status("Mazzo aggiunto con successo.")
-                            wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
-                            self.select_and_focus_deck(new_name)  # Seleziona e mette a fuoco il mazzo
-                            return True
-                    else:
-                        wx.MessageBox("Il nome del mazzo non può essere vuoto.", "Errore")
-
-            elif result == wx.ID_CANCEL:
-                #self.update_status("Operazione annullata.")
-                log.info("Operazione annullata.")
-                wx.MessageBox("Operazione annullata.", "Annullato")
-                self.update_deck_list()
-
-        except pyperclip.PyperclipException as e:
-            log.error(f"Errore negli appunti: {e}")
-            wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
+            # Aggiunge il mazzo al database
+            success = self.db_manager.add_deck_from_clipboard(deck_string)
+            if success:
+                log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
+                return True
+            else:
+                log.error(f"Errore durante l'aggiunta del mazzo '{deck_name}'.")
+                return False
 
         except Exception as e:
-            log.error(f"Errore durante l'aggiunta del mazzo: {e}")
+            log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {e}")
             wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+            return False
 
 
     def delete_deck(self, deck_name):

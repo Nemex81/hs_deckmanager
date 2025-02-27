@@ -247,20 +247,35 @@ class DbManager:
                 return True
         return False
 
-    def add_deck_from_clipboard(self):
+    def add_deck_from_clipboard(self, deck_string=None):
         """ Aggiunge un mazzo copiato dagli appunti al database. """
         try:
-            deck_string = pyperclip.paste()
+            # Se non viene passato un deck_string, prova a leggerlo dagli appunti
+            if not deck_string:
+                deck_string = pyperclip.paste()
+
+            # Verifica se il mazzo è valido
             if not self.is_valid_deck(deck_string):
                 log.error("Il mazzo copiato non è valido.")
                 return False
 
+            # Estrae i metadati del mazzo
             metadata = self.parse_deck_metadata(deck_string)
             deck_name = metadata["name"]
-            cards = self.parse_cards_from_deck(deck_string)
 
-            with db_session():
-                # Creazione del nuovo mazzo
+            # Verifica se il mazzo esiste già nel database
+            if self.get_deck(deck_name):
+                log.warning(f"Il mazzo '{deck_name}' è già presente nel database.")
+                return False
+
+            # Estrae le carte dal mazzo
+            cards = self.parse_cards_from_deck(deck_string)
+            if not cards:
+                log.error("Nessuna carta trovata nel mazzo.")
+                return False
+
+            with db_session() as session:
+                # Crea il nuovo mazzo
                 new_deck = Deck(
                     name=deck_name,
                     player_class=metadata["player_class"],
@@ -269,37 +284,61 @@ class DbManager:
                 session.add(new_deck)
                 session.flush()  # Ottieni l'ID del nuovo mazzo
 
-                # Sincronizzazione delle carte con il database
+                # Sincronizza le carte con il database
                 self.sync_cards_with_database(deck_string)
 
-                # Aggiunta delle relazioni tra mazzo e carte
+                # Aggiunge le relazioni tra mazzo e carte
                 deck_cards = []
                 for card_data in cards:
                     card = session.query(Card).filter_by(name=card_data["name"]).first()
                     if not card:
-                        log.warning(f"Carta '{card_data['name']}' non trovata nel database.")
-                        continue
+                        # Se la carta non esiste, la crea
+                        card = Card(
+                            name=card_data["name"],
+                            class_name="Unknown",
+                            mana_cost=card_data["mana_cost"],
+                            card_type="Unknown",
+                            spell_type="Unknown",
+                            card_subtype="Unknown",
+                            rarity="Unknown",
+                            expansion="Unknown"
+                        )
+                        session.add(card)
+                        session.flush()  # Ottieni l'ID della nuova carta
 
-                    deck_cards.append(DeckCard(deck_id=new_deck.id, card_id=card.id, quantity=card_data["quantity"]))
-                
+                    # Aggiunge la relazione tra mazzo e carta
+                    deck_cards.append(DeckCard(
+                        deck_id=new_deck.id,
+                        card_id=card.id,
+                        quantity=card_data["quantity"]
+                    ))
+
+                # Aggiunge tutte le relazioni in una sola operazione
                 session.bulk_save_objects(deck_cards)
                 session.commit()
 
             log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
             return True
 
+
         except pyperclip.PyperclipException as e:
             log.error(f"Errore negli appunti: {str(e)}")
             return False
+
         except ValueError as e:
-            log.warning(f"Errore di validazione: {str(e)}")
+            log.error(f"Errore di validazione: {str(e)}")
             return False
+
         except SQLAlchemyError as e:
             log.error(f"Errore del database: {str(e)}")
+            session.rollback()  # Annulla le modifiche in caso di errore
             return False
+
         except Exception as e:
             log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
+            session.rollback()  # Annulla le modifiche in caso di errore
             return False
+
 
     def sync_cards_with_database(self, deck_string):
         """ Sincronizza le carte del mazzo con il database. """

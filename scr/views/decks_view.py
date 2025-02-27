@@ -298,14 +298,31 @@ class DecksManagerFrame(BasicView):
         self.set_focus_to_list()
 
 
-    def new_on_add_deck(self, event):
-        """Aggiunge un mazzo tramite finestra di dialogo."""
-
-        controller = self.parent.controller.decks_controller
-        controller.add_deck(event)
-
-
     def on_add_deck(self, event):
+        """Aggiunge un mazzo tramite finestra di dialogo."""
+ 
+        controller = self.parent.controller.decks_controller
+        succ =  controller.question_for_add_deck(self)
+        if succ != wx.ID_YES:
+            wx.MessageBox("Operazione annullata.", "Annullato")
+            return
+
+        if controller.add_deck():
+            self.update_deck_list()
+            self.set_focus_to_list()
+            # selezion al'ultimo mazzo dell'elenco
+            end_list = self.deck_list.GetItemCount()
+            self.deck_list.Select(end_list-1)
+            self.deck_list.Focus(end_list-1)
+            self.deck_list.EnsureVisible(end_list-1)
+            self.deck_list.SetFocus()
+            self.select_element(-1)
+            wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
+        else:
+            wx.MessageBox("Errore durante l'aggiunta del mazzo.", "Errore")
+
+
+    def last_on_add_deck(self, event):
         """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
  
         try:
@@ -503,7 +520,6 @@ class DecksManagerFrame(BasicView):
 
         deck_name = self.get_selected_deck()
         controller = self.parent.controller.decks_controller
-        #controller.delete_deck(deck_name)
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
