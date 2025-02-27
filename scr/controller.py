@@ -173,8 +173,9 @@ class DecksController:
         return True
 
 
-    def get_selected_deck(self):
+    def get_selected_deck(frame):
         """Restituisce il mazzo selezionato nella lista."""
+
         selection = self.deck_list.GetFirstSelected()
         if selection != wx.NOT_FOUND:
             return self.deck_list.GetItemText(selection)
@@ -198,6 +199,20 @@ class DecksController:
             return 0
 
 
+    def select_last_deck(self, frame):
+        """Seleziona l'ultimo mazzo nella lista."""
+
+        deck_list = frame.deck_list
+        self.update_deck_list(deck_list)
+        frame.set_focus_to_list()
+        end_list = deck_list.GetItemCount()
+        deck_list.Select(end_list-1)
+        deck_list.Focus(end_list-1)
+        deck_list.EnsureVisible(end_list-1)
+        deck_list.SetFocus()
+        deck_list.Refresh()
+
+
     def update_deck_list(self, deck_list=None):
         """Aggiorna la lista dei mazzi."""
 
@@ -205,7 +220,7 @@ class DecksController:
         with db_session() as session:  # Usa il contesto db_session
             decks = session.query(Deck).all()
             for deck in decks:
-                index = deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
+                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)  # Prima colonna
                 deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
                 deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
                 
@@ -297,10 +312,13 @@ class DecksController:
             # Aggiunge il mazzo al database
             success = self.db_manager.add_deck_from_clipboard(deck_string)
             if success:
+                deck_name = metadata["name"]
                 log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
+                wx.MessageBox(f"Mazzo {deck_name} aggiunto con successo.", "Successo")
                 return True
             else:
                 log.error(f"Errore durante l'aggiunta del mazzo '{deck_name}'.")
+                wx.MessageBox(f"Errore durante l'aggiunta del mazzo{deck_name}.", "Errore")
                 return False
 
         except Exception as e:
@@ -316,6 +334,7 @@ class DecksController:
             with db_session() as session:  # Usa il contesto db_session
                 success = self.db_manager.delete_deck(deck_name)
                 if success:
+                    log.info(f"Mazzo '{deck_name}' eliminato con successo.")
                     return True
 
         except SQLAlchemyError as e:
