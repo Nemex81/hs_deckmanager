@@ -18,17 +18,15 @@ import wx, pyperclip
 import wx.lib.newevent
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
-#from ..models import load_cards_from_db, load_deck_from_db, load_cards
-from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .proto_views import BasicView
 from .deck_stats_dialog import DeckStatsDialog
-from .collection_view import CardCollectionFrame
-from .deck_view import DeckViewFrame
-#from utyls.enu_glob import EnuColors, ENUCARD, EnuExtraCard, EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
-from utyls import enu_glob as eg
-from utyls import helper as hp
-from utyls import logger as log
-#import pdb
+#from .collection_view import CardCollectionFrame
+#from .deck_view import DeckViewFrame
+import scr.views.view_components as vc              # Componenti dell'interfaccia utente
+from utyls import enu_glob as eg                    # Enumerazioni globali
+from utyls import helper as hp                      # Funzioni helper
+from utyls import logger as log                     # Modulo per la gestione dei log
+#import pdb                                         # Modulo per il debug
 
 # Creazione di un evento personalizzato per la ricerca con debounce
 SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
@@ -42,7 +40,7 @@ class DecksManagerFrame(BasicView):
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
-        self.controller = controller
+        self.controller = self.parent.controller.decks_controller
         self.db_manager = self.parent.controller.db_manager
 
         # Timer per il debounce
@@ -62,7 +60,7 @@ class DecksManagerFrame(BasicView):
 
         # titolo della finestra
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
-        self.deck_list = create_list_ctrl(
+        self.deck_list = vc.create_list_ctrl(
             parent=self.panel,
             #color_manager=self.cm
             #columns=[("Mazzo", 390), ("Classe", 360), ("Formato", 320, ("Carte Totali", 100)]  # 
@@ -77,7 +75,7 @@ class DecksManagerFrame(BasicView):
         self.load_decks()
 
         # Barra di ricerca
-        self.search_bar = create_search_bar(
+        self.search_bar = vc.create_search_bar(
             self.panel,
             placeholder="Cerca mazzo...",
             event_handler=self.on_search
@@ -85,28 +83,28 @@ class DecksManagerFrame(BasicView):
         self.search_bar.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
 
         # Pulsanti
-        btn_add = create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
-        btn_copy = create_button(self.panel, label="Copia Mazzo", event_handler=self.on_copy_deck)
-        btn_view = create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
-        btn_stats = create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
-        btn_update = create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)
-        btn_delete = create_button(self.panel, label="Elimina Mazzo", event_handler=self.on_delete_deck)
-        btn_collection = create_button(self.panel, label="Collezione Carte", event_handler=self.on_view_collection)
-        btn_exit = create_button(self.panel, label="Chiudi", event_handler=self.on_close)
+        btn_add = vc.create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
+        btn_copy = vc.create_button(self.panel, label="Copia Mazzo", event_handler=self.on_copy_deck)
+        btn_view = vc.create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
+        btn_stats = vc.create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
+        btn_update = vc.create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)
+        btn_delete = vc.create_button(self.panel, label="Elimina Mazzo", event_handler=self.on_delete_deck)
+        btn_collection = vc.create_button(self.panel, label="Collezione Carte", event_handler=self.on_view_collection)
+        btn_exit = vc.create_button(self.panel, label="Chiudi", event_handler=self.on_close)
 
         # Layout principale
-        main_sizer = create_sizer(wx.VERTICAL)
-        add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
-        add_to_sizer(main_sizer, self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
+        main_sizer = vc.create_sizer(wx.VERTICAL)
+        vc.add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
+        vc.add_to_sizer(main_sizer, self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Separatore tra barra di ricerca e lista dei mazzi
-        add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Aggiungi la lista dei mazzi al sizer
-        add_to_sizer(main_sizer, self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        vc.add_to_sizer(main_sizer, self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
-        add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Layout pulsanti
         btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
@@ -118,10 +116,10 @@ class DecksManagerFrame(BasicView):
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungi i pulsanti al sizer principale
-        add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        vc.add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra pulsanti e barra di stato
-        add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Imposta il sizer principale
         self.panel.SetSizer(main_sizer)
@@ -148,16 +146,6 @@ class DecksManagerFrame(BasicView):
         self.Layout()
 
 
-    def new_load_decks(self):
-        """Carica i mazzi dal database."""
-
-        decks = self.controller.load_decks()
-        for deck in decks:
-            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
-            self.deck_list.SetItem(index, 1, deck.player_class)
-            self.deck_list.SetItem(index, 2, deck.game_format)
-
-
     def set_focus_to_list(self):
         """
         Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
@@ -170,22 +158,42 @@ class DecksManagerFrame(BasicView):
 
 
     def load_decks(self):
+        """ Carica i mazzi dal database. """
+
+        # carichiamo i mazzi dal database usando db_session
+        controller = self.parent.controller.decks_controller
+        controller.load_decks(self.deck_list)
+
+        # Imposta il colore di sfondo predefinito per tutte le righe
+        self.cm.reset_all_styles(self.deck_list)
+
+        # colora la riga selezionata
+        self.select_element(0)
+        self.deck_list.SetBackgroundColour('blue')
+        self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.deck_list.SetForegroundColour('white')
+
+        # Forza il ridisegno della lista
+        self.deck_list.Refresh()
+
+    def last_load_decks(self):
         """Carica i mazzi."""
 
-        # carichiamo i mazzi
-        decks = session.query(Deck).all()
-        for deck in decks:
-            log.info(f"Caricamento deck: {deck.name}")
-            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
-            self.deck_list.SetItem(index, 1, deck.player_class)
-            self.deck_list.SetItem(index, 2, deck.game_format)
-            
-            # Calcola e visualizza il numero totale di carte
-            deck_name = deck.name
-            stats = self.parent.controller.db_manager.get_deck_statistics(deck_name)
-            total_cards = stats["Numero Carte"]
-            log.info(f"Totale carte per {deck.name}: {total_cards}")
-            self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+        # carichiamo i mazzi dal database usando db_session
+        with db_session() as session:
+            decks = session.query(Deck).all()
+            for deck in decks:
+                log.info(f"Caricamento deck: {deck.name}")
+                index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
+                self.deck_list.SetItem(index, 1, deck.player_class)
+                self.deck_list.SetItem(index, 2, deck.game_format)
+    
+                # Calcola e visualizza il numero totale di carte
+                deck_name = deck.name
+                stats = self.parent.controller.db_manager.get_deck_statistics(deck_name)
+                total_cards = stats["Numero Carte"]
+                log.info(f"Totale carte per {deck.name}: {total_cards}")
+                self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
         # Imposta il colore di sfondo predefinito per tutte le righe
         #self.reset_focus_style_for_card_list()
@@ -199,17 +207,6 @@ class DecksManagerFrame(BasicView):
 
         # Forza il ridisegno della lista
         self.deck_list.Refresh()
-
-
-    def last_load_decks(self):
-        """Carica i mazzi ."""
-
-        # carichiamo i mazzi
-        decks = session.query(Deck).all()
-        for deck in decks:
-            Index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
-            self.deck_list.SetItem(Index, 1, deck.player_class)
-            self.deck_list.SetItem(Index, 2, deck.game_format)
 
 
     def get_total_cards_in_deck(self, deck_name):
@@ -233,15 +230,16 @@ class DecksManagerFrame(BasicView):
         """Aggiorna la lista dei mazzi."""
 
         self.deck_list.DeleteAllItems()  # Pulisce la lista
-        decks = session.query(Deck).all()
-        for deck in decks:
-            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
-            self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-            self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-            
-            # Calcola e visualizza il numero totale di carte
-            total_cards = self.get_total_cards_in_deck(deck.name)
-            self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+        with db_session() as session:  # Usa il contesto db_session
+            decks = session.query(Deck).all()
+            for deck in decks:
+                index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
+                self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+                self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+                
+                # Calcola e visualizza il numero totale di carte
+                total_cards = self.get_total_cards_in_deck(deck.name)
+                self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
     def last_update_deck_list(self):
         """Aggiorna la lista dei mazzi."""
@@ -526,8 +524,8 @@ class DecksManagerFrame(BasicView):
 
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
-        self.controller.run_collection_frame(parent=self)
-        self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
+        self.parent.controller.run_collection_frame(parent=self)
+        #self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
 
 
     def on_delete_deck(self, event):

@@ -15,7 +15,7 @@
 
 # lib
 import wx
-from .models import load_cards
+from .models import load_cards, db_session, Deck
 from .views.main_views import HearthstoneAppFrame
 from .views.collection_view import CardCollectionFrame
 from .views.deck_view import DeckViewFrame
@@ -33,6 +33,7 @@ class CollectionController:
     def __init__(self, parent=None, db_manager=None):
         self.parent = parent            # Riferimento al controller principale
         self.db_manager = db_manager    # Istanza di DbManager
+
 
     def load_collection(self, filters=None, card_list=None):
         """
@@ -152,12 +153,34 @@ class DecksController:
         self.db_manager = db_manager
 
 
-    def run_deck_frame(self, parent=None, controller=None, deck_name=None):
+    def run_deck_frame(self, parent=None, deck_name=None):
         """ carica l'interfaccia per la gestione di un mazzo. """
 
         frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
-        parent.Hide()
         frame.Show()
+        parent.Hide()
+
+
+    def load_decks(self, deck_list=None):
+        """ carica i mazzi dal database. """
+
+        # carichiamo i mazzi dal database usando db_session
+        with db_session() as session:
+            decks = session.query(Deck).all()
+            for deck in decks:
+                log.info(f"Caricamento deck: {deck.name}")
+                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)
+                deck_list.SetItem(index, 1, deck.player_class)
+                deck_list.SetItem(index, 2, deck.game_format)
+    
+                # Calcola e visualizza il numero totale di carte
+                deck_name = deck.name
+                stats = self.db_manager.get_deck_statistics(deck_name)
+                total_cards = stats["Numero Carte"]
+                log.info(f"Totale carte per {deck.name}: {total_cards}")
+                deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+
 
 
 
@@ -178,13 +201,6 @@ class MainController():
         frame.Show()
         parent.Hide()
 
-
-    def run_deck_frame(self, parent=None, deck_name=None):
-        """ carica l'interfaccia per la gestione di un mazzo. """
-
-        frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
-        frame.Show()
-        parent.Hide()
 
     def run_collection_frame(self, parent=None):
         """ carica l'interfaccia pe rla collezzione completa di carte. """
