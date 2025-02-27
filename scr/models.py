@@ -562,6 +562,41 @@ class DbManager:
         load_cards(filters=filters, card_list=card_list)
 
 
+    def load_decks(self, deck_list=None):
+        """ carica i mazzi dal database. """
+
+        # carichiamo i mazzi dal database usando db_session
+        with db_session() as session:
+            decks = session.query(Deck).all()
+            if not decks:
+                log.warning("Nessun mazzo trovato.")
+                return False
+
+            for deck in decks:
+                log.info(f"Caricamento deck: {deck.name}")
+                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)
+                deck_list.SetItem(index, 1, deck.player_class)
+                deck_list.SetItem(index, 2, deck.game_format)
+    
+                # Calcola e visualizza il numero totale di carte
+                deck_name = deck.name
+                stats = self.get_deck_statistics(deck_name)
+                if not stats:
+                    log.warning(f"Statistiche non disponibili per {deck_name}.")
+                    return False
+
+                #total_cards = stats["Numero Carte"]
+                total_cards = stats.get("Numero Carte", 0)
+                if not total_cards:
+                    log.warning(f"Numero carte non disponibile per {deck_name}.")
+                    return False
+
+                log.info(f"Totale carte per {deck.name}: {total_cards}")
+                deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+        return True
+
+
 
 #@@@# Fine del modulo
 if __name__ != "__main__":

@@ -62,14 +62,11 @@ class DecksManagerFrame(BasicView):
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
         self.deck_list = vc.create_list_ctrl(
             parent=self.panel,
-            #color_manager=self.cm
-            #columns=[("Mazzo", 390), ("Classe", 360), ("Formato", 320, ("Carte Totali", 100)]  # 
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
 
         # Collega gli eventi di focus alla lista
         #self.bind_focus_events(self.deck_list)
-
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -165,38 +162,6 @@ class DecksManagerFrame(BasicView):
         controller.load_decks(self.deck_list)
 
         # Imposta il colore di sfondo predefinito per tutte le righe
-        self.cm.reset_all_styles(self.deck_list)
-
-        # colora la riga selezionata
-        self.select_element(0)
-        self.deck_list.SetBackgroundColour('blue')
-        self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.deck_list.SetForegroundColour('white')
-
-        # Forza il ridisegno della lista
-        self.deck_list.Refresh()
-
-    def last_load_decks(self):
-        """Carica i mazzi."""
-
-        # carichiamo i mazzi dal database usando db_session
-        with db_session() as session:
-            decks = session.query(Deck).all()
-            for deck in decks:
-                log.info(f"Caricamento deck: {deck.name}")
-                index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
-                self.deck_list.SetItem(index, 1, deck.player_class)
-                self.deck_list.SetItem(index, 2, deck.game_format)
-    
-                # Calcola e visualizza il numero totale di carte
-                deck_name = deck.name
-                stats = self.parent.controller.db_manager.get_deck_statistics(deck_name)
-                total_cards = stats["Numero Carte"]
-                log.info(f"Totale carte per {deck.name}: {total_cards}")
-                self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
-
-        # Imposta il colore di sfondo predefinito per tutte le righe
-        #self.reset_focus_style_for_card_list()
         self.cm.reset_all_styles(self.deck_list)
 
         # colora la riga selezionata
@@ -333,8 +298,14 @@ class DecksManagerFrame(BasicView):
         self.set_focus_to_list()
 
 
-    def on_add_deck(self, event):
+    def new_on_add_deck(self, event):
+        """Aggiunge un mazzo tramite finestra di dialogo."""
 
+        controller = self.parent.controller.decks_controller
+        controller.add_deck(event)
+
+
+    def on_add_deck(self, event):
         """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
  
         try:
@@ -370,7 +341,7 @@ class DecksManagerFrame(BasicView):
                 success = self.db_manager.add_deck_from_clipboard()
                 if success:
                     self.update_deck_list()
-                    self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
+                    #self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
                     wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
                     self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
 
@@ -525,30 +496,26 @@ class DecksManagerFrame(BasicView):
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
         self.parent.controller.run_collection_frame(parent=self)
-        #self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
 
 
     def on_delete_deck(self, event):
-        """Elimina il mazzo selezionato."""
+        """ Elimina il mazzo selezionato. """
+
+        deck_name = self.get_selected_deck()
+        controller = self.parent.controller.decks_controller
+        #controller.delete_deck(deck_name)
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
-                try:
-                    with db_session() as session:  # Usa il contesto db_session
-                        success = self.db_manager.delete_deck(deck_name)
-                        if success:
-                            self.update_deck_list()
-                            self.update_status(f"Mazzo '{deck_name}' eliminato con successo.")
-                            wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
-                        else:
-                            wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+                if controller.delete_deck(deck_name):
+                    self.update_deck_list()
+                    wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+                else:
+                    log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
+                    wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
 
-                except SQLAlchemyError as e:
-                    wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
-
-                except Exception as e:
-                    wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
         else:
+            log.error("Nessun mazzo selezionato.")
             wx.MessageBox("Seleziona un mazzo prima di eliminarlo.", "Errore")
 
 
