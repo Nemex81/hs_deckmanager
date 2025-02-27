@@ -65,8 +65,8 @@ class DeckViewFrame(BasicView):
         # Impostazioni finestra principale
 
         # coloro il bg del pannello 
-        self.SetBackgroundColour('black')
-        self.panel.SetBackgroundColour('black')
+        #self.SetBackgroundColour('black')
+        #self.panel.SetBackgroundColour('black')
 
         # Creazione degli elementi dell'interfaccia
         search_sizer = create_sizer(wx.HORIZONTAL)
@@ -83,7 +83,7 @@ class DeckViewFrame(BasicView):
 
         # Lista delle carte
         self.card_list = create_list_ctrl(
-            self.panel,
+            parent=self.panel,
             columns=[
                 ("Nome", 250),
                 ("Mana", 50),
@@ -100,11 +100,12 @@ class DeckViewFrame(BasicView):
         )
 
         # Collega gli eventi di focus alla lista
-        self.bind_focus_events(self.card_list)
-        #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+        #self.bind_focus_events(self.card_list)
 
         # coloro il bg della lista
         #self.card_list.SetBackgroundColour('black')
+        #self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        #self.card_list.SetForegroundColour('white')
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -137,20 +138,19 @@ class DeckViewFrame(BasicView):
         # Separatore tra pulsanti e fondo finestra
         add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
-
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
             self.load_cards()
             self.set_focus_to_list()
+            # Imposta lo stile della riga selezionata
+            self.select_element(0)
+            #self.cm.apply_selection_style_to_list(self.card_list, 0)
 
-        #coloro il bg del pannello
-        self.card_list.SetBackgroundColour('blue')
-        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.card_list.SetForegroundColour('white')
+        # Aggiorna la finestra
+        self.card_list.Refresh()
 
         # Imposta il layout principale
         self.Layout()
-
 
         # Aggiungo eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
@@ -214,7 +214,22 @@ class DeckViewFrame(BasicView):
 
 
     def load_cards(self, filters=None):
+        """ Carica le carte nel mazzo, applicando eventuali filtri. """
+
         load_cards(self.card_list, self.deck_content, self.mode, filters)
+
+        # Imposta il colore di sfondo predefinito per tutte le righe
+        self.card_list.SetBackgroundColour('black')
+        self.cm.reset_all_styles(self.card_list)
+
+        # colora la riga selezionata
+        #self.select_element(0)
+        #self.card_list.SetBackgroundColour('blue')
+        #self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        #self.card_list.SetForegroundColour('white')
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
 
 
     def last_load_cards(self, filters=None):

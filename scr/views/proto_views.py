@@ -19,10 +19,8 @@ from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards
-from .view_components import create_button, create_separator, add_to_sizer, create_list_ctrl, create_search_bar, create_sizer
-from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType, EnuHero
+from .color_system import ColorManager, AppColors, ColorTheme
 from utyls import helper as hp
-from utyls.enu_glob import EnuCardType, EnuSpellSubType, EnuPetSubType, EnuRarity, EnuExpansion, EnuSpellType
 from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
@@ -74,59 +72,52 @@ class BasicView(wx.Frame):
         self.parent = parent               # Finestra genitore
         self.controller = None             # Controller per l'interfaccia
         self.db_manager = None             # Gestore del database
+        self.cm = ColorManager()           # Gestore dei colori
 
         # Colori personalizzati per lo stato attivo e inattivo
-        self.FOCUS_BG_COLOR = eg.BLUE      # Colore di sfondo quando l'elemento ha il focus
-        self.FOCUS_TEXT_COLOR = eg.WHITE      # Colore del testo quando l'elemento ha il focus
-        self.DEFAULT_BG_COLOR = eg.BLACK      # Colore di sfondo predefinito
-        self.DEFAULT_TEXT_COLOR = eg.WHITE  # Colore del testo predefinito
+        self.FOCUS_BG_COLOR = self.cm.get_color(AppColors.FOCUS_BG)
+        self.FOCUS_TEXT_COLOR = self.cm.get_color(AppColors.FOCUS_TEXT)
+        self.DEFAULT_BG_COLOR = self.cm.get_color(AppColors.DEFAULT_BG)
+        self.DEFAULT_TEXT_COLOR = self.cm.get_color(AppColors.DEFAULT_TEXT)
+        self.error_bg_color = self.cm.get_color(AppColors.ERROR_BG)
+        self.error_text_color = self.cm.get_color(AppColors.ERROR_TEXT)
 
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
         self.init_ui()                # Inizializza l'interfaccia utente
         self.Show()
 
-
     def set_controller(self, controller=None):
         """ Imposta il controller per l'interfaccia. """
         self.controller = controller
-
 
     def set_db_manager(self, db_manager=None):
         """ Imposta il controller del database. """
         self.db_manager = db_manager
 
-
     def bind_focus_events(self, element):
         """
         Collega gli eventi di focus a un elemento dell'interfaccia grafica.
         """
-
         element.Bind(wx.EVT_SET_FOCUS, lambda e: self.set_focus_style(element))
         element.Bind(wx.EVT_KILL_FOCUS, lambda e: self.reset_focus_style(element))
-
 
     def set_focus_style(self, element):
         """
         Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
         """
-
         self.reset_focus_style_for_all_buttons()
         log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
-        element.SetBackgroundColour(self.FOCUS_BG_COLOR)
-        element.SetForegroundColour(self.FOCUS_TEXT_COLOR)
-        element.Refresh()  # Forza il ridisegno dell'elemento
-
+        self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
+        #element.Refresh()                           # Forza il ridisegno dell'elemento
 
     def reset_focus_style(self, element):
         """
         Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
         """
         log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
-        element.SetBackgroundColour(self.DEFAULT_BG_COLOR)
-        element.SetForegroundColour(self.DEFAULT_TEXT_COLOR)
-        element.Refresh()  # Forza il ridisegno dell'elemento
-
+        self.cm.apply_default_style(element)
+        #element.Refresh()
 
     def reset_focus_style_for_all_buttons(self, btn_sizer=None):
         """ Ripristina il colore di sfondo e del font per tutti i pulsanti. """
@@ -134,42 +125,78 @@ class BasicView(wx.Frame):
             for child in self.panel.GetChildren():
                 if isinstance(child, wx.Button):
                     self.reset_focus_style(child)
-
         else:
             for i in range(btn_sizer.GetItemCount()):
                 btn = btn_sizer.GetItem(i).GetWindow()
                 self.reset_focus_style(btn)
 
+    def reset_focus_style_for_card_list(self, selected_item=None):
+        """ Resetta lo stile di tutte le righe. """
+
+
+        for i in range(self.card_list.GetItemCount()):
+            if i != selected_item:
+                self.cm.apply_default_style_to_list_item(self.card_list, i)
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
+
+
+    def select_element(self, row):
+        """ Seleziona l'elemento attivo. """
+
+        if hasattr(self, "card_list"):
+            self.card_list.SetItemBackgroundColour(row, 'blue')
+            self.card_list.SetItemTextColour(row, 'white')
+            self.card_list.Refresh()
+
+
+    def on_item_focused(self, event):
+        """Gestisce l'evento di focus su una riga della lista."""
+
+        # Imposta lo stile della riga selezionata
+        selected_item = event.GetIndex()
+
+        # Resetta lo stile di tutte le righe
+        #self.reset_focus_style_for_card_list(selected_item)
+
+        # Imposta lo stile della riga selezionata
+        self.select_element(selected_item)
+
+        # Imposta lo stile della riga selezionata
+        self.cm.apply_default_style(self.card_list)
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
+
+        # forza il ridisegno della lista
+        self.Layout()
 
     def init_ui(self):
         """ Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre. """
-
         self.panel = wx.Panel(self)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.panel.SetSizer(self.sizer)
 
-        # imposta i colori di spondo giallo per finestra e pannello
-        self.BackgroundColour = 'black'
-        self.panel.BackgroundColour = 'black'
+        # Imposta i colori di sfondo per finestra e pannello
+        self.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
+        self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
 
-        # imposta il font per il titolo
-        font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        # Imposta il font per il titolo
+        font = wx.Font(32, wx.DEFAULT, wx.NORMAL, wx.BOLD)
         title = wx.StaticText(self.panel, label=self.Title)
         title.SetFont(font)
-        self.init_ui_elements()
-
+        self.init_ui_elements() # Inizializza gli elementi dell'interfaccia utente
 
     @abstractmethod
     def init_ui_elements(self, *args, **kwargs):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
-
     def Close(self):
         """Chiude la finestra."""
         if self.parent:
             self.parent.Show()
-
         self.Destroy()
 
     def on_close(self, event):
@@ -196,7 +223,7 @@ class SingleCardView(BasicDialog):
         common_controls = [
             ("nome", wx.TextCtrl),
             ("costo_mana", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
-            ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo", wx.ComboBox, {"choices": ["Tutti"] + [t.value for t in eg.EnuCardType], "style": wx.CB_READONLY}),
             ("tipo_magia", wx.ComboBox, {"choices": ["Qualsiasi"] + [st.value for st in EnuSpellType], "style": wx.CB_READONLY}),
             ("sottotipo", wx.ComboBox, {"choices": ["Tutti"] + [st.value for st in EnuPetSubType], "style": wx.CB_READONLY}),
             ("attacco", wx.ComboBox, {"choices": ["Qualsiasi"] + [str(i) for i in range(0, 21)], "style": wx.CB_READONLY}),
@@ -239,10 +266,12 @@ class SingleCardView(BasicDialog):
     def on_type_change(self, event):
         """Aggiorna i sottotipi in base al tipo di carta selezionato."""
         card_type = self.controls["tipo"].GetValue()
-        if card_type == EnuCardType.MAGIA.value:
-            subtypes = [st.value for st in EnuSpellSubType]
-        elif card_type == EnuCardType.CREATURA.value:
+        if card_type == eg.EnuCardType.MAGIA.value:
+            subtypes = [st.value for st in eg.EnuSpellSubType]
+
+        elif card_type == eg.EnuCardType.CREATURA.value:
             subtypes = [st.value for st in EnuPetSubType]
+
         else:
             subtypes = []
 

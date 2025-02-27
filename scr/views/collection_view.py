@@ -39,7 +39,6 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 class CardCollectionFrame(BasicView):
-#class LastCardCollectionFrame(CollectionsListView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent):#, controller):
@@ -63,8 +62,8 @@ class CardCollectionFrame(BasicView):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
 
         # Impostazioni finestra principale
-        #self.SetBackgroundColour('black')
-        #self.panel.SetBackgroundColour('black')
+        #self.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
+        #self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
 
         # Creazione degli elementi dell'interfaccia
 
@@ -93,7 +92,8 @@ class CardCollectionFrame(BasicView):
 
         # Lista delle carte
         self.card_list = create_list_ctrl(
-            self.panel,
+            parent=self.panel,
+            #color_manager=self.cm,
             columns=[
                 ("Nome", 250),
                 ("Mana", 50),
@@ -110,7 +110,7 @@ class CardCollectionFrame(BasicView):
         )
 
         # Collega gli eventi di focus alla lista
-        self.bind_focus_events(self.card_list)
+        #self.bind_focus_events(self.card_list)
         #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
@@ -149,13 +149,13 @@ class CardCollectionFrame(BasicView):
         # Carica le carte
         self.load_cards()
 
+        # Imposta il colore di sfondo della riga selezionaata nella lista carte
+        #self.card_list.SetBackgroundColour('blue')
+        #self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        #self.card_list.SetForegroundColour('white')
+
         # sposta il focus sulla lista
         self.set_focus_to_list()
-
-        # Imposta il colore di sfondo della lista
-        self.card_list.SetBackgroundColour('blue')
-        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.card_list.SetForegroundColour('white')
 
         #aggiorna la lista
         self.card_list.Refresh()
@@ -174,11 +174,8 @@ class CardCollectionFrame(BasicView):
 
 
         for i in range(self.card_list.GetItemCount()):
-            if i == selected_item:
-                continue
-
-            self.card_list.SetItemBackgroundColour(i, 'white')
-            self.card_list.SetItemTextColour(i, 'black')
+            if i != selected_item:
+                self.cm.apply_default_style_to_list_item(self.card_list, i)
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()
@@ -190,24 +187,23 @@ class CardCollectionFrame(BasicView):
         if hasattr(self, "card_list"):
             self.card_list.SetItemBackgroundColour(row, 'blue')
             self.card_list.SetItemTextColour(row, 'white')
-            #self.card_list.Refresh()
+            self.card_list.Refresh()
 
 
     def on_item_focused(self, event):
         """Gestisce l'evento di focus su una riga della lista."""
 
-        # Imposta lo stile della riga selezionata
+        # cattura l'indice della riga selezionata
         selected_item = event.GetIndex()
 
         # Resetta lo stile di tutte le righe
-        self.reset_focus_style_for_card_list(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        #self.card_list.SetItemBackgroundColour(selected_item, 'white')
-        #self.card_list.SetItemTextColour(selected_item, 'black')
+        #self.reset_focus_style_for_card_list(selected_item)
 
         # Imposta lo stile della riga selezionata
         self.select_element(selected_item)
+
+        # Imposta lo stile della riga selezionata
+        self.cm.apply_default_style(self.card_list)
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()
@@ -227,7 +223,14 @@ class CardCollectionFrame(BasicView):
         #self.parent.controller.collection_controller.load_collection(filters=filters, card_list=self.card_list)
 
         # Imposta il colore di sfondo predefinito per tutte le righe
-        self.reset_focus_style_for_card_list()
+        #self.reset_focus_style_for_card_list()
+        self.cm.reset_all_styles(self.card_list)
+
+        # colora la riga selezionata
+        self.select_element(0)
+        self.card_list.SetBackgroundColour('blue')
+        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.card_list.SetForegroundColour('white')
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()

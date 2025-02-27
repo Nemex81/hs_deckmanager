@@ -41,10 +41,13 @@
 
 # Lib
 import wx
+from .color_system import ColorManager
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
+
+cm = ColorManager()
 
 #@@# sezioni costanti per la configurazione predefinita degli elementi dell'interfaccia utente
 
@@ -58,15 +61,19 @@ DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
 
 
 class CustomListCtrl(wx.ListCtrl):
-    def __init__(self, parent, focus_bg_color='blue', focus_text_color='white', 
-                 default_bg_color='WHITE', default_text_color='BLACK', *args, **kwargs):
+    """ Classe personalizzata per la gestione di una lista di elementi. """
+
+    def __init__(self, parent, color_manager, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.cm = color_manager
         
         # Colori personalizzati
-        self.FOCUS_BG_COLOR = focus_bg_color       # Colore di sfondo quando la riga è selezionata
-        self.FOCUS_TEXT_COLOR = focus_text_color   # Colore del testo quando la riga è selezionata
-        self.DEFAULT_BG_COLOR = default_bg_color   # Colore di sfondo predefinito
-        self.DEFAULT_TEXT_COLOR = default_text_color  # Colore del testo predefinito
+        self.FOCUS_BG_COLOR = wx.BLUE                   # Colore di sfondo predefinito per la riga selezionata
+        self.FOCUS_TEXT_COLOR = wx.WHITE                # Colore del testo predefinito per la riga selezionata
+        self.DEFAULT_BG_COLOR = wx.BLACK                 # Colore di sfondo predefinito
+        self.DEFAULT_TEXT_COLOR = wx.WHITE               # Colore del testo predefinito
+        self.ERROR_BG_COLOR = wx.RED                     # Colore di sfondo per gli errori
+        self.ERROR_TEXT_COLOR = wx.WHITE                 # Colore del testo per gli errori
 
         # Collega l'evento di focus
         self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
@@ -77,8 +84,7 @@ class CustomListCtrl(wx.ListCtrl):
 
         selected_item = event.GetIndex()
         self.reset_focus_style_for_all_items(selected_item)
-        self.SetItemBackgroundColour(selected_item, self.FOCUS_BG_COLOR)
-        self.SetItemTextColour(selected_item, self.FOCUS_TEXT_COLOR)
+        self.cm.apply_selection_style_to_list(self, selected_item)
         self.Refresh()
 
 
@@ -89,8 +95,8 @@ class CustomListCtrl(wx.ListCtrl):
             if i == selected_item:
                 continue
 
-            self.SetItemBackgroundColour(i, self.DEFAULT_BG_COLOR)
-            self.SetItemTextColour(i, self.DEFAULT_TEXT_COLOR)
+            #self.cm.apply_default_style(self, i)
+            self.cm.apply_default_style_to_list_item(self, i)
 
         self.Refresh()
 
@@ -122,29 +128,26 @@ def create_button(parent, label, size=DEFAULT_BUTTON_SIZE, font_size=DEFAULT_FON
     return button
 
 
-def create_list_ctrl(parent, columns, style=DEFAULT_LIST_STYLE):
+def create_list_ctrl(parent, columns, color_manager=cm, style=DEFAULT_LIST_STYLE):
     """
     Crea una lista (wx.ListCtrl) con colonne personalizzabili.
-
     :param parent: Il genitore della lista.
-    :param columns: Lista di tuple (nome_colonna, larghezza). Esempio: [("Nome", 250), ("Mana", 50)].
-    :param style: Stile della lista. Default: wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN.
-    :return: Un'istanza di wx.ListCtrl.
+    :param columns: Lista di tuple (nome_colonna, larghezza).
+    :param color_manager: Istanza di ColorManager.
+    :param style: Stile della lista.
+    :return: Un'istanza di CustomListCtrl.
     """
 
     list_ctrl = CustomListCtrl(
         parent,
-        focus_bg_color='blue',          # Colore di sfondo predefinito per la riga selezionata
-        focus_text_color='white',       # Colore del testo predefinito per la riga selezionata
-        default_bg_color='black',        # Colore di sfondo predefinito
-        default_text_color='white',      # Colore del testo predefinito
+        color_manager=color_manager,
         style=style
     )
-    
+
     # Aggiungi le colonne alla lista
     for idx, (col_name, width) in enumerate(columns):
         list_ctrl.InsertColumn(idx, col_name, width=width)
-    
+
     return list_ctrl
 
 

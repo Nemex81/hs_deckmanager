@@ -40,7 +40,7 @@ class DecksManagerFrame(BasicView):
 
     def __init__(self, parent, controller):
         title = "Gestione Mazzi"
-        super().__init__(parent, title=title, size=(800, 600))
+        super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
         self.controller = controller
         self.db_manager = self.parent.controller.db_manager
@@ -63,16 +63,15 @@ class DecksManagerFrame(BasicView):
         # titolo della finestra
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
         self.deck_list = create_list_ctrl(
-            self.panel,
+            parent=self.panel,
+            #color_manager=self.cm
             #columns=[("Mazzo", 390), ("Classe", 360), ("Formato", 320, ("Carte Totali", 100)]  # 
-            columns=[("Mazzo", 500), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
+            columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
 
-        # coloro la lista dei mazzi
-        #self.deck_list.SetBackgroundColour('black')
-
         # Collega gli eventi di focus alla lista
-        self.bind_focus_events(self.deck_list)
+        #self.bind_focus_events(self.deck_list)
+
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -139,8 +138,8 @@ class DecksManagerFrame(BasicView):
 
         # Imposta il colore di sfondo della lista
         #self.deck_list.SetBackgroundColour('black')
-        self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.deck_list.SetForegroundColour('white')
+        #self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        #self.deck_list.SetForegroundColour('white')
 
         #aggiorna la lista
         self.deck_list.Refresh()
@@ -187,6 +186,20 @@ class DecksManagerFrame(BasicView):
             total_cards = stats["Numero Carte"]
             log.info(f"Totale carte per {deck.name}: {total_cards}")
             self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+        # Imposta il colore di sfondo predefinito per tutte le righe
+        #self.reset_focus_style_for_card_list()
+        self.cm.reset_all_styles(self.deck_list)
+
+        # colora la riga selezionata
+        self.select_element(0)
+        self.deck_list.SetBackgroundColour('blue')
+        self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.deck_list.SetForegroundColour('white')
+
+        # Forza il ridisegno della lista
+        self.deck_list.Refresh()
+
 
     def last_load_decks(self):
         """Carica i mazzi ."""
@@ -433,6 +446,7 @@ class DecksManagerFrame(BasicView):
 
     def on_update_deck(self, event):
         """Aggiorna il mazzo selezionato con il contenuto degli appunti."""
+
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(
@@ -514,7 +528,6 @@ class DecksManagerFrame(BasicView):
         """Mostra la collezione delle carte."""
         self.controller.run_collection_frame(parent=self)
         self.Hide()                                                         # Nasconde la finestra di gestione dei mazzi
-        #collection_dialog.Show()                                            # Mostra la finestra come modale
 
 
     def on_delete_deck(self, event):

@@ -156,6 +156,7 @@ class DecksController:
         """ carica l'interfaccia per la gestione di un mazzo. """
 
         frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
+        parent.Hide()
         frame.Show()
 
 
@@ -175,6 +176,7 @@ class MainController():
 
         frame = DecksManagerFrame(parent, controller=self)
         frame.Show()
+        parent.Hide()
 
 
     def run_deck_frame(self, parent=None, deck_name=None):
@@ -182,13 +184,14 @@ class MainController():
 
         frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
         frame.Show()
-
+        parent.Hide()
 
     def run_collection_frame(self, parent=None):
         """ carica l'interfaccia pe rla collezzione completa di carte. """
 
         frame = CardCollectionFrame(parent=parent)#, controller=self)
         frame.Show()
+        parent.Hide()
 
 
     def run(self):
