@@ -255,6 +255,13 @@ class DecksManagerFrame(BasicView):
 
     def _apply_search_filter(self, search_text):
         """Applica il filtro di ricerca alla lista dei mazzi."""
+
+        controller = self.parent.controller.decks_controller
+        controller.apply_search_filter(self, search_text)
+
+    def last__apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+
         if not search_text or search_text in ["tutti", "tutto", "all"]:
             # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
             self.load_decks()
@@ -355,9 +362,11 @@ class DecksManagerFrame(BasicView):
                 DeckStatsDialog(self, stats=stats).ShowModal()
 
             else:
+                log.error(f"Impossibile calcolare le statistiche per il mazzo: {deck_name}")
                 wx.MessageBox("Impossibile calcolare le statistiche per questo mazzo.", "Errore")
 
         else:
+            log.error("Nessun mazzo selezionato.")
             wx.MessageBox("Seleziona un mazzo prima di visualizzare le statistiche.", "Errore")
 
 

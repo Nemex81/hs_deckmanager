@@ -183,6 +183,25 @@ class DecksController:
         return None
 
 
+    def apply_search_filter(self, frame, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
+            frame.load_decks()
+        else:
+            # Filtra i mazzi in base al nome o alla classe
+            frame.deck_list.DeleteAllItems()
+            with db_session() as session:
+                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
+                for deck in decks:
+                    index = frame.deck_list.InsertItem(frame.deck_list.GetItemCount(), deck.name)
+                    frame.deck_list.SetItem(index, 1, deck.player_class)
+                    frame.deck_list.SetItem(index, 2, deck.game_format)
+
+        frame.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
+
+
     def get_total_cards_in_deck(self, deck_name):
         """Calcola il numero totale di carte in un mazzo."""
 
