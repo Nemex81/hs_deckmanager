@@ -40,7 +40,8 @@ class DecksManagerFrame(BasicView):
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
-        self.controller = self.parent.controller.decks_controller
+        #self.controller = self.parent.controller.decks_controller
+        self.controller = None
         self.db_manager = self.parent.controller.db_manager
 
         # Timer per il debounce
@@ -255,7 +256,7 @@ class DecksManagerFrame(BasicView):
 
         deck_name = self.get_selected_deck()
         if deck_name:
-            deck_content = self.db_manager.get_deck_details(deck_name)
+            deck_content = self.controller.get_deck_details(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
                 self.controller.run_deck_frame(parent=self, deck_name=deck_name)

@@ -147,6 +147,11 @@ class DeckController:
         self.db_manager = db_manager
 
 
+    def get_deck_details(self, deck_name):
+        """ Restituisce i dettagli di un mazzo. """
+        return self.db_manager.get_deck_details(deck_name)
+
+
 
 class DecksController:
     """ Controller per la vista dei mazzi. """
@@ -154,6 +159,7 @@ class DecksController:
     def __init__(self, parent=None, db_manager=None):
         self.parent= parent
         self.db_manager = db_manager
+
 
 
     def run_deck_frame(self, parent=None, deck_name=None):
@@ -407,8 +413,6 @@ class DecksController:
         else:
             wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
 
-        #return self.db_manager.copy_deck_to_clipboard(deck_name)
-
 
     def get_deck_details(self, deck_name):
         """ Restituisce i dettagli di un mazzo. """
@@ -473,6 +477,7 @@ class MainController():
         """ carica l'interfaccia per la gestione dei mazzi. """
 
         frame = DecksManagerFrame(parent, controller=self)
+        frame.set_controller(self.decks_controller)
         frame.Show()
         parent.Hide()
 
