@@ -26,27 +26,17 @@
 
 # lib
 import wx
-from scr.models import DbManager
-from scr.controller import MainController
 from scr.hdm import AppBuilder
 
 
 
 def start_app():
     """Avvia l'applicazione Hearthstone Deck Manager."""
+
     app_builder = AppBuilder()
     app = app_builder.build_app()
     if app:
         app_builder.run_app()
-
-
-def last_start_app():
-    """ Start dell'applicazione Hearthstone Deck Manager. """
-
-    db_manager = DbManager()
-    app = MainController(db_manager=db_manager)
-    if app:
-        app.run()
 
 
 
