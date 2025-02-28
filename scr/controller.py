@@ -443,6 +443,21 @@ class DecksController:
             return False
 
 
+    def select_list_element(self, frame=None):
+        """ colora la riga del mazzo selezionato nell'elenco. """
+
+        if not frame:
+            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
+            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
+            return
+
+        # colora la riga selezionata
+        frame.select_element(0)
+        frame.deck_list.SetBackgroundColour('blue')
+        frame.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        frame.deck_list.SetForegroundColour('white')
+
+
 
 class MainController():
     """ gestore dell'applicazione. """

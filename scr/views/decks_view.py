@@ -151,14 +151,8 @@ class DecksManagerFrame(BasicView):
         # Imposta il colore di sfondo predefinito per tutte le righe
         self.cm.reset_all_styles(self.deck_list)
 
-        # colora la riga selezionata
-        self.select_element(0)
-        self.deck_list.SetBackgroundColour('blue')
-        self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.deck_list.SetForegroundColour('white')
-
-        # Forza il ridisegno della lista
-        self.deck_list.Refresh()
+        # colora il mazzo selezionato nella lista
+        self.parent.controller.decks_controller.select_list_element(self)
 
 
     def get_total_cards_in_deck(self, deck_name):
