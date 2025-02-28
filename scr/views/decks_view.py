@@ -40,9 +40,9 @@ class DecksManagerFrame(BasicView):
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
+        self.db_manager = self.parent.controller.db_manager
         #self.controller = self.parent.controller.decks_controller
         self.controller = None
-        self.db_manager = self.parent.controller.db_manager
 
         # Timer per il debounce
         self.timer = wx.Timer(self)
@@ -139,7 +139,7 @@ class DecksManagerFrame(BasicView):
         """Imposta il focus sulla lista dei mazzi."""
 
         controller = self.parent.controller.decks_controller
-        controller.set_focus_to_list(self)
+        #self.controller.set_focus_to_list(self)
 
 
     def load_decks(self):
@@ -198,8 +198,8 @@ class DecksManagerFrame(BasicView):
     def _apply_search_filter(self, search_text):
         """Applica il filtro di ricerca alla lista dei mazzi."""
 
-        controller = self.parent.controller.decks_controller
-        controller.apply_search_filter(self, search_text)
+        #controller = self.parent.controller.decks_controller
+        self.controller.apply_search_filter(self, search_text)
 
 
     def on_timer(self, event):
@@ -246,8 +246,8 @@ class DecksManagerFrame(BasicView):
     def on_copy_deck(self, event):
         """Copia il mazzo selezionato negli appunti."""
 
-        controller = self.parent.controller.decks_controller
-        if controller.copy_deck(self):
+        #controller = self.parent.controller.decks_controller
+        if self.controller.copy_deck(self):
             self.parent.controller.decks_controller.select_last_deck(self)
 
 
