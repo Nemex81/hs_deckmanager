@@ -125,8 +125,10 @@ class DecksManagerFrame(BasicView):
         # Imposta il focus sul search bar
         #self.search_bar.SetFocus()
 
-        # Imposta il focus sulla lista delle carte
-        self.set_focus_to_list()
+        # Imposta il focus sul primo deck della lista delle carte
+        self.select_and_focus_deck(self.deck_list.GetItemText(0))
+        #self.parent.controller.decks_controller.select_and_focus_deck(self, self.deck_list.GetItemText(0))
+
 
         #aggiorna la lista
         #self.deck_list.Refresh()
@@ -297,7 +299,8 @@ class DecksManagerFrame(BasicView):
 
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
-        self.parent.controller.run_collection_frame(parent=self)
+        app_controller = self.parent.controller
+        app_controller.run_collection_frame(parent=self)
 
 
     def on_delete_deck(self, event):

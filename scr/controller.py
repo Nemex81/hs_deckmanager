@@ -140,7 +140,7 @@ class CollectionController:
 
 
 class DeckController:
-    """ Controller per la vista di un mazzo. """
+    """ Controller per la view di un singoolo mazzo. """
 
     def __init__(self, parent=None, db_manager=None):
         self.parent= parent
@@ -159,7 +159,6 @@ class DecksController:
     def __init__(self, parent=None, db_manager=None):
         self.parent= parent
         self.db_manager = db_manager
-
 
 
     def run_deck_frame(self, parent=None, deck_name=None):
@@ -253,21 +252,18 @@ class DecksController:
         deck_list.Refresh()
 
 
-    def update_deck_list(self, deck_list =None):
-        """Aggiorna la lista dei mazzi."""
+    def select_list_element(self, frame=None):
+        """ colora la riga del mazzo selezionato nell'elenco. """
 
-        #deck_list = frame.deck_list
-        deck_list.DeleteAllItems()  # Pulisce la lista
-        with db_session() as session:  # Usa il contesto db_session
-            decks = session.query(Deck).all()
-            for deck in decks:
-                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)  # Prima colonna
-                deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-                deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-                
-                # Calcola e visualizza il numero totale di carte
-                total_cards = self.get_total_cards_in_deck(deck.name)
-                deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+        if not frame:
+            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
+            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
+            return
+
+        # colora la riga selezionata
+        frame.deck_list.SetBackgroundColour('blue')
+        frame.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        frame.deck_list.SetForegroundColour('white')
 
 
     def select_and_focus_deck(self, frame, deck_name):
@@ -424,6 +420,23 @@ class DecksController:
         return self.db_manager.get_deck_statistics(deck_name)
 
 
+    def update_deck_list(self, deck_list =None):
+        """Aggiorna la lista dei mazzi."""
+
+        #deck_list = frame.deck_list
+        deck_list.DeleteAllItems()  # Pulisce la lista
+        with db_session() as session:  # Usa il contesto db_session
+            decks = session.query(Deck).all()
+            for deck in decks:
+                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)  # Prima colonna
+                deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+                deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+                
+                # Calcola e visualizza il numero totale di carte
+                total_cards = self.get_total_cards_in_deck(deck.name)
+                deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+
     def upgrade_deck(self, deck_name):
         """ Aggiorna un mazzo. """
 
@@ -447,19 +460,6 @@ class DecksController:
             return False
 
 
-    def select_list_element(self, frame=None):
-        """ colora la riga del mazzo selezionato nell'elenco. """
-
-        if not frame:
-            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
-            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
-            return
-
-        # colora la riga selezionata
-        frame.select_element(0)
-        frame.deck_list.SetBackgroundColour('blue')
-        frame.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        frame.deck_list.SetForegroundColour('white')
 
 
 
