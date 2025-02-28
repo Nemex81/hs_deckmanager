@@ -27,7 +27,7 @@ from utyls import logger as log
 class HearthstoneAppFrame(BasicView):
     """ Finestra principale dell'applicazione. """
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent=None, controller=None):
         title = "earthstone Deck Manager by Nemex81"
         super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
         #font = wx.Font(24, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)    # Imposta il font per la finestra principale
@@ -38,6 +38,8 @@ class HearthstoneAppFrame(BasicView):
 
         self.parent=parent
         self.controller = controller
+        #self.controller = self.parent.controller.decks_controller
+        #super(HearthstoneAppFrame, self).__init__(parent, title=title, size=(900, 700))
 
 
     def init_ui_elements(self):

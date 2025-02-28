@@ -41,11 +41,12 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class CardCollectionFrame(BasicView):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent):#, controller):
+    def __init__(self, parent, controller):
         super().__init__(parent, title="Collezione")
         self.mode = "collection"
         self.parent = parent
-        self.controller = self.parent.controller
+        #self.controller = self.parent.controller
+        self.controller = controller
         if not self.controller:
             log.error("Il controller non può essere None.")
             raise ValueError("Il controller non può essere None.")

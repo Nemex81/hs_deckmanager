@@ -36,13 +36,13 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class DecksManagerFrame(BasicView):
     """ Finestra di gestione dei mazzi. """
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent=None, controller=None):
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
         self.db_manager = self.parent.controller.db_manager
         #self.controller = self.parent.controller.decks_controller
-        self.controller = None
+        self.controller = controller
 
         # Timer per il debounce
         self.timer = wx.Timer(self)
