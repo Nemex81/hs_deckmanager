@@ -15,7 +15,6 @@
 # lib
 import wx, pyperclip
 import wx.lib.newevent
-#from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
@@ -142,12 +141,13 @@ class DeckViewFrame(BasicView):
         if hasattr(self, "deck_content") and self.deck_content:
             self.load_cards()
             self.set_focus_to_list()
-            # Imposta lo stile della riga selezionata
+            self.set_focus_to_list()
             self.select_element(0)
             #self.cm.apply_selection_style_to_list(self.card_list, 0)
+            # sposta il focus sulla lista
 
-        # Aggiorna la finestra
-        self.card_list.Refresh()
+            # Aggiorna la finestra
+            self.card_list.Refresh()
 
         # Imposta il layout principale
         self.Layout()
@@ -223,10 +223,13 @@ class DeckViewFrame(BasicView):
         self.cm.reset_all_styles(self.card_list)
 
         # colora la riga selezionata
-        #self.select_element(0)
-        #self.card_list.SetBackgroundColour('blue')
-        #self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        #self.card_list.SetForegroundColour('white')
+        self.select_element(0)
+        self.card_list.SetBackgroundColour('blue')
+        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.card_list.SetForegroundColour('white')
+
+        #self.card_list.SetItemBackgroundColour(0, 'blue')
+        #self.card_list.SetItemTextColour(0, 'white')
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()

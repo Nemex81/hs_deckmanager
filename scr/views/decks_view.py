@@ -203,6 +203,9 @@ class DecksManagerFrame(BasicView):
         #controller = self.parent.controller.decks_controller
         self.controller.apply_search_filter(self, search_text)
 
+        # sposta il focus sul primo risultato ed evidezia la riga
+        self.select_and_focus_deck(self.deck_list.GetItemText(0))
+
 
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
