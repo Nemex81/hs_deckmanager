@@ -132,6 +132,7 @@ class CollectionController:
             self.db_manager.delete_card(card_name)
             log.info(f"Carta '{card_name}' rimossa con successo.")
             return True
+
         except Exception as e:
             log.error(f"Errore durante la rimozione della carta: {str(e)}")
             return False
@@ -338,13 +339,22 @@ class DecksController:
                 success = self.db_manager.delete_deck(deck_name)
                 if success:
                     log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+                    wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
                     return True
+                else:
+                    log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
+                    wx.MessageBox(f"Errore durante l'eliminazione del mazzo '{deck_name}'.", "Errore")
+                    return False
 
         except SQLAlchemyError as e:
             log.error("Errore del database. Verificare le procedure.")
+            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
+            return False
 
         except Exception as e:
             log.error("Si è verificato un errore imprevisto.")
+            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+            return False
 
 
     def copy_deck(self, frame):

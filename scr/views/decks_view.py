@@ -311,103 +311,12 @@ class DecksManagerFrame(BasicView):
             self.parent.controller.decks_controller.select_last_deck(self)
 
 
-    def last_on_add_deck(self, event):
-        """Aggiunge un mazzo dagli appunti con una finestra di conferma."""
- 
-        try:
-            deck_string = pyperclip.paste()
-            if not self.db_manager.is_valid_deck(deck_string):
-                wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
-                return
-
-            #metadata = parse_deck_metadata(deck_string)
-            metadata = self.db_manager.parse_deck_metadata(deck_string)
-            deck_name = metadata["name"]
-
-            # Mostra una finestra di conferma con i dati estratti
-            confirm_message = (
-                f"È stato rilevato un mazzo valido negli appunti.\n\n"
-                f"Nome: {deck_name}\n"
-                f"Classe: {metadata['player_class']}\n"
-                f"Formato: {metadata['game_format']}\n\n"
-                f"Vuoi utilizzare questi dati per creare il mazzo?"
-            )
-
-            # Mostra una finestra di conferma con i dati estratti
-            confirm_dialog = wx.MessageDialog(
-                self,
-                confirm_message,
-                "Conferma Creazione Mazzo",
-                wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION
-            )
-
-            # Gestione della risposta
-            result = confirm_dialog.ShowModal()
-            if result == wx.ID_YES:
-                success = self.db_manager.add_deck_from_clipboard()
-                if success:
-                    self.update_deck_list()
-                    #self.update_status(f"Mazzo '{deck_name}' aggiunto con successo.")
-                    wx.MessageBox(f"Mazzo '{deck_name}' aggiunto con successo.", "Successo")
-                    self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
-
-            elif result == wx.ID_NO:
-                name_dialog = wx.TextEntryDialog(
-                    self,
-                    "Inserisci il nome per il nuovo mazzo:",
-                    "Nome del Mazzo",
-                    deck_name
-                )
-
-                if name_dialog.ShowModal() == wx.ID_OK:
-                    new_name = name_dialog.GetValue()
-                    if new_name:
-                        metadata["name"] = new_name
-                        success = self.db_manager.add_deck_from_clipboard()
-                        if success:
-                            self.update_deck_list()
-                            self.update_status("Mazzo aggiunto con successo.")
-                            wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
-                            self.select_and_focus_deck(new_name)  # Seleziona e mette a fuoco il mazzo
-                    else:
-                        wx.MessageBox("Il nome del mazzo non può essere vuoto.", "Errore")
-
-            elif result == wx.ID_CANCEL:
-                self.update_status("Operazione annullata.")
-                wx.MessageBox("Operazione annullata.", "Annullato")
-                self.update_deck_list()
-
-        except pyperclip.PyperclipException as e:
-            wx.MessageBox("Errore negli appunti. Assicurati di aver copiato un mazzo valido.", "Errore")
-
-        except Exception as e:
-            log.error(f"Errore durante l'aggiunta del mazzo: {e}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
-
-
     def on_copy_deck(self, event):
         """Copia il mazzo selezionato negli appunti."""
 
         controller = self.parent.controller.decks_controller
         if controller.copy_deck(self):
             self.parent.controller.decks_controller.select_last_deck(self)
-
-
-    def last_on_copy_deck(self, event):
-        """Copia il mazzo selezionato negli appunti."""
-
-        deck_name = self.get_selected_deck()
-        if deck_name:
-            if self.db_manager.copy_deck_to_clipboard(deck_name):
-                #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
-                wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
-                self.select_and_focus_deck(deck_name)
-
-            else:
-                wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
-
-        else:
-            wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
 
 
     def on_view_deck(self, event):
@@ -434,69 +343,6 @@ class DecksManagerFrame(BasicView):
         if controller.upgrade_deck(deck_name):
                 self.update_deck_list()
                 self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo                
-
-    def last_on_update_deck(self, event):
-        """Aggiorna il mazzo selezionato con il contenuto degli appunti."""
-
-        deck_name = self.get_selected_deck()
-        if deck_name:
-            if wx.MessageBox(
-                f"Sei sicuro di voler aggiornare '{deck_name}' con il contenuto degli appunti?",
-                "Conferma",
-                wx.YES_NO
-            ) == wx.YES:
-                try:
-                    deck_string = pyperclip.paste()
-                    if self.db_manager.is_valid_deck(deck_string):
-                        with db_session() as session:  # Usa il contesto db_session
-                            deck = session.query(Deck).filter_by(name=deck_name).first()
-                            if deck:
-                                # Elimina le carte associate al mazzo
-                                session.query(DeckCard).filter_by(deck_id=deck.id).delete()
-                                session.commit()
-
-                                # Sincronizza le carte con il database
-                                self.db_manager.sync_cards_with_database(deck_string)
-
-                                # Aggiungi le nuove carte al mazzo
-                                cards = self.db_manager.parse_cards_from_deck(deck_string)
-                                for card_data in cards:
-                                    card = session.query(Card).filter_by(name=card_data["name"]).first()
-                                    if not card:
-                                        card = Card(
-                                            name=card_data["name"],
-                                            class_name="Unknown",
-                                            mana_cost=card_data["mana_cost"],
-                                            card_type="Unknown",
-                                            spell_type="Unknown",
-                                            card_subtype="Unknown",
-                                            rarity="Unknown",
-                                            expansion="Unknown"
-                                        )
-                                        session.add(card)
-                                        session.commit()
-
-                                    deck_card = DeckCard(deck_id=deck.id, card_id=card.id, quantity=card_data["quantity"])
-                                    session.add(deck_card)
-                                    session.commit()
-
-                                self.update_deck_list()
-                                self.update_status(f"Mazzo '{deck_name}' aggiornato con successo.")
-                                wx.MessageBox(f"Mazzo '{deck_name}' aggiornato con successo.", "Successo")
-                                self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo
-
-                            else:
-                                wx.MessageBox("Errore: Mazzo non trovato nel database.", "Errore")
-
-                    else:
-                        wx.MessageBox("Il mazzo negli appunti non è valido.", "Errore")
-
-                except Exception as e:
-                    log.error(f"Errore durante l'aggiornamento del mazzo: {e}")
-                    wx.MessageBox(f"Si è verificato un errore: {e}", "Errore")
-
-        else:
-            wx.MessageBox("Seleziona un mazzo prima di aggiornarlo.", "Errore")
 
 
     def on_view_stats(self, event):
@@ -530,10 +376,9 @@ class DecksManagerFrame(BasicView):
                 if controller.delete_deck(deck_name):
                     self.update_deck_list()
                     controller.select_last_deck(self)
-                    wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
-                else:
-                    log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
-                    wx.MessageBox(f"Mazzo '{deck_name}' non trovato.", "Errore")
+            else:
+                log.info("Operazione annullata.")
+                wx.MessageBox("Operazione annullata.", "Annullato")
 
         else:
             log.error("Nessun mazzo selezionato.")
