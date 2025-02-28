@@ -52,10 +52,6 @@ class DecksManagerFrame(BasicView):
     def init_ui_elements(self):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
-        # Impostazioni finestra principale
-        #self.SetBackgroundColour('black')
-        #self.panel.SetBackgroundColour('black')
-
         # Creazione degli elementi dell'interfaccia
 
         # titolo della finestra
@@ -131,27 +127,18 @@ class DecksManagerFrame(BasicView):
         # Imposta il focus sulla lista delle carte
         self.set_focus_to_list()
 
-        # Imposta il colore di sfondo della lista
-        #self.deck_list.SetBackgroundColour('black')
-        #self.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        #self.deck_list.SetForegroundColour('white')
-
         #aggiorna la lista
-        self.deck_list.Refresh()
+        #self.deck_list.Refresh()
 
         # Imposta il layout principale
-        self.Layout()
+        #self.Layout()
 
 
     def set_focus_to_list(self):
-        """
-        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
-        """
-        if hasattr(self, "deck_list") and self.deck_list.GetItemCount() > 0:
-            self.deck_list.SetFocus()  # Imposta il focus sulla lista
-            self.deck_list.Select(0)   # Seleziona il primo elemento
-            self.deck_list.Focus(0)    # Sposta il focus sul primo elemento
-            self.deck_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
+        """Imposta il focus sulla lista dei mazzi."""
+
+        controller = self.parent.controller.decks_controller
+        controller.set_focus_to_list(self)
 
 
     def load_decks(self):
@@ -177,44 +164,15 @@ class DecksManagerFrame(BasicView):
     def get_total_cards_in_deck(self, deck_name):
         """Calcola il numero totale di carte in un mazzo."""
 
-        try:
-            with db_session() as session:
-                deck = self.db_manager.get_deck(deck_name)
-                if deck:
-                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
-                    total_cards = sum(card["quantity"] for card in deck["cards"])
-                    return total_cards
-                else:
-                    return 0
-        except Exception as e:
-            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
-            return 0
+        control = self.parent.controller.decks_controller
+        return control.get_total_cards_in_deck(deck_name)
 
 
     def update_deck_list(self):
-        """Aggiorna la lista dei mazzi."""
+        """ Aggiorna la lista dei mazzi. """
 
-        self.deck_list.DeleteAllItems()  # Pulisce la lista
-        with db_session() as session:  # Usa il contesto db_session
-            decks = session.query(Deck).all()
-            for deck in decks:
-                index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
-                self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-                self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-                
-                # Calcola e visualizza il numero totale di carte
-                total_cards = self.get_total_cards_in_deck(deck.name)
-                self.deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
-
-    def last_update_deck_list(self):
-        """Aggiorna la lista dei mazzi."""
-
-        self.deck_list.DeleteAllItems()  # Pulisce la lista
-        decks = session.query(Deck).all()
-        for deck in decks:
-            index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)  # Prima colonna
-            self.deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-            self.deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+        controller = self.parent.controller.decks_controller
+        controller.update_deck_list(self.deck_list)
 
 
     def update_status(self, message):
@@ -225,32 +183,21 @@ class DecksManagerFrame(BasicView):
 
     def get_selected_deck(self):
         """Restituisce il mazzo selezionato nella lista."""
-        selection = self.deck_list.GetFirstSelected()
-        if selection != wx.NOT_FOUND:
-            return self.deck_list.GetItemText(selection)
-        return None
+
+        controller = self.parent.controller.decks_controller
+        return controller.get_selected_deck(self)
 
 
     def select_and_focus_deck(self, deck_name):
         """
         Seleziona un mazzo nella lista e imposta il focus su di esso.
-        
+
+        :param frame: Il frame contenente la lista dei mazzi.
         :param deck_name: Il nome del mazzo da selezionare.
         """
 
-        if not deck_name:
-            return
-
-        log.info(f"Tentativo di selezione e focus sul mazzo: {deck_name}")
-        # Trova l'indice del mazzo nella lista
-        for i in range(self.deck_list.GetItemCount()):
-            if self.deck_list.GetItemText(i) == deck_name:
-                log.info(f"Mazzo trovato all'indice: {i}")
-                self.deck_list.Select(i)  # Seleziona il mazzo
-                self.deck_list.Focus(i)   # Imposta il focus sul mazzo
-                self.deck_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
-                self.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
-                break
+        controller = self.parent.controller.decks_controller
+        controller.select_and_focus_deck(self, deck_name)
 
 
     def _apply_search_filter(self, search_text):
@@ -258,23 +205,6 @@ class DecksManagerFrame(BasicView):
 
         controller = self.parent.controller.decks_controller
         controller.apply_search_filter(self, search_text)
-
-    def last__apply_search_filter(self, search_text):
-        """Applica il filtro di ricerca alla lista dei mazzi."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
-            self.load_decks()
-        else:
-            # Filtra i mazzi in base al nome o alla classe
-            self.deck_list.DeleteAllItems()
-            decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
-            for deck in decks:
-                index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
-                self.deck_list.SetItem(index, 1, deck.player_class)
-                self.deck_list.SetItem(index, 2, deck.game_format)
-
-        self.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
 
 
     def on_timer(self, event):

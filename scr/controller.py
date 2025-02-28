@@ -174,13 +174,12 @@ class DecksController:
         return True
 
 
-    def get_selected_deck(frame):
+    def get_selected_deck(self, frame):
         """Restituisce il mazzo selezionato nella lista."""
 
-        selection = self.deck_list.GetFirstSelected()
+        selection = frame.deck_list.GetFirstSelected()
         if selection != wx.NOT_FOUND:
-            return self.deck_list.GetItemText(selection)
-        return None
+            return frame.deck_list.GetItemText(selection)
 
 
     def apply_search_filter(self, frame, search_text):
@@ -202,6 +201,18 @@ class DecksController:
         frame.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
 
 
+    def set_focus_to_list(self, frame):
+        """
+        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
+        """
+        
+        if hasattr(frame, "deck_list") and frame.deck_list.GetItemCount() > 0:
+            frame.deck_list.SetFocus()  # Imposta il focus sulla lista
+            frame.deck_list.Select(0)   # Seleziona il primo elemento
+            frame.deck_list.Focus(0)    # Sposta il focus sul primo elemento
+            frame.deck_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
+
+
     def get_total_cards_in_deck(self, deck_name):
         """Calcola il numero totale di carte in un mazzo."""
 
@@ -211,9 +222,12 @@ class DecksController:
                 if deck:
                     #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
                     total_cards = sum(card["quantity"] for card in deck["cards"])
+                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
                     return total_cards
                 else:
+                    log.error(f"Mazzo '{deck_name}' non trovato.")
                     return 0
+
         except Exception as e:
             log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
             return 0
@@ -233,9 +247,10 @@ class DecksController:
         deck_list.Refresh()
 
 
-    def update_deck_list(self, deck_list=None):
+    def update_deck_list(self, deck_list =None):
         """Aggiorna la lista dei mazzi."""
 
+        #deck_list = frame.deck_list
         deck_list.DeleteAllItems()  # Pulisce la lista
         with db_session() as session:  # Usa il contesto db_session
             decks = session.query(Deck).all()
