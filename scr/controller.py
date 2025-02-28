@@ -229,11 +229,14 @@ class DecksController:
                 deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
 
-    def select_and_focus_deck(self, deck_name):
+    def select_and_focus_deck(self, frame, deck_name):
         """
         Seleziona un mazzo nella lista e imposta il focus su di esso.
         
-        :param deck_name: Il nome del mazzo da selezionare.
+        Args:
+            frame: L'istanza del frame dei mazzi.
+            deck_name: Il nome del mazzo da selezionare.
+
         """
 
         if not deck_name:
@@ -241,13 +244,13 @@ class DecksController:
 
         log.info(f"Tentativo di selezione e focus sul mazzo: {deck_name}")
         # Trova l'indice del mazzo nella lista
-        for i in range(self.deck_list.GetItemCount()):
-            if self.deck_list.GetItemText(i) == deck_name:
+        for i in range(frame.deck_list.GetItemCount()):
+            if frame.deck_list.GetItemText(i) == deck_name:
                 log.info(f"Mazzo trovato all'indice: {i}")
-                self.deck_list.Select(i)  # Seleziona il mazzo
-                self.deck_list.Focus(i)   # Imposta il focus sul mazzo
-                self.deck_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
-                self.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
+                frame.deck_list.Select(i)  # Seleziona il mazzo
+                frame.deck_list.Focus(i)   # Imposta il focus sul mazzo
+                frame.deck_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
+                frame.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
                 break
 
 
@@ -344,17 +347,56 @@ class DecksController:
             log.error("Si è verificato un errore imprevisto.")
 
 
-    def copy_deck(self, deck_name):
+    def copy_deck(self, frame):
         """ Copia un mazzo negli appunti. """
-        return self.db_manager.copy_deck_to_clipboard(deck_name)
+
+        deck_name = frame.get_selected_deck()
+        if deck_name:
+            if self.db_manager.copy_deck_to_clipboard(deck_name):
+                #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
+                wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
+                self.select_and_focus_deck(deck_name)
+
+            else:
+                wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
+
+        else:
+            wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
+
+        #return self.db_manager.copy_deck_to_clipboard(deck_name)
+
 
     def get_deck_details(self, deck_name):
         """ Restituisce i dettagli di un mazzo. """
         return self.db_manager.get_deck_details(deck_name)
 
+
     def get_deck_statistics(self, deck_name):
         """ Restituisce le statistiche di un mazzo. """
         return self.db_manager.get_deck_statistics(deck_name)
+
+
+    def upgrade_deck(self, deck_name):
+        """ Aggiorna un mazzo. """
+
+        if deck_name:
+            if wx.MessageBox(
+                f"Sei sicuro di voler aggiornare '{deck_name}' con il contenuto degli appunti?",
+                "Conferma",
+                wx.YES_NO
+            ) == wx.YES:
+                if self.db_manager.upgrade_deck(deck_name):
+                    #self.update_status(f"Mazzo '{deck_name}' aggiornato con successo.")
+                    wx.MessageBox(f"Mazzo '{deck_name}' aggiornato con successo.", "Successo")
+                    return True
+
+                else:
+                    wx.MessageBox("Errore durante l'aggiornamento del mazzo.", "Errore")
+                    return False
+
+        else:
+            wx.MessageBox("Seleziona un mazzo prima di aggiornarlo.", "Errore")
+            return False
 
 
 

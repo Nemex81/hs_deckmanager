@@ -636,6 +636,59 @@ class DbManager:
         return True
 
 
+    def upgrade_deck(self, deck_name):
+        """ Aggiorna un mazzo nel database. """
+
+        try:
+            deck_string = pyperclip.paste()
+            if self.is_valid_deck(deck_string):
+                with db_session() as session:  # Usa il contesto db_session
+                    deck = session.query(Deck).filter_by(name=deck_name).first()
+                    if deck:
+                        # Elimina le carte associate al mazzo
+                        session.query(DeckCard).filter_by(deck_id=deck.id).delete()
+                        session.commit()
+
+                        # Sincronizza le carte con il database
+                        self.sync_cards_with_database(deck_string)
+
+                        # Aggiungi le nuove carte al mazzo
+                        cards = self.parse_cards_from_deck(deck_string)
+                        for card_data in cards:
+                            card = session.query(Card).filter_by(name=card_data["name"]).first()
+                            if not card:
+                                card = Card(
+                                    name=card_data["name"],
+                                    class_name="Unknown",
+                                    mana_cost=card_data["mana_cost"],
+                                    card_type="Unknown",
+                                    spell_type="Unknown",
+                                    card_subtype="Unknown",
+                                    rarity="Unknown",
+                                    expansion="Unknown"
+                                )
+                                session.add(card)
+                                session.commit()
+
+                            deck_card = DeckCard(deck_id=deck.id, card_id=card.id, quantity=card_data["quantity"])
+                            session.add(deck_card)
+                            session.commit()
+
+                        return True
+
+                    else:
+                        log.error("Errore: Mazzo non trovato nel database.")
+                        return False
+
+            else:
+                log.error("Il mazzo negli appunti non è valido.")
+                return False
+
+        except Exception as e:
+            log.error(f"Errore durante l'aggiornamento del mazzo: {e}")
+            return False
+
+
 
 #@@@# Fine del modulo
 if __name__ != "__main__":

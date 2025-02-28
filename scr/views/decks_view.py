@@ -388,10 +388,18 @@ class DecksManagerFrame(BasicView):
     def on_copy_deck(self, event):
         """Copia il mazzo selezionato negli appunti."""
 
+        controller = self.parent.controller.decks_controller
+        if controller.copy_deck(self):
+            self.parent.controller.decks_controller.select_last_deck(self)
+
+
+    def last_on_copy_deck(self, event):
+        """Copia il mazzo selezionato negli appunti."""
+
         deck_name = self.get_selected_deck()
         if deck_name:
             if self.db_manager.copy_deck_to_clipboard(deck_name):
-                self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
+                #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
                 wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
                 self.select_and_focus_deck(deck_name)
 
@@ -420,6 +428,14 @@ class DecksManagerFrame(BasicView):
 
 
     def on_update_deck(self, event):
+
+        controller = self.parent.controller.decks_controller
+        deck_name = self.get_selected_deck()
+        if controller.upgrade_deck(deck_name):
+                self.update_deck_list()
+                self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo                
+
+    def last_on_update_deck(self, event):
         """Aggiorna il mazzo selezionato con il contenuto degli appunti."""
 
         deck_name = self.get_selected_deck()
