@@ -13,13 +13,14 @@
 """
 
 # lib
-import wx, pyperclip
+import wx#, pyperclip
 import wx.lib.newevent
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import BasicView#, ListView
+from .proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
+from .color_system import AppColors
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
@@ -29,7 +30,8 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-class DeckViewFrame(BasicView):
+#class DeckViewFrame(BasicView):
+class DeckViewFrame(ListView):
     """Finestra per gestire le carte di un mazzo."""
 
 
@@ -64,8 +66,8 @@ class DeckViewFrame(BasicView):
         # Impostazioni finestra principale
 
         # coloro il bg del pannello 
-        #self.SetBackgroundColour('black')
-        #self.panel.SetBackgroundColour('black')
+        self.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
+        self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
 
         # Creazione degli elementi dell'interfaccia
         search_sizer = create_sizer(wx.HORIZONTAL)
@@ -101,10 +103,8 @@ class DeckViewFrame(BasicView):
         # Collega gli eventi di focus alla lista
         #self.bind_focus_events(self.card_list)
 
-        # coloro il bg della lista
-        #self.card_list.SetBackgroundColour('black')
-        #self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        #self.card_list.SetForegroundColour('white')
+        # Applica lo stile predefinito alla lista
+        self.cm.apply_default_style(self.card_list)
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
@@ -141,10 +141,10 @@ class DeckViewFrame(BasicView):
         if hasattr(self, "deck_content") and self.deck_content:
             self.load_cards()
             self.set_focus_to_list()
-            self.set_focus_to_list()
             self.select_element(0)
-            #self.cm.apply_selection_style_to_list(self.card_list, 0)
-            # sposta il focus sulla lista
+            self.cm.apply_selection_style_to_list(self.card_list, 0)  # Applica lo stile di selezione alla prima riga
+            #self.cm.apply_focus_style(self.card_list)
+            #self.cm.apply_selection_style_to_list(self.card_list)
 
             # Aggiorna la finestra
             self.card_list.Refresh()
@@ -213,7 +213,7 @@ class DeckViewFrame(BasicView):
         ])
 
 
-    def load_cards(self, filters=None):
+    def new_load_cards(self, filters=None):
         """ Carica le carte nel mazzo, applicando eventuali filtri. """
 
         load_cards(self.card_list, self.deck_content, self.mode, filters)
@@ -223,19 +223,19 @@ class DeckViewFrame(BasicView):
         self.cm.reset_all_styles(self.card_list)
 
         # colora la riga selezionata
-        self.select_element(0)
-        self.card_list.SetBackgroundColour('blue')
+        self.card_list.SetBackgroundColour('black')
         self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.card_list.SetForegroundColour('white')
+        self.select_element(0)
 
-        #self.card_list.SetItemBackgroundColour(0, 'blue')
-        #self.card_list.SetItemTextColour(0, 'white')
+        self.card_list.SetItemBackgroundColour(0, 'blue')
+        self.card_list.SetItemTextColour(0, 'white')
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()
 
 
-    def last_load_cards(self, filters=None):
+    def load_cards(self, filters=None):
         """vecchia versioen del metodo che Carica le carte nel mazzo, applicando eventuali filtri."""
 
         if not hasattr(self, "deck_content") or not self.deck_content:
@@ -253,6 +253,14 @@ class DeckViewFrame(BasicView):
             # Aggiunge la carta alla lista
             self._add_card_to_list(card_data)
 
+        # Applica lo stile predefinito a tutte le righe
+        self.cm.apply_default_style(self.card_list)
+
+        # Applica lo stile di focus alla prima riga
+        if self.card_list.GetItemCount() > 0:
+            #self.cm.apply_focus_style(self.card_list, 0)
+            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
+
 
     def refresh_card_list(self):
         """Aggiorna la lista delle carte con i dati più recenti dal database."""
@@ -263,8 +271,7 @@ class DeckViewFrame(BasicView):
         self.deck_content = self.controller.db_manager.get_deck(self.deck_name)
 
          # Ricarica le carte nella lista
-        self.load_cards()
-        
+        self.load_cards()        
         log.debug("Lista delle carte aggiornata.")
 
 

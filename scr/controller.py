@@ -169,10 +169,10 @@ class DecksController:
         parent.Hide()
 
 
-    def load_decks(self, deck_list=None):
+    def load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
 
-        if not self.db_manager.load_decks(deck_list=deck_list):
+        if not self.db_manager.load_decks(deck_list=card_list):
             log.warning("Nessun mazzo trovato.")
             return False
 
@@ -182,9 +182,9 @@ class DecksController:
     def get_selected_deck(self, frame):
         """Restituisce il mazzo selezionato nella lista."""
 
-        selection = frame.deck_list.GetFirstSelected()
+        selection = frame.card_list.GetFirstSelected()
         if selection != wx.NOT_FOUND:
-            return frame.deck_list.GetItemText(selection)
+            return frame.card_list.GetItemText(selection)
 
 
     def apply_search_filter(self, frame, search_text):
@@ -195,13 +195,13 @@ class DecksController:
             frame.load_decks()
         else:
             # Filtra i mazzi in base al nome o alla classe
-            frame.deck_list.DeleteAllItems()
+            frame.card_list.DeleteAllItems()
             with db_session() as session:
                 decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
                 for deck in decks:
-                    index = frame.deck_list.InsertItem(frame.deck_list.GetItemCount(), deck.name)
-                    frame.deck_list.SetItem(index, 1, deck.player_class)
-                    frame.deck_list.SetItem(index, 2, deck.game_format)
+                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
+                    frame.card_list.SetItem(index, 1, deck.player_class)
+                    frame.card_list.SetItem(index, 2, deck.game_format)
 
         frame.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
 
@@ -211,11 +211,11 @@ class DecksController:
         Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
         """
         
-        if hasattr(frame, "deck_list") and frame.deck_list.GetItemCount() > 0:
-            frame.deck_list.SetFocus()  # Imposta il focus sulla lista
-            frame.deck_list.Select(0)   # Seleziona il primo elemento
-            frame.deck_list.Focus(0)    # Sposta il focus sul primo elemento
-            frame.deck_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
+        if hasattr(frame, "card_list") and frame.card_list.GetItemCount() > 0:
+            frame.card_list.SetFocus()  # Imposta il focus sulla lista
+            frame.card_list.Select(0)   # Seleziona il primo elemento
+            frame.card_list.Focus(0)    # Sposta il focus sul primo elemento
+            frame.card_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
 
 
     def get_total_cards_in_deck(self, deck_name):
@@ -241,15 +241,15 @@ class DecksController:
     def select_last_deck(self, frame):
         """Seleziona l'ultimo mazzo nella lista."""
 
-        deck_list = frame.deck_list
-        self.update_deck_list(deck_list)
+        card_list = frame.card_list
+        self.update_card_list(card_list)
         frame.set_focus_to_list()
-        end_list = deck_list.GetItemCount()
-        deck_list.Select(end_list-1)
-        deck_list.Focus(end_list-1)
-        deck_list.EnsureVisible(end_list-1)
-        deck_list.SetFocus()
-        deck_list.Refresh()
+        end_list = card_list.GetItemCount()
+        card_list.Select(end_list-1)
+        card_list.Focus(end_list-1)
+        card_list.EnsureVisible(end_list-1)
+        card_list.SetFocus()
+        card_list.Refresh()
 
 
     def select_list_element(self, frame=None):
@@ -261,9 +261,9 @@ class DecksController:
             return
 
         # colora la riga selezionata
-        frame.deck_list.SetBackgroundColour('blue')
-        frame.deck_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        frame.deck_list.SetForegroundColour('white')
+        frame.card_list.SetBackgroundColour('blue')
+        frame.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        frame.card_list.SetForegroundColour('white')
 
 
     def select_and_focus_deck(self, frame, deck_name):
@@ -281,13 +281,13 @@ class DecksController:
 
         log.info(f"Tentativo di selezione e focus sul mazzo: {deck_name}")
         # Trova l'indice del mazzo nella lista
-        for i in range(frame.deck_list.GetItemCount()):
-            if frame.deck_list.GetItemText(i) == deck_name:
+        for i in range(frame.card_list.GetItemCount()):
+            if frame.card_list.GetItemText(i) == deck_name:
                 log.info(f"Mazzo trovato all'indice: {i}")
-                frame.deck_list.Select(i)  # Seleziona il mazzo
-                frame.deck_list.Focus(i)   # Imposta il focus sul mazzo
-                frame.deck_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
-                frame.deck_list.SetFocus() # Imposta il focus sulla lista dei mazzi
+                frame.card_list.Select(i)  # Seleziona il mazzo
+                frame.card_list.Focus(i)   # Imposta il focus sul mazzo
+                frame.card_list.EnsureVisible(i)  # Assicurati che il mazzo sia visibile
+                frame.card_list.SetFocus() # Imposta il focus sulla lista dei mazzi
                 break
 
 
@@ -420,21 +420,21 @@ class DecksController:
         return self.db_manager.get_deck_statistics(deck_name)
 
 
-    def update_deck_list(self, deck_list =None):
+    def update_card_list(self, card_list =None):
         """Aggiorna la lista dei mazzi."""
 
-        #deck_list = frame.deck_list
-        deck_list.DeleteAllItems()  # Pulisce la lista
+        #card_list = frame.card_list
+        card_list.DeleteAllItems()  # Pulisce la lista
         with db_session() as session:  # Usa il contesto db_session
             decks = session.query(Deck).all()
             for deck in decks:
-                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)  # Prima colonna
-                deck_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-                deck_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
+                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
                 
                 # Calcola e visualizza il numero totale di carte
                 total_cards = self.get_total_cards_in_deck(deck.name)
-                deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
 
     def upgrade_deck(self, deck_name):

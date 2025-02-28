@@ -82,6 +82,9 @@ class BasicView(wx.Frame):
         self.error_bg_color = self.cm.get_color(AppColors.ERROR_BG)
         self.error_text_color = self.cm.get_color(AppColors.ERROR_TEXT)
 
+        # applica il tema dark
+        self.cm.set_theme_dark()
+
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
         self.init_ui()                # Inizializza l'interfaccia utente
@@ -146,8 +149,8 @@ class BasicView(wx.Frame):
         """ Seleziona l'elemento attivo. """
 
         if hasattr(self, "card_list"):
-            self.card_list.SetItemBackgroundColour(row, 'blue')
-            self.card_list.SetItemTextColour(row, 'white')
+            self.card_list.SetItemBackgroundColour(row, eg.BLUE)
+            self.card_list.SetItemTextColour(row, eg.WHITE)
             self.card_list.Refresh()
 
 
@@ -305,7 +308,7 @@ class ListView(BasicView):
 
     def __init__(self, parent, title, size=(800, 600)):
         super().__init__(parent, title, size)
-        self.mode = None                                    # Modalità di visualizzazione (es. "collection", "deck")
+        self.mode = None                                  # Modalità di visualizzazione (es. "collection", "decks", "deck")
 
 
     def init_ui_elements(self):
@@ -326,79 +329,29 @@ class ListView(BasicView):
         raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
 
 
-    def on_refresh(self, event):
-        """Aggiorna l'elenco."""
+    def select_element(self, row):
+        """Seleziona l'elemento attivo e applica lo stile di focus."""
 
-        self.load_cards()
+        if hasattr(self, "card_list"):
+            # Applica lo stile di focus alla riga selezionata
+            #self.cm.apply_focus_style(row)
+            self.cm.apply_selection_style_to_list(self.card_list, row)
 
+            # Resetta lo stile delle altre righe
+            for i in range(self.card_list.GetItemCount()):
+                if i != row:
+                    self.cm.apply_default_style_to_list_item(self.card_list, i)
 
-
-class CollectionsListView(BasicView):
-    """
-        Classe per la visualizzazione della collezzione generale  di carte.
-    """
-
-    def __init__(self, parent, controller, title="Collezione Carte", size=(1200, 800)):
-        super().__init__(parent, title, size)
-        self.mode = "collection"
-        self.card_list = None       # Lista delle carte
-
-
-    def init_ui(self):
-        """Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre."""
-
-        self.panel = wx.Panel(self)
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.panel.SetSizer(self.sizer)
-
-        # imposta i colori di spondo giallo per finestra e pannello
-        self.BackgroundColour = 'black'
-        self.panel.BackgroundColour = 'black'
-
-        # imposta il font per il titolo
-        font = wx.Font(18, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-        title = wx.StaticText(self.panel, label=self.Title)
-        title.SetFont(font)
-        self.init_ui_elements()
+            # Forza il ridisegno della lista
+            self.card_list.Refresh()
 
 
-    def init_ui_elements(self):
-        """
-        Inizializza gli elementi dell'interfaccia utente.
-        Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
-        """
-        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
+    def on_item_focused(self, event):
+        """Gestisce l'evento di focus su una riga della lista."""
 
-
-
-class DecksListView(ListView):
-    """
-        Classe base per la visualizzazione di elenchi di mazzi.
-    """
-
-    def __init__(self, parent, title="Gestione Mazzi", size=(800, 600)):
-        super().__init__(parent, title, size)
-        #self.init_ui_elements()
-
-    def _ui_elements(self):
-        """Inizializza gli elementi dell'interfaccia utente specifici per la visualizzazione dei mazzi."""
-        super().init_ui_elements()
-        self.list_ctrl.AppendColumn("Mazzo", width=260)
-        self.list_ctrl.AppendColumn("Classe", width=200)
-        self.list_ctrl.AppendColumn("Formato", width=120)
-
-    def load_data(self):
-        """Carica i mazzi nella lista."""
-
-        decks = session.query(Deck).all()
-        self.list_ctrl.DeleteAllItems()
-        for deck in decks:
-            index = self.list_ctrl.InsertItem(self.list_ctrl.GetItemCount(), deck.name)
-            self.list_ctrl.SetItem(index, 1, deck.player_class)
-            self.list_ctrl.SetItem(index, 2, deck.game_format)
-
-
+        selected_item = event.GetIndex()
+        self.select_element(selected_item)  # Applica lo stile di focus alla riga selezionata
+        self.card_list.Refresh()  # Forza il ridisegno della lista
 
 
 #@@@# Start del modulo

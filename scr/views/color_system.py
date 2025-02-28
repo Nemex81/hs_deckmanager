@@ -14,6 +14,10 @@
 # lib
 import wx
 from enum import Enum, auto
+from utyls import enu_glob as eg
+from utyls import helper as hp
+from utyls import logger as log
+#import pdb
 
 
 #@@# Sezione Enum per i colori e i temi
@@ -123,6 +127,19 @@ class ColorManager:
         list_ctrl.SetItemTextColour(item_index, self.get_color(AppColors.DEFAULT_TEXT))
 
 
+    def apply_selection_style_to_list_item(self, list_ctrl, item_index):
+        """
+        Applica lo stile di selezione a un elemento di una ListCtrl.
+
+        :param list_ctrl: La ListCtrl contenente l'elemento.
+        :param item_index: L'indice dell'elemento da modificare.
+        """
+
+        list_ctrl.SetItemBackgroundColour(item_index, self.get_color(AppColors.FOCUS_BG))
+        list_ctrl.SetItemTextColour(item_index, self.get_color(AppColors.FOCUS_TEXT))
+        list_ctrl.Refresh()
+
+
     def apply_selection_style_to_list(self, list_ctrl, selected_item=None):
         """
         Applica lo stile di selezione a un elemento di una ListCtrl.
@@ -157,3 +174,26 @@ class ColorManager:
         :param theme: Un valore dell'enum ColorTheme.
         """
         self.theme = theme
+
+
+    def set_theme_dark(self):
+        """Imposta il tema scuro."""
+        self.set_theme(ColorTheme.DARK)
+
+
+    def set_theme_light(self):
+        """Imposta il tema chiaro."""
+        self.set_theme(ColorTheme.LIGHT)
+
+
+    def get_theme(self):
+        """Restituisce il tema corrente."""
+        return self.theme
+
+
+
+
+
+#@@@# Start del modulo
+if __name__ != "__main__":
+    log.debug(f"Carico: {__name__}")

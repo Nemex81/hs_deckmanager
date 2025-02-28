@@ -14,14 +14,12 @@
 """
 
 # lib
-import wx, pyperclip
+import wx#, pyperclip
 import wx.lib.newevent
-from sqlalchemy.exc import SQLAlchemyError
+#from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
-from .proto_views import BasicView
+from .proto_views import BasicView, ListView
 from .deck_stats_dialog import DeckStatsDialog
-#from .collection_view import CardCollectionFrame
-#from .deck_view import DeckViewFrame
 import scr.views.view_components as vc              # Componenti dell'interfaccia utente
 from utyls import enu_glob as eg                    # Enumerazioni globali
 from utyls import helper as hp                      # Funzioni helper
@@ -33,7 +31,8 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-class DecksManagerFrame(BasicView):
+#class DecksManagerFrame(BasicView):
+class DecksManagerFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent=None, controller=None):
@@ -43,6 +42,7 @@ class DecksManagerFrame(BasicView):
         self.db_manager = self.parent.controller.db_manager
         #self.controller = self.parent.controller.decks_controller
         self.controller = controller
+        self.mode = "decks"
 
         # Timer per il debounce
         self.timer = wx.Timer(self)
@@ -57,13 +57,13 @@ class DecksManagerFrame(BasicView):
 
         # titolo della finestra
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
-        self.deck_list = vc.create_list_ctrl(
+        self.card_list = vc.create_list_ctrl(
             parent=self.panel,
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
 
         # Collega gli eventi di focus alla lista
-        #self.bind_focus_events(self.deck_list)
+        #self.bind_focus_events(self.card_list)
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -95,7 +95,7 @@ class DecksManagerFrame(BasicView):
         vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Aggiungi la lista dei mazzi al sizer
-        vc.add_to_sizer(main_sizer, self.deck_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        vc.add_to_sizer(main_sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
         vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
@@ -126,12 +126,12 @@ class DecksManagerFrame(BasicView):
         #self.search_bar.SetFocus()
 
         # Imposta il focus sul primo deck della lista delle carte
-        self.select_and_focus_deck(self.deck_list.GetItemText(0))
-        #self.parent.controller.decks_controller.select_and_focus_deck(self, self.deck_list.GetItemText(0))
+        self.select_and_focus_deck(self.card_list.GetItemText(0))
+        #self.parent.controller.decks_controller.select_and_focus_deck(self, self.card_list.GetItemText(0))
 
 
         #aggiorna la lista
-        #self.deck_list.Refresh()
+        #self.card_list.Refresh()
 
         # Imposta il layout principale
         #self.Layout()
@@ -149,10 +149,10 @@ class DecksManagerFrame(BasicView):
 
         # carichiamo i mazzi dal database usando db_session
         controller = self.parent.controller.decks_controller
-        controller.load_decks(self.deck_list)
+        controller.load_decks(self.card_list)
 
         # Imposta il colore di sfondo predefinito per tutte le righe
-        self.cm.reset_all_styles(self.deck_list)
+        self.cm.reset_all_styles(self.card_list)
 
         # colora il mazzo selezionato nella lista
         self.parent.controller.decks_controller.select_list_element(self)
@@ -165,11 +165,11 @@ class DecksManagerFrame(BasicView):
         return control.get_total_cards_in_deck(deck_name)
 
 
-    def update_deck_list(self):
+    def update_card_list(self):
         """ Aggiorna la lista dei mazzi. """
 
         controller = self.parent.controller.decks_controller
-        controller.update_deck_list(self.deck_list)
+        controller.update_card_list(self.card_list)
 
 
     def update_status(self, message):
@@ -204,7 +204,7 @@ class DecksManagerFrame(BasicView):
         self.controller.apply_search_filter(self, search_text)
 
         # sposta il focus sul primo risultato ed evidezia la riga
-        self.select_and_focus_deck(self.deck_list.GetItemText(0))
+        self.select_and_focus_deck(self.card_list.GetItemText(0))
 
 
     def on_timer(self, event):
@@ -278,7 +278,7 @@ class DecksManagerFrame(BasicView):
         controller = self.parent.controller.decks_controller
         deck_name = self.get_selected_deck()
         if controller.upgrade_deck(deck_name):
-                self.update_deck_list()
+                self.update_card_list()
                 self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo                
 
 
@@ -314,7 +314,7 @@ class DecksManagerFrame(BasicView):
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 if controller.delete_deck(deck_name):
-                    self.update_deck_list()
+                    self.update_card_list()
                     controller.select_last_deck(self)
             else:
                 log.info("Operazione annullata.")
@@ -336,12 +336,12 @@ class DecksManagerFrame(BasicView):
 
         # cerchiamo la parola richiesta dall'utente sia nei nomi dei mazzi sia nella classe
         search_text = self.search_bar.GetValue()
-        self.deck_list.DeleteAllItems()
+        self.card_list.DeleteAllItems()
         decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
         for deck in decks:
-            Index = self.deck_list.InsertItem(self.deck_list.GetItemCount(), deck.name)
-            self.deck_list.SetItem(Index, 1, deck.player_class)
-            self.deck_list.SetItem(Index, 2, deck.game_format)
+            Index = self.card_list.InsertItem(self.card_list.GetItemCount(), deck.name)
+            self.card_list.SetItem(Index, 1, deck.player_class)
+            self.card_list.SetItem(Index, 2, deck.game_format)
 
 
     def on_close(self, event):

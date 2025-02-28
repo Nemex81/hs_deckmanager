@@ -24,7 +24,7 @@ import wx.lib.newevent
 #from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
-from .proto_views import BasicView, ListView, CollectionsListView
+from .proto_views import BasicView, ListView
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
@@ -38,7 +38,8 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-class CardCollectionFrame(BasicView):
+#class CardCollectionFrame(BasicView):
+class CardCollectionFrame(ListView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller):
@@ -50,8 +51,6 @@ class CardCollectionFrame(BasicView):
         if not self.controller:
             log.error("Il controller non può essere None.")
             raise ValueError("Il controller non può essere None.")
-
-        
 
         # Inizializza il timer per il debounce
         self.timer = wx.Timer(self)                                 # Timer per il debounce
@@ -229,9 +228,10 @@ class CardCollectionFrame(BasicView):
 
         # colora la riga selezionata
         self.select_element(0)
-        self.card_list.SetBackgroundColour('blue')
-        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.card_list.SetForegroundColour('white')
+        self.cm.apply_focus_style(self.card_list)
+        #self.card_list.SetBackgroundColour('blue')
+        #self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        #self.card_list.SetForegroundColour('white')
 
         # Forza il ridisegno della lista
         self.card_list.Refresh()
