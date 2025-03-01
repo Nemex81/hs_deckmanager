@@ -454,11 +454,10 @@ class ProtoDeckList(ListView):
 
     def __init__(self, parent, controller, deck_name):
         title = f"Mazzo: {deck_name}"
-        super().__init__(parent=parent, title=title)
         self.parent = parent
         self.controller = controller
         self.db_manager = self.controller.db_manager
-        self.mode = "collection"  # Modalità "deck" per gestire i mazzi
+        self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.card_list = None
         self.deck_name = deck_name
         self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
@@ -467,7 +466,8 @@ class ProtoDeckList(ListView):
         if not self.deck_content:
             raise ValueError(f"Mazzo non trovato: {deck_name}")
 
-
+        # chiamata al genitore ListView
+        super().__init__(parent=parent, title=title)
 
 
 
