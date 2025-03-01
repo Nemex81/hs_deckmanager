@@ -18,7 +18,7 @@ import wx.lib.newevent
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import BasicView, ListView
+from .proto_views import ProtoDeckList, BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .color_system import AppColors
 from utyls import enu_glob as eg
@@ -30,10 +30,9 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-#class DeckViewFrame(BasicView):
 class DeckViewFrame(ListView):
+#class DeckViewFrame(ProtoDeckList):
     """Finestra per gestire le carte di un mazzo."""
-
 
     def __init__(self, parent, controller, deck_name):
         """ Costruttore della classe DeckViewFrame. """
@@ -53,6 +52,7 @@ class DeckViewFrame(ListView):
         
         # Chiamata al costruttore della classe base
         super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
+        #super().__init__(parent, controller, deck_name)
 
         # Timer per il debounce
         self.timer = wx.Timer(self)
@@ -149,7 +149,7 @@ class DeckViewFrame(ListView):
             # Aggiorna la finestra
             self.card_list.Refresh()
 
-        # Imposta il layout principale
+        # forza la riscrittura del layout
         self.Layout()
 
         # Aggiungo eventi
@@ -236,6 +236,47 @@ class DeckViewFrame(ListView):
 
 
     def load_cards(self, filters=None):
+        """Carica le carte nel mazzo, applicando eventuali filtri."""
+
+        # Verifica che il mazzo sia stato caricato correttamente
+        if not hasattr(self, "deck_content") or not self.deck_content:
+            log.error("Mazzo non caricato correttamente.")
+            return
+
+        # Verifica che la card_list sia inizializzata
+        if self.card_list is None:
+            log.error("card_list non è stata inizializzata.")
+            return
+
+        # Pulisce la lista delle carte
+        self.card_list.DeleteAllItems()
+
+        # Recupera le carte dal mazzo
+        cards = self.deck_content.get("cards", [])
+        if not cards:
+            log.warning("Nessuna carta trovata nel mazzo.")
+            return
+
+        # Filtra le carte in base ai criteri specificati
+        filtered_cards = []
+        for card_data in cards:
+            if filters and "name" in filters:
+                if filters["name"].lower() not in card_data["name"].lower():
+                    continue  # Salta le carte che non corrispondono al filtro
+            filtered_cards.append(card_data)
+
+        # Aggiunge le carte filtrate alla lista
+        for card_data in filtered_cards:
+            self._add_card_to_list(card_data)
+
+        # Applica lo stile predefinito a tutte le righe
+        self.cm.apply_default_style(self.card_list)
+
+        # Seleziona la prima carta, se presente
+        if self.card_list.GetItemCount() > 0:
+            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
+
+    def last_cards(self, filters=None):
         """vecchia versioen del metodo che Carica le carte nel mazzo, applicando eventuali filtri."""
 
         if not hasattr(self, "deck_content") or not self.deck_content:

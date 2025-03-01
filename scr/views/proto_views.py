@@ -20,6 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards
 from .color_system import ColorManager, AppColors, ColorTheme
+import scr.views.view_components as vc
 from utyls import helper as hp
 from utyls import enu_glob as eg
 from utyls import logger as log
@@ -67,7 +68,7 @@ class BasicView(wx.Frame):
         Classe base per le finestre principali dell'interfaccia utente.
     """
     
-    def __init__(self, parent, title, size=(500, 400)):
+    def __init__(self, parent, title, size=(900, 700)):
         super().__init__(parent=parent, title=title, size=size)
         self.parent = parent               # Finestra genitore
         self.controller = None             # Controller per l'interfaccia
@@ -273,7 +274,7 @@ class SingleCardView(BasicDialog):
             subtypes = [st.value for st in eg.EnuSpellSubType]
 
         elif card_type == eg.EnuCardType.CREATURA.value:
-            subtypes = [st.value for st in EnuPetSubType]
+            subtypes = [st.value for st in eg.EnuPetSubType]
 
         else:
             subtypes = []
@@ -310,6 +311,11 @@ class ListView(BasicView):
         super().__init__(parent, title, size)
         self.mode = None                                  # Modalità di visualizzazione (es. "collection", "decks", "deck")
 
+        # Timer per il debounce
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+
 
     def init_ui_elements(self):
         """
@@ -322,11 +328,54 @@ class ListView(BasicView):
 
     def load_cards(self, filters=None):
         """
-        Carica i dati nell'elenco.
-        Deve essere implementato nelle classi derivate.
+        Carica le carte nella lista.
+        Questo metodo deve essere implementato nelle classi derivate.
         """
         log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
         raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
+
+
+    def refresh_card_list(self):
+        """Aggiorna la lista delle carte con i dati più recenti dal database."""
+
+        log.debug("Aggiornamento della lista delle carte...")        
+
+        # Ricarica il contenuto del mazzo dal database
+        self.deck_content = self.controller.db_manager.get_deck(self.deck_name)
+
+         # Ricarica le carte nella lista
+        self.load_cards()        
+        log.debug("Lista delle carte aggiornata.")
+
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata."""
+
+        items = []
+        for i in range(self.card_list.GetItemCount()):
+            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+            items.append(item)
+
+        self._sort_items(items, col)
+
+        self.card_list.DeleteAllItems()
+        for item in items:
+            self.card_list.Append(item)
+
+
+    def select_card_by_name(self, card_name):
+        """Seleziona una carta nella lista in base al nome."""
+
+        if not card_name:
+            return
+
+        for i in range(self.card_list.GetItemCount()):
+            if self.card_list.GetItemText(i) == card_name:
+                self.card_list.Select(i)
+                self.card_list.Focus(i)
+                self.card_list.EnsureVisible(i)
+                self.card_list.SetFocus()
+                break
 
 
     def select_element(self, row):
@@ -346,12 +395,80 @@ class ListView(BasicView):
             self.card_list.Refresh()
 
 
+    def set_focus_to_list(self):
+        """Imposta il focus sulla prima carta della lista carte."""
+
+        if hasattr(self, "card_list"):
+            self.card_list.SetFocus()
+            self.card_list.Select(0)
+            self.card_list.Focus(0)
+            self.card_list.EnsureVisible(0)
+
+
+    def on_timer(self, event):
+        """Esegue la ricerca dopo il timeout del debounce."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
+
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        if not search_text:
+            # ricarica le carte del mazzo
+            self.load_cards()
+
+        # Avvia il timer per il debounce (es. 300 ms)
+        self.timer.Stop()  # Ferma il timer precedente
+        self.timer.Start(500, oneShot=True)
+    
+
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+        search_text = event.search_text
+        self._apply_search_filter(search_text)
+        self.set_focus_to_list()
+
+
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self._apply_search_filter(search_text)
+
+
     def on_item_focused(self, event):
         """Gestisce l'evento di focus su una riga della lista."""
 
         selected_item = event.GetIndex()
         self.select_element(selected_item)  # Applica lo stile di focus alla riga selezionata
         self.card_list.Refresh()  # Forza il ridisegno della lista
+
+
+
+class ProtoDeckList(ListView):
+    """ Finestra di dialogo per la visualizzazione di un mazzo specifico. """
+
+    def __init__(self, parent, controller, deck_name):
+        title = f"Mazzo: {deck_name}"
+        super().__init__(parent=parent, title=title)
+        self.parent = parent
+        self.controller = controller
+        self.db_manager = self.controller.db_manager
+        self.mode = "collection"  # Modalità "deck" per gestire i mazzi
+        self.card_list = None
+        self.deck_name = deck_name
+        self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+
+        # Se il mazzo non esiste, solleva un'eccezione
+        if not self.deck_content:
+            raise ValueError(f"Mazzo non trovato: {deck_name}")
+
+
+
 
 
 #@@@# Start del modulo
