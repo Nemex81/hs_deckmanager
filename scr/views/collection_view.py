@@ -24,7 +24,7 @@ import wx.lib.newevent
 #from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
-from .proto_views import BasicView, ListView
+from .proto_views import ProtoCollectionList, BasicView, ListView
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
@@ -39,11 +39,12 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 #class CardCollectionFrame(BasicView):
-class CardCollectionFrame(ListView):
+#class CardCollectionFrame(ListView):
+class CardCollectionFrame(ProtoCollectionList):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller):
-        super().__init__(parent, title="Collezione")
+        #super().__init__(parent, title="Collezione")
         self.mode = "collection"
         self.parent = parent
         #self.controller = self.parent.controller
@@ -51,6 +52,9 @@ class CardCollectionFrame(ListView):
         if not self.controller:
             log.error("Il controller non può essere None.")
             raise ValueError("Il controller non può essere None.")
+
+        # chiamata a super del costruttore
+        super().__init__(parent, controller=controller)
 
         # Inizializza il timer per il debounce
         self.timer = wx.Timer(self)                                 # Timer per il debounce

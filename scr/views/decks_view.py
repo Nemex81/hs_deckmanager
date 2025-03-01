@@ -32,7 +32,7 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 #class DecksManagerFrame(BasicView):
-class DecksManagerFrame(ListView):
+class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent=None, controller=None):

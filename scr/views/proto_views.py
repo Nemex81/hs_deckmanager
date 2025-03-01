@@ -489,6 +489,31 @@ class ProtoDeckList(ListView):
         #element.Refresh()
 
 
+
+class ProtoCollectionList(ListView):
+    """ Finestra di dialogo per la visualizzazione della collezione di carte. """
+
+    def __init__(self, parent, controller):
+        title = "Collezione"
+        super().__init__(parent=parent, title=title)
+        self.parent = parent
+        self.controller = controller
+        self.db_manager = self.controller.db_manager
+        self.mode = "collection"  # Modalità "collection" per gestire la collezione di carte
+        self.card_list = None
+        self.search_ctrl = None
+
+        # chiamata al genitore ListView
+        #super().__init__(parent=parent, title=title)
+
+
+    def init_ui_elements(self):
+        """Inizializza gli elementi dell'interfaccia utente."""
+        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
+
+
+
+
 #@@@# Start del modulo
 if __name__ != "__main__":
     log.debug(f"Carico: {__name__}")

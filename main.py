@@ -14,6 +14,7 @@
 
         Questo progetto implementa un'applicazione per la gestione di mazzi del gioco di carte collezionabili Hearthstone.
         Permette di creare, salvare, caricare, modificare e visualizzare mazzi di Hearthstone.
+        
         Include anche una funzionalità per la gestione di una collezione di carte, con la possibilità di filtrare le carte
         per nome, costo in mana, tipo, sottotipo, rarità ed espansione.
 

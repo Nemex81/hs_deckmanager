@@ -21,7 +21,7 @@ from .models import load_cards, db_session, Deck
 from .views.main_views import HearthstoneAppFrame
 from .views.collection_view import CardCollectionFrame
 from .views.deck_view import DeckViewFrame
-from .views.decks_view import DecksManagerFrame
+from .views.decks_view import DecksViewFrame
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
@@ -157,14 +157,19 @@ class DecksController:
     """ Controller per la vista dei mazzi. """
 
     def __init__(self, parent=None, db_manager=None):
-        self.parent= parent
+        self.parent = parent
         self.db_manager = db_manager
+        self.deck_controller = None
 
+
+    def new_run_deck_frame(self, parent=None, deck_name=None):
+        self.parent.run_deck_frame(parent, deck_name=deck_name)
 
     def run_deck_frame(self, parent=None, deck_name=None):
         """ carica l'interfaccia per la gestione di un mazzo. """
 
         frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
+        #frame = DeckViewFrame(parent, controller=self.deck_controller, deck_name=deck_name)
         frame.Show()
         parent.Hide()
 
@@ -489,35 +494,19 @@ class MainController():
 
     def run_decks_frame(self, parent=None):
         """Carica l'interfaccia per la gestione dei mazzi."""
-        frame = DecksManagerFrame(parent=parent, controller=self.decks_controller)
+        frame = DecksViewFrame(parent=parent, controller=self.decks_controller)
+        frame.deck_controller = self.deck_controller
         frame.Show()
         parent.Hide()
 
 
-    def last_run_decks_frame(self, parent=None):
-        """ carica l'interfaccia per la gestione dei mazzi. """
+    def run_deck_frame(self, parent=None, deck_name=None):
+        """ carica l'interfaccia per la gestione di un mazzo. """
 
-        frame = DecksManagerFrame(parent, controller=self)
-        frame.set_controller(self.decks_controller)
+        #frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
+        frame = DeckViewFrame(parent, controller=self.deck_controller, deck_name=deck_name)
         frame.Show()
         parent.Hide()
-
-
-    def last_run_collection_frame(self, parent=None):
-        """ carica l'interfaccia pe rla collezzione completa di carte. """
-
-        frame = CardCollectionFrame(parent=parent)#, controller=self)
-        frame.Show()
-        parent.Hide()
-
-
-    def last_run(self):
-        """ avvia l'applicazione. """
-
-        app = wx.App(False)
-        frame = HearthstoneAppFrame(parent=None, controller=self)
-        frame.Show()
-        app.MainLoop()
 
 
     def load_decks(self):
