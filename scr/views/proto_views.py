@@ -470,6 +470,24 @@ class ProtoDeckList(ListView):
         super().__init__(parent=parent, title=title)
 
 
+    def set_focus_style(self, element):
+        """
+        Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
+        """
+        self.reset_focus_style_for_all_buttons()
+        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
+        self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
+        #element.Refresh()                           # Forza il ridisegno dell'elemento
+
+
+    def reset_focus_style(self, element):
+        """
+        Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
+        """
+        log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
+        self.cm.apply_default_style(element)
+        #element.Refresh()
+
 
 #@@@# Start del modulo
 if __name__ != "__main__":

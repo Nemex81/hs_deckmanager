@@ -40,7 +40,6 @@ class DeckViewFrame(ProtoDeckList):
         # Inizializzazione delle variabili PRIMA di chiamare super().__init__
         self.parent = parent
         self.controller = controller
-        self.deck_manager = self.controller.db_manager
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.card_list = None
         self.deck_name = deck_name
@@ -202,37 +201,15 @@ class DeckViewFrame(ProtoDeckList):
             card_data.get("name", "-"),
             str(card_data.get("mana_cost", "-")) if card_data.get("mana_cost") is not None else "-",
             str(card_data.get("quantity", "-")) if card_data.get("quantity") else "-",
-            card_data.get("card_type", "-"),
-            card_data.get("spell_type", "-"),
-            card_data.get("card_subtype", "-"),
+            card_data.get("card_type", "-") if card_data.get("card_type") else "-",
+            card_data.get("spell_type", "-") if card_data.get("spell_type") else "-",
+            card_data.get("card_subtype", "-") if card_data.get("card_subtype") else "-",
             str(card_data.get("attack", "-")) if card_data.get("attack") is not None else "-",
             str(card_data.get("health", "-")) if card_data.get("health") is not None else "-",
             str(card_data.get("durability", "-")) if card_data.get("durability") is not None else "-",
-            card_data.get("rarity", "-"),
-            card_data.get("expansion", "-")
+            card_data.get("rarity", "-") if card_data.get("rarity") else "-",
+            card_data.get("expansion", "-") if card_data.get("expansion") else "-"
         ])
-
-
-    def new_load_cards(self, filters=None):
-        """ Carica le carte nel mazzo, applicando eventuali filtri. """
-
-        load_cards(self.card_list, self.deck_content, self.mode, filters)
-
-        # Imposta il colore di sfondo predefinito per tutte le righe
-        self.card_list.SetBackgroundColour('black')
-        self.cm.reset_all_styles(self.card_list)
-
-        # colora la riga selezionata
-        self.card_list.SetBackgroundColour('black')
-        self.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        self.card_list.SetForegroundColour('white')
-        self.select_element(0)
-
-        self.card_list.SetItemBackgroundColour(0, 'blue')
-        self.card_list.SetItemTextColour(0, 'white')
-
-        # Forza il ridisegno della lista
-        self.card_list.Refresh()
 
 
     def load_cards(self, filters=None):
@@ -241,11 +218,13 @@ class DeckViewFrame(ProtoDeckList):
         # Verifica che il mazzo sia stato caricato correttamente
         if not hasattr(self, "deck_content") or not self.deck_content:
             log.error("Mazzo non caricato correttamente.")
+            raise ValueError("Mazzo non caricato correttamente.")
             return
 
         # Verifica che la card_list sia inizializzata
         if self.card_list is None:
             log.error("card_list non è stata inizializzata.")
+            raise ValueError("card_list non è stata inizializzata.")
             return
 
         # Pulisce la lista delle carte
@@ -263,6 +242,7 @@ class DeckViewFrame(ProtoDeckList):
             if filters and "name" in filters:
                 if filters["name"].lower() not in card_data["name"].lower():
                     continue  # Salta le carte che non corrispondono al filtro
+
             filtered_cards.append(card_data)
 
         # Aggiunge le carte filtrate alla lista
@@ -276,7 +256,11 @@ class DeckViewFrame(ProtoDeckList):
         if self.card_list.GetItemCount() > 0:
             self.cm.apply_selection_style_to_list_item(self.card_list, 0)
 
-    def last_cards(self, filters=None):
+        #aggiorna la visualizzazione della card_list
+        self.card_list.Refresh()
+
+
+    def very_last_load_cards(self, filters=None):
         """vecchia versioen del metodo che Carica le carte nel mazzo, applicando eventuali filtri."""
 
         if not hasattr(self, "deck_content") or not self.deck_content:
@@ -309,7 +293,7 @@ class DeckViewFrame(ProtoDeckList):
         log.debug("Aggiornamento della lista delle carte...")        
 
         # Ricarica il contenuto del mazzo dal database
-        self.deck_content = self.controller.db_manager.get_deck(self.deck_name)
+        self.deck_content = self.parent.controller.db_manager.get_deck(self.deck_name)
 
          # Ricarica le carte nella lista
         self.load_cards()        
@@ -374,6 +358,7 @@ class DeckViewFrame(ProtoDeckList):
             dlg = CardEditDialog(self, card)
             if dlg.ShowModal() == wx.ID_OK:
                 self.load_cards()
+                self.refresh_card_list()
                 wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                 self.select_card_by_name(card_name)
 
