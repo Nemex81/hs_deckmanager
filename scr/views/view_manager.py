@@ -79,7 +79,7 @@ class WinController:
         self.current_window = self.windows[window_key]
         self.current_window.Show()
         if parent:
-            self.current_window.SetParent(parent)
+            self.current_window.parent = parent
 
     def close_current_window(self):
         """Chiude la finestra corrente e ripristina la genitore."""
