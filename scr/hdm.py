@@ -44,6 +44,11 @@ class AppBuilder:
 
     def build_app(self):
         """Restituisce l'applicazione inizializzata."""
+        # Imposta i controller genitori
+        self.collection_controller.parent = self.main_controller
+        self.decks_controller.parent = self.main_controller
+        self.deck_controller.parent = self.main_controller
+
         return self.main_controller
 
     def run_app(self):

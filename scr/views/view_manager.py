@@ -11,6 +11,7 @@ from enum import Enum
 from .main_views import HearthstoneAppFrame
 from .collection_view import CardCollectionFrame
 from .decks_view import DecksViewFrame
+from .deck_view import DeckViewFrame
 from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb

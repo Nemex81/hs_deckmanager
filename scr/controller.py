@@ -164,16 +164,9 @@ class DecksController:
         self.deck_controller = None
 
 
-    def new_run_deck_frame(self, parent=None, deck_name=None):
-        self.parent.run_deck_frame(parent, deck_name=deck_name)
-
     def run_deck_frame(self, parent=None, deck_name=None):
-        """ carica l'interfaccia per la gestione di un mazzo. """
-
-        frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
-        #frame = DeckViewFrame(parent, controller=self.deck_controller, deck_name=deck_name)
-        frame.Show()
-        parent.Hide()
+        """Apre la finestra di un mazzo specifico."""
+        self.parent.run_deck_frame(parent, deck_name)
 
 
     def load_decks(self, card_list=None):
@@ -495,60 +488,10 @@ class MainController:
 
     def run_deck_frame(self, parent=None, deck_name=None):
         """Apre la finestra di un mazzo specifico."""
-        window_key = f"{eg.WindowKey.DECK.value}_{deck_name}" if deck_name else eg.WindowKey.DECK
-        self.win_controller.create_window(window_key, parent, self.deck_controller, deck_name=deck_name)
+        window_key = eg.WindowKey.DECK
+        self.win_controller.create_window(window_key, parent, controller=self.deck_controller, deck_name=deck_name)
         self.win_controller.open_window(window_key, parent)
 
-
-
-
-class LastMainController():
-    """ gestore dell'applicazione. """
-
-    def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None):
-        self.win_controller = WinController()
-        self.db_manager = db_manager
-        self.collection_controller = collection_controller
-        self.decks_controller = decks_controller
-        self.deck_controller = deck_controller
-
-
-    def run(self):
-        """Avvia l'applicazione."""
-
-        app = wx.App(False)
-        frame = HearthstoneAppFrame(parent=None, controller=self)
-        frame.Show()
-        app.MainLoop()
-
-
-    def run_collection_frame(self, parent=None):
-        """Carica l'interfaccia per la collezione completa di carte."""
-        frame = CardCollectionFrame(parent=parent, controller=self.collection_controller)
-        frame.Show()
-        parent.Hide()
-
-
-    def run_decks_frame(self, parent=None):
-        """Carica l'interfaccia per la gestione dei mazzi."""
-        frame = DecksViewFrame(parent=parent, controller=self.decks_controller)
-        frame.Show()
-        parent.Hide()
-
-
-    def run_deck_frame(self, parent=None, deck_name=None):
-        """ carica l'interfaccia per la gestione di un mazzo. """
-
-        #frame = DeckViewFrame(parent, controller=self, deck_name=deck_name)
-        frame = DeckViewFrame(parent, controller=self.deck_controller, deck_name=deck_name)
-        frame.Show()
-        parent.Hide()
-
-
-    def load_decks(self):
-        """ carica i mazzi dal database. """
-
-        return self.db_manager.get_decks()
 
 
 
