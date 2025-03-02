@@ -182,7 +182,10 @@ class DecksViewFrame(ListView):
         """Restituisce il mazzo selezionato nella lista."""
 
         controller = self.parent.controller.decks_controller
-        return controller.get_selected_deck(self)
+        #return controller.get_selected_deck(self)
+        selection = self.card_list.GetFirstSelected()
+        if selection != wx.NOT_FOUND:
+            return self.card_list.GetItemText(selection)
 
 
     def select_and_focus_deck(self, deck_name):
