@@ -317,6 +317,25 @@ class ListView(BasicView):
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
 
+    def set_focus_style(self, element):
+        """
+        Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
+        """
+        self.reset_focus_style_for_all_buttons()
+        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
+        self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
+        #element.Refresh()                           # Forza il ridisegno dell'elemento
+
+
+    def reset_focus_style(self, element):
+        """
+        Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
+        """
+        log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
+        self.cm.apply_default_style(element)
+        #element.Refresh()
+
+
     def init_ui_elements(self):
         """
         Inizializza gli elementi dell'interfaccia utente.
@@ -339,13 +358,7 @@ class ListView(BasicView):
         """Aggiorna la lista delle carte con i dati più recenti dal database."""
 
         log.debug("Aggiornamento della lista delle carte...")        
-
-        # Ricarica il contenuto del mazzo dal database
-        self.deck_content = self.controller.db_manager.get_deck(self.deck_name)
-
-         # Ricarica le carte nella lista
-        self.load_cards()        
-        log.debug("Lista delle carte aggiornata.")
+        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
 
 
     def sort_cards(self, col):
@@ -474,23 +487,7 @@ class ProtoDeckList(ListView):
         raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
 
 
-    def set_focus_style(self, element):
-        """
-        Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
-        """
-        self.reset_focus_style_for_all_buttons()
-        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
-        self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
-        #element.Refresh()                           # Forza il ridisegno dell'elemento
 
-
-    def reset_focus_style(self, element):
-        """
-        Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
-        """
-        log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
-        self.cm.apply_default_style(element)
-        #element.Refresh()
 
 
 
