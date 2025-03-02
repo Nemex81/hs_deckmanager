@@ -100,11 +100,13 @@ class DeckViewFrame(ListView):
             ]
         )
 
+
+        # Applica lo stile predefinito alla lista
+        #self.cm.apply_default_style(self.card_list)
+
         # Collega gli eventi di focus alla lista
         #self.bind_focus_events(self.card_list)
 
-        # Applica lo stile predefinito alla lista
-        self.cm.apply_default_style(self.card_list)
 
         # Aggiungo la lista alla finestra
         add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)

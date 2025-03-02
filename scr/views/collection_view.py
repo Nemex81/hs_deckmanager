@@ -28,6 +28,7 @@ from .builder.view_components import create_button, create_list_ctrl, create_siz
 from .proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
+from .builder.color_system import AppColors
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
@@ -64,9 +65,9 @@ class CardCollectionFrame(ListView):
     def init_ui_elements(self):
         """Inizializza l'interfaccia utente utilizzando le funzioni helper."""
 
-        # Impostazioni finestra principale
-        #self.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
-        #self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
+        # coloro il bg del pannello 
+        self.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
+        self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
 
         # Creazione degli elementi dell'interfaccia
 
