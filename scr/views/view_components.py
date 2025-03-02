@@ -52,8 +52,8 @@ cm = ColorManager()
 #@@# sezioni costanti per la configurazione predefinita degli elementi dell'interfaccia utente
 
 # Configurazione di default
-DEFAULT_BUTTON_SIZE = (250, 90)
-DEFAULT_FONT_SIZE = 20
+DEFAULT_BUTTON_SIZE = (200, 70)
+DEFAULT_FONT_SIZE = 18
 DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
 
 

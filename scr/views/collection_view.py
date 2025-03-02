@@ -39,12 +39,12 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 #class CardCollectionFrame(BasicView):
-#class CardCollectionFrame(ListView):
-class CardCollectionFrame(ProtoCollectionList):
+class CardCollectionFrame(ListView):
+#class CardCollectionFrame(ProtoCollectionList):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller):
-        #super().__init__(parent, title="Collezione")
+        super().__init__(parent, title="Collezione")
         self.mode = "collection"
         self.parent = parent
         #self.controller = self.parent.controller
@@ -54,7 +54,7 @@ class CardCollectionFrame(ProtoCollectionList):
             raise ValueError("Il controller non può essere None.")
 
         # chiamata a super del costruttore
-        super().__init__(parent, controller=controller)
+        #super().__init__(parent=parent, controller=controller)
 
         # Inizializza il timer per il debounce
         self.timer = wx.Timer(self)                                 # Timer per il debounce
