@@ -18,7 +18,7 @@ import wx.lib.newevent
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import ProtoDeckList, BasicView, ListView
+from .proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .color_system import AppColors
 from utyls import enu_glob as eg
@@ -31,7 +31,6 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 class DeckViewFrame(ListView):
-#class DeckViewFrame(ProtoDeckList):
     """Finestra per gestire le carte di un mazzo."""
 
     def __init__(self, parent, controller, deck_name):

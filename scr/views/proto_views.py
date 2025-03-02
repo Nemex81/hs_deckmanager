@@ -462,59 +462,6 @@ class ListView(BasicView):
 
 
 
-class ProtoDeckList(ListView):
-    """ Finestra di dialogo per la visualizzazione di un mazzo specifico. """
-
-    def __init__(self, parent, controller, deck_name):
-        title = f"Mazzo: {deck_name}"
-        super().__init__(parent=parent, title=title)
-        self.parent = parent
-        self.controller = controller
-        self.db_manager = self.controller.db_manager
-        self.mode = "deck"  # Modalità "deck" per gestire i mazzi
-        self.card_list = None
-        self.deck_name = deck_name
-        self.deck_content = None#self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
-
-
-    def init_ui_elements(self):
-        """ Da implementare nelle classi derivate. """
-        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
-
-
-    def load_cards(self, filters=None):
-        """ Da implementare nelle classi derivate. """
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
-
-
-
-
-
-
-class ProtoCollectionList(ListView):
-    """ Finestra di dialogo per la visualizzazione della collezione di carte. """
-
-    def __init__(self, parent, controller):
-        title = "Collezione"
-        super().__init__(parent=parent, title=title)
-        self.parent = parent
-        self.controller = controller
-        self.db_manager = self.controller.db_manager
-        self.mode = "collection"  # Modalità "collection" per gestire la collezione di carte
-        self.card_list = None
-        self.search_ctrl = None
-
-        # chiamata al genitore ListView
-        #super().__init__(parent=parent, title=title)
-
-
-    def init_ui_elements(self):
-        """Inizializza gli elementi dell'interfaccia utente."""
-        raise NotImplementedError("Il metodo init_ui_elements deve essere implementato nelle classi derivate.")
-
-
-
-
 #@@@# Start del modulo
 if __name__ != "__main__":
     log.debug(f"Carico: {__name__}")

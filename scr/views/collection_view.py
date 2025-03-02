@@ -24,8 +24,8 @@ import wx.lib.newevent
 #from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
-from .proto_views import ProtoCollectionList, BasicView, ListView
 from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
+from .proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
 from utyls import enu_glob as eg
@@ -40,7 +40,6 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 #class CardCollectionFrame(BasicView):
 class CardCollectionFrame(ListView):
-#class CardCollectionFrame(ProtoCollectionList):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller):
