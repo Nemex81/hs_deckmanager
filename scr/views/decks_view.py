@@ -38,9 +38,9 @@ class DecksViewFrame(ListView):
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
+        self.controller = controller
         self.db_manager = self.parent.controller.db_manager
         #self.controller = self.parent.controller.decks_controller
-        self.controller = controller
         self.mode = "decks"
 
         # Timer per il debounce

@@ -40,6 +40,13 @@ class EnuColors(Enum):
     ORANGE = ORANGE
 
 
+class WindowKey(Enum):
+    MAIN = "main"
+    COLLECTION = "collection"
+    DECKS = "decks"
+    DECK = "deck"  # Per le finestre dei mazzi, useremo f"{WindowKey.DECK.value}_{deck_name}"
+
+
 class ENUCARD(Enum):
     """ info base obblicagorie delel carte pe rl'interazione con il db. """
 

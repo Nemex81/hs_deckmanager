@@ -16,8 +16,10 @@
 # lib
 import wx
 import pyperclip
+from enum import Enum
 from sqlalchemy.exc import SQLAlchemyError
 from .models import load_cards, db_session, Deck
+from.views.view_manager import WinController
 from .views.main_views import HearthstoneAppFrame
 from .views.collection_view import CardCollectionFrame
 from .views.deck_view import DeckViewFrame
@@ -466,12 +468,45 @@ class DecksController:
 
 
 
+class MainController:
+    def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None):
+        self.db_manager = db_manager
+        self.win_controller = WinController()  # Inizializza il WinController
+        self.collection_controller = collection_controller
+        self.decks_controller = decks_controller
+        self.deck_controller = deck_controller
+
+    def run(self):
+        """Avvia l'applicazione."""
+        app = wx.App(False)
+        self.win_controller.create_window(eg.WindowKey.MAIN, None, self)
+        self.win_controller.open_window(eg.WindowKey.MAIN)
+        app.MainLoop()
+
+    def run_collection_frame(self, parent=None):
+        """Apre la finestra della collezione."""
+        self.win_controller.create_window(eg.WindowKey.COLLECTION, parent, self.collection_controller)
+        self.win_controller.open_window(eg.WindowKey.COLLECTION, parent)
+
+    def run_decks_frame(self, parent=None):
+        """Apre la finestra dei mazzi."""
+        self.win_controller.create_window(eg.WindowKey.DECKS, parent, self.decks_controller)
+        self.win_controller.open_window(eg.WindowKey.DECKS, parent)
+
+    def run_deck_frame(self, parent=None, deck_name=None):
+        """Apre la finestra di un mazzo specifico."""
+        window_key = f"{eg.WindowKey.DECK.value}_{deck_name}" if deck_name else eg.WindowKey.DECK
+        self.win_controller.create_window(window_key, parent, self.deck_controller, deck_name=deck_name)
+        self.win_controller.open_window(window_key, parent)
 
 
-class MainController():
+
+
+class LastMainController():
     """ gestore dell'applicazione. """
 
     def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None):
+        self.win_controller = WinController()
         self.db_manager = db_manager
         self.collection_controller = collection_controller
         self.decks_controller = decks_controller
