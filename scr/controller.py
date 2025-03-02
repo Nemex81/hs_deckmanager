@@ -471,7 +471,6 @@ class DecksController:
 class MainController():
     """ gestore dell'applicazione. """
 
-    #def __init__(self, db_manager=None):
     def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None):
         self.db_manager = db_manager
         self.collection_controller = collection_controller
@@ -481,10 +480,12 @@ class MainController():
 
     def run(self):
         """Avvia l'applicazione."""
+
         app = wx.App(False)
         frame = HearthstoneAppFrame(parent=None, controller=self)
         frame.Show()
         app.MainLoop()
+
 
     def run_collection_frame(self, parent=None):
         """Carica l'interfaccia per la collezione completa di carte."""
@@ -492,10 +493,10 @@ class MainController():
         frame.Show()
         parent.Hide()
 
+
     def run_decks_frame(self, parent=None):
         """Carica l'interfaccia per la gestione dei mazzi."""
         frame = DecksViewFrame(parent=parent, controller=self.decks_controller)
-        frame.deck_controller = self.deck_controller
         frame.Show()
         parent.Hide()
 
