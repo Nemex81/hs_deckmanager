@@ -30,28 +30,30 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-#class DeckViewFrame(ListView):
-class DeckViewFrame(ProtoDeckList):
+class DeckViewFrame(ListView):
+#class DeckViewFrame(ProtoDeckList):
     """Finestra per gestire le carte di un mazzo."""
 
     def __init__(self, parent, controller, deck_name):
         """ Costruttore della classe DeckViewFrame. """
 
         # Inizializzazione delle variabili PRIMA di chiamare super().__init__
+        title = f"Mazzo: {deck_name}"
         self.parent = parent
         self.controller = controller
+        #super().__init__(parent, controller, deck_name)
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.card_list = None
         self.deck_name = deck_name
         self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
 
         # Se il mazzo non esiste, solleva un'eccezione
-        if not self.deck_content:
-            raise ValueError(f"Mazzo non trovato: {deck_name}")
+        #if not self.deck_content:
+            #raise ValueError(f"Mazzo non trovato: {deck_name}")
         
         # Chiamata al costruttore della classe base
-        #super().__init__(parent, title=f"Mazzo: {deck_name}", size=(1200, 800))
-        super().__init__(parent, controller, deck_name)
+        #super().__init__(parent, controller, deck_name)
+        super().__init__(parent, title=title, size=(1200, 800))
 
         # Timer per il debounce
         self.timer = wx.Timer(self)
@@ -138,7 +140,8 @@ class DeckViewFrame(ProtoDeckList):
 
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
-            self.load_cards()
+            #self.load_cards()
+            self.refresh_card_list()
             self.set_focus_to_list()
             self.select_element(0)
             self.cm.apply_selection_style_to_list(self.card_list, 0)  # Applica lo stile di selezione alla prima riga
@@ -146,10 +149,10 @@ class DeckViewFrame(ProtoDeckList):
             #self.cm.apply_selection_style_to_list(self.card_list)
 
             # Aggiorna la finestra
-            self.card_list.Refresh()
+            #self.card_list.Refresh()
 
         # forza la riscrittura del layout
-        self.Layout()
+        #self.Layout()
 
         # Aggiungo eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
@@ -296,7 +299,8 @@ class DeckViewFrame(ProtoDeckList):
         self.deck_content = self.parent.controller.db_manager.get_deck(self.deck_name)
 
          # Ricarica le carte nella lista
-        self.load_cards()        
+        self.load_cards()
+        self.card_list.Refresh()
         log.debug("Lista delle carte aggiornata.")
 
 
