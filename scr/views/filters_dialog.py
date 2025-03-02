@@ -14,7 +14,7 @@
 
 # Lib
 import wx
-from .view_components import create_check_list_box, create_common_controls
+from .builder.view_components import create_check_list_box, create_common_controls
 from .proto_views import BasicDialog, SingleCardView
 from utyls.enu_glob import EnuCardType, EnuSpellType , EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import enu_glob as eg

@@ -16,11 +16,10 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-#from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from .proto_views import BasicView, ListView
 from .deck_stats_dialog import DeckStatsDialog
-import scr.views.view_components as vc              # Componenti dell'interfaccia utente
+import scr.views.builder.view_components as vc              # Componenti dell'interfaccia utente
 from utyls import enu_glob as eg                    # Enumerazioni globali
 from utyls import helper as hp                      # Funzioni helper
 from utyls import logger as log                     # Modulo per la gestione dei log

@@ -147,22 +147,6 @@ def create_list_ctrl(parent, columns, color_manager=cm, style=DEFAULT_LIST_STYLE
     return list_ctrl
 
 
-def last_create_list_ctrl(parent, columns, style=DEFAULT_LIST_STYLE):
-    """
-    Crea una lista (wx.ListCtrl) con colonne predefinite.
-
-    :param parent: Il genitore della lista.
-    :param columns: Lista di tuple (nome_colonna, larghezza). Esempio: [("Nome", 250), ("Mana", 50)].
-    :param style: Stile della lista. Default: wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN.
-    :return: Un'istanza di wx.ListCtrl.
-    """
-
-    list_ctrl = wx.ListCtrl(parent, style=style)
-    for idx, (col_name, width) in enumerate(columns):
-        list_ctrl.AppendColumn(col_name, width=width)
-    return list_ctrl
-
-
 def create_search_bar(parent, placeholder="Cerca...", event_handler=None):
     """
     Crea una barra di ricerca (wx.SearchCtrl).

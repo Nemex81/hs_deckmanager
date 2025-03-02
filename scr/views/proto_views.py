@@ -19,8 +19,8 @@ from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards
-from .color_system import ColorManager, AppColors, ColorTheme
-import scr.views.view_components as vc
+from .builder.color_system import ColorManager, AppColors, ColorTheme
+import scr.views.builder.view_components as vc
 from utyls import helper as hp
 from utyls import enu_glob as eg
 from utyls import logger as log

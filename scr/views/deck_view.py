@@ -17,10 +17,10 @@ import wx#, pyperclip
 import wx.lib.newevent
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
-from .view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
+from .builder.view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
-from .color_system import AppColors
+from .builder.color_system import AppColors
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log

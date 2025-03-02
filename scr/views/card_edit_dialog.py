@@ -19,7 +19,7 @@ import wx
 from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card
 from ..models import load_cards
-from .view_components import create_button, create_check_list_box, create_separator, create_common_controls
+from .builder.view_components import create_button, create_check_list_box, create_separator, create_common_controls
 from .proto_views import SingleCardView
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import helper as hp
