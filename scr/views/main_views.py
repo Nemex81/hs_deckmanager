@@ -89,7 +89,7 @@ class HearthstoneAppFrame(BasicView):
 
     def on_quit_button_click(self, event):
         """Chiude l'applicazione."""
-        self.Close()
+        self.controller.question_quit_app(self)
 
 
 class last_HearthstoneAppFrame(BasicView):

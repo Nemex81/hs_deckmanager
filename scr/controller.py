@@ -469,6 +469,24 @@ class MainController:
         self.decks_controller = decks_controller
         self.deck_controller = deck_controller
 
+    def question_quit_app(self, frame):
+        """Gestisce la richiesta di chiusura applicazione."""
+
+        # Mostra una finestra di dialogo di conferma
+        dlg = wx.MessageDialog(
+            frame,
+            "Confermi l'uscita dall'applicazione?",
+            "Conferma Uscita",
+            wx.YES_NO | wx.ICON_QUESTION
+        )
+
+        # Se l'utente conferma, esci dall'applicazione
+        if dlg.ShowModal() == wx.ID_YES:
+            dlg.Destroy()  # Distruggi la finestra di dialogo
+            frame.Close()   # Chiudi la finestra impostazioni account
+
+
+
     def run(self):
         """Avvia l'applicazione."""
         app = wx.App(False)
