@@ -2,7 +2,7 @@
     Modulo per la gestione sistemica dei colori
 
     path:
-        scr/views/color_system.py
+        scr/views/builder/color_system.py
 
     Descrizione:
     
