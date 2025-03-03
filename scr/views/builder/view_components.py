@@ -2,7 +2,7 @@
     Modulo per la gestione dei componenti delle finestre dell'applicazione
 
     path:
-        ./scr/views/view_components.py
+        ./scr/views/builder/view_components.py
 
     Descrizione:
         Questo modulo contiene funzioni helper per la creazione di elementi dell'interfaccia utente
