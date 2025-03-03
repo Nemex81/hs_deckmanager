@@ -28,15 +28,20 @@
 # lib
 import wx
 from scr.hdm import AppBuilder
+from utyls import logger as log
+# import pdb
 
 
 
 def start_app():
     """Avvia l'applicazione Hearthstone Deck Manager."""
 
+    log.debug("Inizializzazione dell'applicazione.")
+
     app_builder = AppBuilder()
     app = app_builder.build_app()
     if app:
+        log.debug("Avvio dell'applicazione.")
         app_builder.run_app()
 
 
