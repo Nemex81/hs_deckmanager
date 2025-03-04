@@ -20,6 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_cards
 from .builder.color_system import ColorManager, AppColors, ColorTheme
+from .builder.focus_handler import FocusHandler
 import scr.views.builder.view_components as vc
 from utyls import helper as hp
 from utyls import enu_glob as eg
@@ -74,6 +75,7 @@ class BasicView(wx.Frame):
         self.controller = None             # Controller per l'interfaccia
         self.db_manager = None             # Gestore del database
         self.cm = ColorManager()           # Gestore dei colori
+        self.focus_handler = FocusHandler()  # Gestore degli eventi di focus
 
         # Colori personalizzati per lo stato attivo e inattivo
         self.FOCUS_BG_COLOR = self.cm.get_color(AppColors.FOCUS_BG)

@@ -4,43 +4,13 @@
     path:
         ./scr/views/builder/view_components.py
 
-    Descrizione:
-        Questo modulo contiene funzioni helper per la creazione di elementi dell'interfaccia utente
-        comuni, come pulsanti, liste, barre di ricerca e sizer. Le funzioni sono progettate per
-        essere riutilizzabili in tutte le finestre dell'applicazione, riducendo la duplicazione
-        del codice e migliorando la manutenibilità.
 
-    Spiegazione delle Funzioni
-    1. create_button:
-        ◦ Crea un pulsante con dimensioni, font e stile predefiniti.
-        ◦ Permette di specificare un gestore di eventi per il clic.
-
-    2. create_list_ctrl:
-        ◦  Crea una lista (wx.ListCtrl) con colonne personalizzabili.
-        ◦  Supporta l'aggiunta di colonne con larghezze specifiche.
-
-    3. create_search_bar:
-        ◦  Crea una barra di ricerca (wx.SearchCtrl) con un placeholder personalizzabile.
-        ◦  Permette di specificare un gestore di eventi per la ricerca.
-
-    4.  create_sizer:
-        ◦  Crea un sizer (verticale o orizzontale) per organizzare gli elementi.
-
-    5.  add_to_sizer:
-        ◦  Aggiunge un elemento a un sizer con parametri predefiniti (proporzione, flag, bordo).
-
-    6.  create_message_dialog:
-        ◦  Crea una finestra di dialogo per messaggi di conferma con titolo e stile personalizzabili.
-
-    Note:
-        ◦  Questo modulo non è progettato per essere eseguito
-        ◦  Le funzioni sono progettate per essere importate in altri moduli
-        ◦  Le funzioni sono progettate per essere utilizzate in combinazione con wxPython
 
 """
 
 # Lib
 import wx
+from .focus_handler import FocusHandler
 from .color_system import ColorManager
 from utyls import enu_glob as eg
 from utyls import helper as hp
@@ -59,8 +29,82 @@ DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
 
 #@@# sezione classi personalizzate per la gestione degli elementi dell'interfaccia utente
 
+class CustomButton(wx.Button):
+    """
+    Pulsante personalizzato con gestione centralizzata del focus.
+    """
+
+    def __init__(self, parent, focus_handler, label, size=DEFAULT_BUTTON_SIZE, font_size=DEFAULT_FONT_SIZE, event_handler=None, *args, **kwargs):
+        super().__init__(parent, label=label, size=size)
+        self.fh = focus_handler  # Componente per la gestione del focus
+
+        # Imposta il font e collega l'evento del pulsante
+        self.SetFont(wx.Font(font_size, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        if event_handler:
+            self.Bind(wx.EVT_BUTTON, event_handler)
+
+        # Collega gli eventi di focus
+        self.fh.bind_focus_events(self)
+
+
+    def SetFocus(self):
+        """Imposta il focus sul pulsante."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+
+    def KillFocus(self):
+        """Rimuove il focus dal pulsante."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
+
+
 
 class CustomListCtrl(wx.ListCtrl):
+    """
+    ListCtrl personalizzata con gestione centralizzata del focus e dei colori.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.cm = color_manager  # Componente per la gestione dei colori
+        self.fh = focus_handler  # Componente per la gestione del focus
+
+        # Collega gli eventi di focus
+        #self.fh.bind_focus_events(self)
+
+        # Collega l'evento di selezione degli elementi
+        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+
+    def on_item_focused(self, event):
+        """
+        Gestisce l'evento di focus su una riga della lista.
+        """
+        selected_item = event.GetIndex()
+        self.reset_focus_style_for_all_items(selected_item)
+        self.apply_selection_style(selected_item)
+        self.Refresh()
+        event.Skip()
+
+    def reset_focus_style_for_all_items(self, selected_item=None):
+        """
+        Resetta lo stile di tutte le righe tranne quella selezionata.
+        """
+        for i in range(self.GetItemCount()):
+            if i != selected_item:
+                self.cm.apply_default_style_to_list_item(self, i)
+        self.Refresh()
+
+    def apply_selection_style(self, item_index):
+        """
+        Applica lo stile di selezione a un elemento della lista.
+        """
+        self.cm.apply_selection_style_to_list_item(self, item_index)
+
+
+class LastCustomListCtrl(wx.ListCtrl):
     """ Classe personalizzata per la gestione di una lista di elementi. """
 
     def __init__(self, parent, color_manager, *args, **kwargs):
@@ -84,8 +128,10 @@ class CustomListCtrl(wx.ListCtrl):
 
         selected_item = event.GetIndex()
         self.reset_focus_style_for_all_items(selected_item)
-        self.cm.apply_selection_style_to_list(self, selected_item)
+        self.apply_selection_style(selected_item)
         self.Refresh()
+        event.Skip()  # Permette ad altri gestori di gestire l'evento
+
 
 
     def reset_focus_style_for_all_items(self, selected_item=None):
@@ -100,6 +146,11 @@ class CustomListCtrl(wx.ListCtrl):
 
         self.Refresh()
 
+
+    def apply_selection_style(self, item_index):
+        """Applica lo stile di selezione a un elemento della lista."""
+
+        self.cm.apply_selection_style_to_list_item(self, item_index)
 
 
 #@@# sezione funzioni helper per la creazione di elementi dell'interfaccia utente
@@ -124,12 +175,14 @@ def create_button(parent, label, size=DEFAULT_BUTTON_SIZE, font_size=DEFAULT_FON
     return button
 
 
-def create_list_ctrl(parent, columns, color_manager=cm, style=DEFAULT_LIST_STYLE):
+def create_list_ctrl(parent, columns, color_manager=cm, focus_handler=None, style=DEFAULT_LIST_STYLE):
     """
+
     Crea una lista (wx.ListCtrl) con colonne personalizzabili.
     :param parent: Il genitore della lista.
     :param columns: Lista di tuple (nome_colonna, larghezza).
     :param color_manager: Istanza di ColorManager.
+    :param focus_handler: Istanza di FocusHandler.
     :param style: Stile della lista.
     :return: Un'istanza di CustomListCtrl.
     """
@@ -137,6 +190,7 @@ def create_list_ctrl(parent, columns, color_manager=cm, style=DEFAULT_LIST_STYLE
     list_ctrl = CustomListCtrl(
         parent,
         color_manager=color_manager,
+        focus_handler=focus_handler,
         style=style
     )
 

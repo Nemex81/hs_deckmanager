@@ -58,11 +58,13 @@ class DecksViewFrame(ListView):
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
         self.card_list = vc.create_list_ctrl(
             parent=self.panel,
+            color_manager=self.cm,
+            focus_handler=self.focus_handler,
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
 
         # Collega gli eventi di focus alla lista
-        #self.bind_focus_events(self.card_list)
+        self.bind_focus_events(self.card_list)
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -130,7 +132,7 @@ class DecksViewFrame(ListView):
 
 
         #aggiorna la lista
-        #self.card_list.Refresh()
+        self.card_list.Refresh()
 
         # Imposta il layout principale
         #self.Layout()
@@ -140,7 +142,7 @@ class DecksViewFrame(ListView):
         """Imposta il focus sulla lista dei mazzi."""
 
         controller = self.parent.controller.decks_controller
-        #self.controller.set_focus_to_list(self)
+        self.controller.set_focus_to_list(self)
 
 
     def load_decks(self):
@@ -181,10 +183,8 @@ class DecksViewFrame(ListView):
         """Restituisce il mazzo selezionato nella lista."""
 
         controller = self.parent.controller.decks_controller
-        #return controller.get_selected_deck(self)
-        selection = self.card_list.GetFirstSelected()
-        if selection != wx.NOT_FOUND:
-            return self.card_list.GetItemText(selection)
+        return controller.get_selected_deck(self.card_list)
+
 
 
     def select_and_focus_deck(self, deck_name):
@@ -196,7 +196,7 @@ class DecksViewFrame(ListView):
         """
 
         controller = self.parent.controller.decks_controller
-        controller.select_and_focus_deck(self, deck_name)
+        controller.select_and_focus_deck(frame=self, deck_name=deck_name)
 
 
     def _apply_search_filter(self, search_text):
@@ -207,6 +207,8 @@ class DecksViewFrame(ListView):
 
         # sposta il focus sul primo risultato ed evidezia la riga
         self.select_and_focus_deck(self.card_list.GetItemText(0))
+
+
 
 
     def on_timer(self, event):
@@ -261,10 +263,12 @@ class DecksViewFrame(ListView):
     def on_view_deck(self, event):
         """Mostra il mazzo selezionato in una finestra dettagliata."""
 
-        deck_name = self.get_selected_deck()
+        deck_name = self.controller.get_selected_deck(self.card_list)
         if deck_name:
+            log.debug(f"Visualizzazione del mazzo: {deck_name}")
             deck_content = self.controller.get_deck_details(deck_name)
             if deck_content:
+                log.debug(f"Mazzo: {deck_content}")
                 # Apri la finestra di visualizzazione del mazzo
                 self.controller.run_deck_frame(parent=self, deck_name=deck_name)
 

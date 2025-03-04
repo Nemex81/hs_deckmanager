@@ -170,6 +170,10 @@ class DecksController:
 
 
     def load_decks(self, card_list=None):
+        """Carica i mazzi utilizzando DbManager."""
+        return self.db_manager.load_decks(card_list=card_list)
+
+    def last_load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
 
         if not self.db_manager.load_decks(deck_list=card_list):
@@ -179,15 +183,28 @@ class DecksController:
         return True
 
 
-    def get_selected_deck(self, frame):
+    def get_selected_deck(self, card_list=None):
         """Restituisce il mazzo selezionato nella lista."""
 
-        selection = frame.card_list.GetFirstSelected()
+        if not card_list:
+            log.error("Errore durante la selezione del mazzo. Nessuna lista di carte rilevata.")
+            wx.MessageBox("Errore durante la selezione del mazzo, nessuna lista di carte rilevata!", "Errore")
+            return
+
+        selection = card_list.GetFirstSelected()
         if selection != wx.NOT_FOUND:
-            return frame.card_list.GetItemText(selection)
+            return card_list.GetItemText(selection)
 
 
-    def apply_search_filter(self, frame, search_text):
+    def apply_search_filter(self, search_text):
+        """Applica un filtro di ricerca ai mazzi."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            return self.db_manager.get_decks()
+
+        return self.db_manager.get_decks(filters={"name": search_text})
+
+    def last_apply_search_filter(self, frame, search_text):
         """Applica il filtro di ricerca alla lista dei mazzi."""
 
         if not search_text or search_text in ["tutti", "tutto", "all"]:
@@ -276,8 +293,18 @@ class DecksController:
 
         """
 
+        if not frame:
+            log.error("Errore durante la selezione del mazzo. Nessun frame passato.")
+            wx.MessageBox("Errore durante la selezione del mazzo.", "Errore")
+            raise ValueError("Errore durante la selezione del mazzo. Nessun frame passato.")
+
+        if not frame.card_list:
+            log.error("Errore durante la selezione del mazzo. Nessuna lista di mazzi rilevata.")
+            raise ValueError("Errore durante la selezione del mazzo. Nessuna lista di mazzi rilevata.")
+
         if not deck_name:
-            return
+            log.error("Errore durante la selezione del mazzo. Nessun mazzo specificato.")
+            raise ValueError("Errore durante la selezione del mazzo. Nessun mazzo specificato.")
 
         log.info(f"Tentativo di selezione e focus sul mazzo: {deck_name}")
         # Trova l'indice del mazzo nella lista
@@ -330,7 +357,11 @@ class DecksController:
             return wx.ID_YES
 
 
-    def add_deck(self):
+    def add_deck(self, deck_data):
+        """Aggiunge un mazzo utilizzando DbManager."""
+        return self.db_manager.add_deck(deck_data)
+
+    def last_add_deck(self):
         """Aggiunge un mazzo dagli appunti."""
 
         try:
@@ -368,6 +399,10 @@ class DecksController:
 
 
     def delete_deck(self, deck_name):
+        """Elimina un mazzo utilizzando DbManager."""
+        return self.db_manager.delete_deck(deck_name)
+
+    def last_delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """
 
         try:
@@ -396,7 +431,7 @@ class DecksController:
     def copy_deck(self, frame):
         """ Copia un mazzo negli appunti. """
 
-        deck_name = frame.get_selected_deck()
+        deck_name = self.get_selected_deck(frame.card_list)
         if deck_name:
             if self.db_manager.copy_deck_to_clipboard(deck_name):
                 #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
@@ -486,28 +521,41 @@ class MainController:
             frame.Close()   # Chiudi la finestra impostazioni account
 
 
-
     def run(self):
         """Avvia l'applicazione."""
+
+        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
         app = wx.App(False)
-        self.win_controller.create_window(eg.WindowKey.MAIN, None, self)
+        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
+        #self.win_controller.create_window(window_key=eg.WindowKey.MAIN, parent=None, controller=self)
+        self.win_controller.create_main_window(None, controller=self)
         self.win_controller.open_window(eg.WindowKey.MAIN)
         app.MainLoop()
 
     def run_collection_frame(self, parent=None):
         """Apre la finestra della collezione."""
-        self.win_controller.create_window(eg.WindowKey.COLLECTION, parent, self.collection_controller)
-        self.win_controller.open_window(eg.WindowKey.COLLECTION, parent)
+        self.win_controller.create_collection_window(parent=parent, controller=self.collection_controller)
+        self.win_controller.open_window(eg.WindowKey.COLLECTION)
 
     def run_decks_frame(self, parent=None):
         """Apre la finestra dei mazzi."""
-        self.win_controller.create_window(eg.WindowKey.DECKS, parent, self.decks_controller)
-        self.win_controller.open_window(eg.WindowKey.DECKS, parent)
+
+        log.debug(f"Controller DecksController: {self.decks_controller}")
+        controller = self.decks_controller
+        if not controller:
+            log.debug("Controller per finestra mazzi assente, provvedo alla creazione di un nuovo controller per i mazzi.")
+            self.decks_controller = DecksController(parent=self, db_manager=self.db_manager)
+
+        self.win_controller.create_decks_window(parent=parent, controller=self.decks_controller)
+        self.win_controller.open_window(eg.WindowKey.DECKS)
 
     def run_deck_frame(self, parent=None, deck_name=None):
         """Apre la finestra di un mazzo specifico."""
         window_key = eg.WindowKey.DECK
-        self.win_controller.create_window(window_key, parent, controller=self.deck_controller, deck_name=deck_name)
+        if not self.deck_controller:
+            self.deck_controller = DeckController(parent=self, db_manager=self.db_manager)
+
+        self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
         self.win_controller.open_window(window_key, parent)
 
 
