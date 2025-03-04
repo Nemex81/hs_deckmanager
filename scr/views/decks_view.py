@@ -20,10 +20,10 @@ from ..db import session, db_session, Card, DeckCard, Deck
 from .proto_views import BasicView, ListView
 from .deck_stats_dialog import DeckStatsDialog
 import scr.views.builder.view_components as vc              # Componenti dell'interfaccia utente
-from utyls import enu_glob as eg                    # Enumerazioni globali
-from utyls import helper as hp                      # Funzioni helper
-from utyls import logger as log                     # Modulo per la gestione dei log
-#import pdb                                         # Modulo per il debug
+from utyls import enu_glob as eg                            # Enumerazioni globali
+from utyls import helper as hp                              # Funzioni helper
+from utyls import logger as log                             # Modulo per la gestione dei log
+#import pdb                                                 # Modulo per il debug
 
 # Creazione di un evento personalizzato per la ricerca con debounce
 SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
@@ -125,8 +125,8 @@ class DecksViewFrame(ListView):
         #self.search_bar.SetFocus()
 
         # Imposta il focus sul primo deck della lista delle carte
-        self.select_and_focus_deck(self.card_list.GetItemText(0))
-        #self.parent.controller.decks_controller.select_and_focus_deck(self, self.card_list.GetItemText(0))
+        #self.select_and_focus_deck(self.card_list.GetItemText(0))
+        self.parent.controller.decks_controller.select_and_focus_deck(self, self.card_list.GetItemText(0))
 
 
         #aggiorna la lista
@@ -136,22 +136,14 @@ class DecksViewFrame(ListView):
         #self.Layout()
 
 
-    #def set_focus_to_list(self):
-        """Imposta il focus sulla lista dei mazzi."""
-
-        #controller = self.parent.controller.decks_controller
-        #self.controller.set_focus_to_list(self)
-
-
     def load_decks(self):
         """ Carica i mazzi dal database. """
 
         # carichiamo i mazzi dal database usando db_session
         controller = self.parent.controller.decks_controller
-        controller.load_decks(self.card_list)
-
-        # Imposta il colore di sfondo predefinito per tutte le righe
-        self.cm.reset_all_styles(self.card_list)
+        if not controller.load_decks(self.card_list):
+            wx.MessageBox("Errore durante il caricamento dei mazzi.", "Errore")
+            return
 
         # colora il mazzo selezionato nella lista
         self.parent.controller.decks_controller.select_list_element(self)
@@ -168,7 +160,7 @@ class DecksViewFrame(ListView):
         """ Aggiorna la lista dei mazzi. """
 
         controller = self.parent.controller.decks_controller
-        controller.update_card_list(self.card_list)
+        self.controller.update_card_list(self.card_list)
 
 
     def update_status(self, message):
@@ -180,33 +172,9 @@ class DecksViewFrame(ListView):
     def get_selected_deck(self):
         """Restituisce il mazzo selezionato nella lista."""
 
-        controller = self.parent.controller.decks_controller
-        #return controller.get_selected_deck(self)
         selection = self.card_list.GetFirstSelected()
         if selection != wx.NOT_FOUND:
             return self.card_list.GetItemText(selection)
-
-
-    def select_and_focus_deck(self, deck_name):
-        """
-        Seleziona un mazzo nella lista e imposta il focus su di esso.
-
-        :param frame: Il frame contenente la lista dei mazzi.
-        :param deck_name: Il nome del mazzo da selezionare.
-        """
-
-        controller = self.parent.controller.decks_controller
-        controller.select_and_focus_deck(self, deck_name)
-
-
-    def _apply_search_filter(self, search_text):
-        """Applica il filtro di ricerca alla lista dei mazzi."""
-
-        #controller = self.parent.controller.decks_controller
-        self.controller.apply_search_filter(self, search_text)
-
-        # sposta il focus sul primo risultato ed evidezia la riga
-        self.select_and_focus_deck(self.card_list.GetItemText(0))
 
 
     def on_timer(self, event):
@@ -222,6 +190,8 @@ class DecksViewFrame(ListView):
 
         search_text = self.search_bar.GetValue().strip().lower()
         if not search_text:
+            # ripulisci la list aprim adi ricaricare
+            self.card_list.DeleteAllItems()
             self.load_decks()  # Ricarica tutti i mazzi se la casella di ricerca è vuota
 
         # Avvia il timer per il debounce (es. 500 ms)
@@ -233,21 +203,24 @@ class DecksViewFrame(ListView):
         """Gestisce l'evento di ricerca con debounce."""
 
         search_text = event.search_text
-        self._apply_search_filter(search_text)
+        self.controller.apply_search_filter(frame=self, search_text=search_text)
         self.set_focus_to_list()
 
 
     def on_add_deck(self, event):
         """Aggiunge un mazzo tramite finestra di dialogo."""
  
-        controller = self.parent.controller.decks_controller
-        succ =  controller.question_for_add_deck(self)
+        succ =  self.controller.question_for_add_deck(self)
         if succ != wx.ID_YES:
             wx.MessageBox("Operazione annullata.", "Annullato")
             return
 
-        if controller.add_deck():
-            self.parent.controller.decks_controller.select_last_deck(self)
+        if self.controller.add_deck():
+            self.update_card_list()
+            self.controller.select_last_deck(self)
+            wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
+        else:
+            wx.messageBox("Errore durante l'aggiunta del mazzo.", "Errore")
 
 
     def on_copy_deck(self, event):
@@ -276,12 +249,12 @@ class DecksViewFrame(ListView):
 
 
     def on_update_deck(self, event):
+        """ Aggiorna il mazzo selezionato. """
 
-        controller = self.parent.controller.decks_controller
         deck_name = self.get_selected_deck()
-        if controller.upgrade_deck(deck_name):
+        if self.controller.upgrade_deck(deck_name):
                 self.update_card_list()
-                self.select_and_focus_deck(deck_name)  # Seleziona e mette a fuoco il mazzo                
+                self.controller.select_and_focus_deck(frame=self, deck_name=deck_name)  # Seleziona e mette a fuoco il mazzo                
 
 
     def on_view_stats(self, event):
@@ -311,13 +284,13 @@ class DecksViewFrame(ListView):
     def on_delete_deck(self, event):
         """ Elimina il mazzo selezionato. """
 
-        controller = self.parent.controller.decks_controller
+        #controller = self.parent.controller.decks_controller
         deck_name = self.get_selected_deck()
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
-                if controller.delete_deck(deck_name):
+                if self.controller.delete_deck(frame=self, deck_name=deck_name):
                     self.update_card_list()
-                    controller.select_last_deck(self)
+                    self.controller.select_last_deck(self)
             else:
                 log.info("Operazione annullata.")
                 wx.MessageBox("Operazione annullata.", "Annullato")
@@ -330,7 +303,8 @@ class DecksViewFrame(ListView):
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
         search_text = self.search_bar.GetValue().strip().lower()
-        self._apply_search_filter(search_text)
+        #self._apply_search_filter(search_text)
+        self.controller.apply_search_filter(self, search_text)
 
 
     def last_on_search(self, event):

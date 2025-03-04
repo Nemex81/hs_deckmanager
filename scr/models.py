@@ -20,6 +20,8 @@
             - Copia dei mazzi negli appunti
             - Estrazione delle informazioni di metadata da un mazzo
             - Verifica della validità di un mazzo
+            - Aggiornamento di un mazzo esistente nel database
+            - Caricamento dei mazzi dal database e visualizzazione in una lista
 
     Note:
         - Il modulo si occupa di gestire le operazioni di caricamento/salvataggio dei mazzi, la sincronizzazione delle carte con il database e la gestione delle operazioni CRUD sulle carte.
@@ -35,7 +37,6 @@ from contextlib import contextmanager
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from .db import session, db_session, Deck, DeckCard, Card
-from utyls import enu_glob as eg
 from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
@@ -497,6 +498,21 @@ class DbManager:
             log.error(f"Errore imprevisto durante l'eliminazione del mazzo '{deck_name}': {str(e)}")
             raise
 
+    def get_deck_by_name(self, deck_name):
+        """Restituisce i dettagli di un mazzo specifico."""
+
+        with db_session() as session:
+            deck = session.query(Deck).filter_by(name=deck_name).first()
+            if deck:
+                return {
+                    "id": deck.id,
+                    "name": deck.name,
+                    "player_class": deck.player_class,
+                    "game_format": deck.game_format,
+                    "cards": self.get_deck_cards(deck.id)
+                }
+            return None
+
     def get_card_by_name(self, card_name):
         """Restituisce una carta dal database in base al nome."""
         with db_session():
@@ -601,8 +617,41 @@ class DbManager:
         load_cards(filters=filters, card_list=card_list)
 
 
-    def load_decks(self, deck_list=None):
+    def get_deck_cards(self, deck_id):
+        """Restituisce le carte associate a un mazzo."""
+        with db_session() as session:
+            deck_cards = session.query(DeckCard).filter_by(deck_id=deck_id).all()
+            cards = []
+            for deck_card in deck_cards:
+                card = session.query(Card).filter_by(id=deck_card.card_id).first()
+                if card:
+                    cards.append({
+                        "name": card.name,
+                        "mana_cost": card.mana_cost,
+                        "quantity": deck_card.quantity
+                    })
+
+            return cards
+
+
+    def new_load_decks(self, card_list=None):
+        """Carica i mazzi dal database e restituisce una lista di dizionari."""
+
+        # carichiamo i mazzi dal database usando db_session
+        with db_session() as session:
+            decks = session.query(Deck).all()
+            if not decks:
+                log.warning("Nessun mazzo trovato.")
+
+        return decks
+
+
+    def load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
+
+        if not card_list:
+            log.error("Errore durante il caricamento dei mazzi. Nessuna lista passata.")
+            raise ValueError("Errore durante il caricamento dei mazzi. Nessuna lista passata.")
 
         # carichiamo i mazzi dal database usando db_session
         with db_session() as session:
@@ -613,9 +662,9 @@ class DbManager:
 
             for deck in decks:
                 log.info(f"Caricamento deck: {deck.name}")
-                index = deck_list.InsertItem(deck_list.GetItemCount(), deck.name)
-                deck_list.SetItem(index, 1, deck.player_class)
-                deck_list.SetItem(index, 2, deck.game_format)
+                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)
+                card_list.SetItem(index, 1, deck.player_class)
+                card_list.SetItem(index, 2, deck.game_format)
     
                 # Calcola e visualizza il numero totale di carte
                 deck_name = deck.name
@@ -631,7 +680,7 @@ class DbManager:
                     return False
 
                 log.info(f"Totale carte per {deck.name}: {total_cards}")
-                deck_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
         return True
 
