@@ -192,6 +192,7 @@ class DecksController:
 
         if not search_text or search_text in ["tutti", "tutto", "all"]:
             # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
+            frame.card_list.DeleteAllItems()
             frame.load_decks()
         else:
             # Filtra i mazzi in base al nome o alla classe

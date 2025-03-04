@@ -2,8 +2,8 @@
 
     file dialog_box.py
 
-        percorso: 
-                 ./utyls/dialog_box.py
+        path: 
+                 ./scr/views/builder/dialog_box.py
 
         Modulo per la gestione delle dialog box
 

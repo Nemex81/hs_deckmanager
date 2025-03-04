@@ -136,10 +136,10 @@ class DecksViewFrame(ListView):
         #self.Layout()
 
 
-    def set_focus_to_list(self):
+    #def set_focus_to_list(self):
         """Imposta il focus sulla lista dei mazzi."""
 
-        controller = self.parent.controller.decks_controller
+        #controller = self.parent.controller.decks_controller
         #self.controller.set_focus_to_list(self)
 
 

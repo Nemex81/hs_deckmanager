@@ -2,7 +2,7 @@
     Modulo per la gestione sistemica dei colori
 
     path:
-        scr/views/color_system.py
+        scr/views/builder/color_system.py
 
     Descrizione:
     
@@ -157,6 +157,33 @@ class ColorManager:
                 list_ctrl.SetItemTextColour(i, self.get_color(AppColors.DEFAULT_TEXT))
 
         list_ctrl.Refresh()
+
+
+    def apply_theme_to_window(self, window):
+        """Applica lo stile corrente a una finestra e ai suoi figli."""
+
+        for child in window.GetChildren():
+            if isinstance(child, wx.Button):
+                self.apply_default_style(child)
+
+            elif isinstance(child, wx.ListCtrl):
+                self.apply_default_style_to_list_item(child, 0)
+
+            elif isinstance(child, wx.Panel):
+                self.apply_theme_to_window(child)
+
+            elif isinstance(child, wx.StaticText):
+                self.apply_default_style
+
+            elif isinstance(child, wx.TextCtrl):
+                self.apply_default_style(child)
+
+            elif isinstance(child, wx.SearchCtrl):
+                self.apply_default_style(child)
+
+            else:
+                log.warning(f"Elemento non gestito: {child}")
+                raise ValueError(f"Elemento non gestito: {child}")
 
 
     def reset_all_styles(self, container):
