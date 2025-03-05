@@ -133,4 +133,4 @@ def create_search_bar(panel, on_search_handler):
 
 #@@@# Start del modulo
 if __name__ != "__main__":
-    print("Carico: %s" % __name__)
+    log.debug(f"Carico: {__name__}")
