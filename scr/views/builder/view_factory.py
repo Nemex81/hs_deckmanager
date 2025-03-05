@@ -10,6 +10,8 @@
 
 # lib
 import wx
+from .color_system import ColorManager
+from .focus_handler import FocusHandler
 from scr.views.builder.dependency_container import DependencyContainer
 from scr.views.main_views import  HearthstoneAppFrame
 from scr.views.collection_view import CardCollectionFrame
@@ -24,6 +26,96 @@ __all_win__ = {
     eg.WindowKey.DECKS: DecksViewFrame,
     eg.WindowKey.DECK: DeckViewFrame,
 }
+
+
+
+class WidgetFactory:
+    """
+    Factory per la creazione centralizzata di widget.
+    Utilizza il DependencyContainer per risolvere le dipendenze necessarie.
+    """
+
+    def __init__(self, container=None):
+        """
+        Inizializza la factory con un container di dipendenze.
+        Se non viene fornito un container, ne crea uno nuovo.
+        """
+
+        self.container = container or DependencyContainer()
+        self.color_manager = self.container.resolve("color_manager")
+        self.focus_handler = self.container.resolve("focus_handler")
+
+
+    def create_button(self, parent, label, size=(180, 70), font_size=16, event_handler=None):
+        """
+        Crea un pulsante personalizzato con gestione del focus e temi.
+
+        :param parent: Il genitore del pulsante (es. un pannello).
+        :param label: Testo del pulsante.
+        :param size: Dimensioni del pulsante (larghezza, altezza). Default: (180, 70).
+        :param font_size: Dimensione del font. Default: 16.
+        :param event_handler: Funzione da chiamare quando il pulsante viene cliccato (opzionale).
+        :return: Un'istanza di wx.Button.
+        """
+
+        button = wx.Button(parent, label=label, size=size)
+        button.SetFont(wx.Font(font_size, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        if event_handler:
+            button.Bind(wx.EVT_BUTTON, event_handler)
+
+        # Applica lo stile predefinito e collega gli eventi di focus
+        self.color_manager.apply_default_style(button)
+        self.focus_handler.bind_focus_events(button)
+
+        log.debug(f"Creato pulsante: {label}")
+        return button
+
+
+    def create_list_ctrl(self, parent, columns, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN):
+        """
+        Crea una lista (wx.ListCtrl) con colonne personalizzabili.
+
+        :param parent: Il genitore della lista.
+        :param columns: Lista di tuple (nome_colonna, larghezza).
+        :param style: Stile della lista. Default: wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN.
+        :return: Un'istanza di wx.ListCtrl.
+        """
+
+        list_ctrl = wx.ListCtrl(parent, style=style)
+
+        # Aggiungi le colonne alla lista
+        for idx, (col_name, width) in enumerate(columns):
+            list_ctrl.InsertColumn(idx, col_name, width=width)
+
+        # Applica lo stile predefinito e collega gli eventi di focus
+        self.color_manager.apply_default_style(list_ctrl)
+        self.focus_handler.bind_focus_events(list_ctrl)
+
+        log.debug(f"Creata ListCtrl con colonne: {columns}")
+        return list_ctrl
+
+
+    def create_search_bar(self, parent, placeholder="Cerca...", event_handler=None):
+        """
+        Crea una barra di ricerca (wx.SearchCtrl).
+
+        :param parent: Il genitore della barra di ricerca.
+        :param placeholder: Testo placeholder. Default: "Cerca...".
+        :param event_handler: Funzione da chiamare quando si avvia la ricerca (opzionale).
+        :return: Un'istanza di wx.SearchCtrl.
+        """
+
+        search_ctrl = wx.SearchCtrl(parent)
+        search_ctrl.SetDescriptiveText(placeholder)
+        if event_handler:
+            search_ctrl.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, event_handler)
+
+        # Applica lo stile predefinito e collega gli eventi di focus
+        self.color_manager.apply_default_style(search_ctrl)
+        self.focus_handler.bind_focus_events(search_ctrl)
+
+        log.debug(f"Creata barra di ricerca con placeholder: {placeholder}")
+        return search_ctrl
 
 
 

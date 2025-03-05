@@ -278,7 +278,7 @@ class DecksViewFrame(ListView):
 
         deck_name = self.get_selected_deck()
         if deck_name:
-            stats = self.db_manager.get_deck_statistics(deck_name)
+            stats = self.controller.get_deck_statistics(deck_name)
             if stats:
                 DeckStatsDialog(self, stats=stats).ShowModal()
 
