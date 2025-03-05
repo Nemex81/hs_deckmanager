@@ -172,28 +172,41 @@ class DecksController:
     def load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
 
-        if not self.db_manager.load_decks(deck_list=card_list):
+        if not self.db_manager.load_decks(card_list=card_list):
             log.warning("Nessun mazzo trovato.")
             return False
 
         return True
 
 
-    def get_selected_deck(self, frame):
+    def get_selected_deck(self, card_list=None):
         """Restituisce il mazzo selezionato nella lista."""
 
-        selection = frame.card_list.GetFirstSelected()
-        if selection != wx.NOT_FOUND:
-            return frame.card_list.GetItemText(selection)
+        if not card_list:
+            log.error("Errore durante la selezione del mazzo. Nessuna lista di carte rilevata.")
+            wx.MessageBox("Errore durante la selezione del mazzo, nessuna lista di carte rilevata!", "Errore")
+            return
 
+        selection = card_list.GetFirstSelected()
+        if selection != wx.NOT_FOUND:
+            return card_list.GetItemText(selection)
+
+        else:
+            log.warning("Nessun mazzo selezionato.")
+            wx.MessageBox("Seleziona un mazzo prima di procedere.", "Errore")
+            return False
 
     def apply_search_filter(self, frame, search_text):
         """Applica il filtro di ricerca alla lista dei mazzi."""
 
         if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
+            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
             frame.card_list.DeleteAllItems()
+            # mostra tutti i mazzi
             frame.load_decks()
+            # sposta il cursore nella lista deimazzi
+            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
         else:
             # Filtra i mazzi in base al nome o alla classe
             frame.card_list.DeleteAllItems()
@@ -204,7 +217,7 @@ class DecksController:
                     frame.card_list.SetItem(index, 1, deck.player_class)
                     frame.card_list.SetItem(index, 2, deck.game_format)
 
-        frame.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
+        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
 
 
     def set_focus_to_list(self, frame):
@@ -277,8 +290,18 @@ class DecksController:
 
         """
 
+        if not frame:
+            log.error("Errore durante la selezione del mazzo. Nessun frame passato.")
+            wx.MessageBox("Errore durante la selezione del mazzo.", "Errore")
+            raise ValueError("Errore durante la selezione del mazzo. Nessun frame passato.")
+
+        if not frame.card_list:
+            log.error("Errore durante la selezione del mazzo. Nessuna lista di mazzi rilevata.")
+            raise ValueError("Errore durante la selezione del mazzo. Nessuna lista di mazzi rilevata.")
+
         if not deck_name:
-            return
+            log.error("Errore durante la selezione del mazzo. Nessun mazzo specificato.")
+            raise ValueError("Errore durante la selezione del mazzo. Nessun mazzo specificato.")
 
         log.info(f"Tentativo di selezione e focus sul mazzo: {deck_name}")
         # Trova l'indice del mazzo nella lista
@@ -331,7 +354,22 @@ class DecksController:
             return wx.ID_YES
 
 
-    def add_deck(self):
+    def add_deck(self):#, frame):
+        """Aggiunge un mazzo utilizzando DbManager."""
+
+        if not self.db_manager.add_deck_from_clipboard():
+            log.error("Errore durante l'aggiunta del mazzo.")
+            wx.MessageBox("Errore durante l'aggiunta del mazzo.", "Errore")
+            return False
+
+        #card_list = frame.card_list
+        #self.update_card_list(card_list)
+        #self.select_last_deck(self)
+        log.info("Mazzo aggiunto con successo.")
+        return True
+
+
+    def last_add_deck(self):
         """Aggiunge un mazzo dagli appunti."""
 
         try:
@@ -368,7 +406,22 @@ class DecksController:
             return False
 
 
-    def delete_deck(self, deck_name):
+    def delete_deck(self, frame, deck_name):
+        """Elimina un mazzo utilizzando DbManager."""
+
+        if not  self.db_manager.delete_deck(deck_name):
+            log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
+            wx.MessageBox(f"Errore durante l'eliminazione del mazzo '{deck_name}'.", "Errore")
+            return False
+
+        card_list = frame.card_list
+        self.update_card_list(card_list)
+        self.select_last_deck(frame)
+        log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+        wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+
+
+    def last_delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """
 
         try:
@@ -397,7 +450,7 @@ class DecksController:
     def copy_deck(self, frame):
         """ Copia un mazzo negli appunti. """
 
-        deck_name = frame.get_selected_deck()
+        deck_name = self.get_selected_deck(frame.card_list)
         if deck_name:
             if self.db_manager.copy_deck_to_clipboard(deck_name):
                 #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
@@ -470,27 +523,58 @@ class MainController:
         self.decks_controller = decks_controller
         self.deck_controller = deck_controller
 
+    def question_quit_app(self, frame):
+        """Gestisce la richiesta di chiusura applicazione."""
+
+        # Mostra una finestra di dialogo di conferma
+        dlg = wx.MessageDialog(
+            frame,
+            "Confermi l'uscita dall'applicazione?",
+            "Conferma Uscita",
+            wx.YES_NO | wx.ICON_QUESTION
+        )
+
+        # Se l'utente conferma, esci dall'applicazione
+        if dlg.ShowModal() == wx.ID_YES:
+            dlg.Destroy()  # Distruggi la finestra di dialogo
+            frame.Close()   # Chiudi la finestra impostazioni account
+
+
     def run(self):
         """Avvia l'applicazione."""
+
+        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
         app = wx.App(False)
-        self.win_controller.create_window(eg.WindowKey.MAIN, None, self)
+        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
+        #self.win_controller.create_window(window_key=eg.WindowKey.MAIN, parent=None, controller=self)
+        self.win_controller.create_main_window(None, controller=self)
         self.win_controller.open_window(eg.WindowKey.MAIN)
         app.MainLoop()
 
     def run_collection_frame(self, parent=None):
         """Apre la finestra della collezione."""
-        self.win_controller.create_window(eg.WindowKey.COLLECTION, parent, self.collection_controller)
-        self.win_controller.open_window(eg.WindowKey.COLLECTION, parent)
+        self.win_controller.create_collection_window(parent=parent, controller=self.collection_controller)
+        self.win_controller.open_window(eg.WindowKey.COLLECTION)
 
     def run_decks_frame(self, parent=None):
         """Apre la finestra dei mazzi."""
-        self.win_controller.create_window(eg.WindowKey.DECKS, parent, self.decks_controller)
-        self.win_controller.open_window(eg.WindowKey.DECKS, parent)
+
+        log.debug(f"Controller DecksController: {self.decks_controller}")
+        controller = self.decks_controller
+        if not controller:
+            log.debug("Controller per finestra mazzi assente, provvedo alla creazione di un nuovo controller per i mazzi.")
+            self.decks_controller = DecksController(parent=self, db_manager=self.db_manager)
+
+        self.win_controller.create_decks_window(parent=parent, controller=self.decks_controller)
+        self.win_controller.open_window(eg.WindowKey.DECKS)
 
     def run_deck_frame(self, parent=None, deck_name=None):
         """Apre la finestra di un mazzo specifico."""
         window_key = eg.WindowKey.DECK
-        self.win_controller.create_window(window_key, parent, controller=self.deck_controller, deck_name=deck_name)
+        if not self.deck_controller:
+            self.deck_controller = DeckController(parent=self, db_manager=self.db_manager)
+
+        self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
         self.win_controller.open_window(window_key, parent)
 
 

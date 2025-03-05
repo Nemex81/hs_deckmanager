@@ -147,7 +147,7 @@ Il progetto è organizzato in diversi moduli:
 ## **Autore**
     - **Nome**: Luca Profita (Nemex81)
     - **Email**: nemex1981@gmail.com
-    - **Versione**: 0.5
+    - **Versione**: 0.9.2
 
 ---
 

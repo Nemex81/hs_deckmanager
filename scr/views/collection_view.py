@@ -21,11 +21,10 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-#from sqlalchemy.exc import SQLAlchemyError
 from ..db import session, db_session, Card, DeckCard, Deck
 from ..models import load_cards
 from .builder.view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import BasicView, ListView
+from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
 from utyls import enu_glob as eg
@@ -42,18 +41,25 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class CardCollectionFrame(ListView):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, container):
         super().__init__(parent, title="Collezione")
         self.mode = "collection"
         self.parent = parent
-        #self.controller = self.parent.controller
-        self.controller = controller
-        if not self.controller:
-            log.error("Il controller non può essere None.")
-            raise ValueError("Il controller non può essere None.")
 
-        # chiamata a super del costruttore
-        #super().__init__(parent=parent, controller=controller)
+        # Gestione del controller
+        if controller:
+            self.controller = controller
+
+        elif container and container.has("main_controller"):
+            self.controller = container.resolve("main_controller")
+        else:
+            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
+
+        # Gestione del DependencyContainer
+        self.container = container
+        if container:
+            self.color_manager = container.resolve("color_manager")
+            self.focus_handler = container.resolve("focus_handler")
 
         # Inizializza il timer per il debounce
         self.timer = wx.Timer(self)                                 # Timer per il debounce

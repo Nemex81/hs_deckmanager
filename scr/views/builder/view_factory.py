@@ -4,18 +4,30 @@
     Modulo per la creazione dinamica di finestre e widget.
 
     path:
-        scr/views/builder/window_factory.py
+        scr/views/builder/view_factory.py
 
 """
 
 # lib
 import wx
 from scr.views.builder.dependency_container import DependencyContainer
+from scr.views.main_views import  HearthstoneAppFrame
+from scr.views.collection_view import CardCollectionFrame
+from scr.views.decks_view import DecksViewFrame
+from scr.views.deck_view import DeckViewFrame
+from utyls import enu_glob as eg
 from utyls import logger as log
 
+__all_win__ = {
+    eg.WindowKey.MAIN: HearthstoneAppFrame,
+    eg.WindowKey.COLLECTION: CardCollectionFrame,
+    eg.WindowKey.DECKS: DecksViewFrame,
+    eg.WindowKey.DECK: DeckViewFrame,
+}
 
 
-class WindowFactory:
+
+class NewViewFactory:
     """
     Factory per la creazione dinamica di finestre e widget.
     Utilizza il DependencyContainer per risolvere le dipendenze necessarie.
@@ -29,7 +41,7 @@ class WindowFactory:
         """
         self.container = container
 
-    def create_window(self, window_class, parent=None, **kwargs):
+    def create_window(self, key, parent=None, controller=None, **kwargs):
         """
         Crea una finestra utilizzando la classe specificata.
 
@@ -38,15 +50,21 @@ class WindowFactory:
         :param kwargs: Parametri aggiuntivi per la creazione della finestra.
         :return: Istanza della finestra creata.
         """
-        if not hasattr(window_class, "__bases__") or wx.Frame not in window_class.__bases__:
-            raise ValueError(f"La classe {window_class.__name__} non è una finestra valida (deve ereditare da wx.Frame).")
-
-        # Risolve le dipendenze necessarie (es. ColorManager, FocusHandler)
+        window_class = __all_win__.get(key)
+        if not window_class:
+            raise ValueError(f"Chiave finestra non valida: {key}")
+        
+        # Risolvi le dipendenze dal container
         color_manager = self.container.resolve("color_manager")
         focus_handler = self.container.resolve("focus_handler")
 
         # Crea la finestra
-        return window_class(parent, color_manager=color_manager, focus_handler=focus_handler, **kwargs)
+        return window_class(
+            parent=parent,
+            controller=controller,
+            container=self.container,
+            #**kwargs
+        )
 
     def create_widget(self, widget_class, parent=None, **kwargs):
         """

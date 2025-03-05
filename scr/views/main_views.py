@@ -16,7 +16,7 @@
 # lib
 import wx, pyperclip
 from .builder.view_components import create_button
-from .proto_views import BasicView
+from .builder.proto_views import BasicView
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
@@ -25,9 +25,26 @@ from utyls import logger as log
 
 
 class HearthstoneAppFrame(BasicView):
-    def __init__(self, parent=None, controller=None):
-        super().__init__(parent, title="Hearthstone Deck Manager by Nemex81", size=(900, 700))
-        self.controller = controller
+    #def __init__(self, parent=None, controller=None):
+    def __init__(self, parent=None, controller=None, container=None):
+        super().__init__(parent=parent, title="Hearthstone Deck Manager by Nemex81", size=(900, 700), container=container)
+        #self.controller = controller
+
+        # Gestione del controller
+        if controller:
+            self.controller = controller
+
+        elif container and container.has("main_controller"):
+            self.controller = container.resolve("main_controller")
+        else:
+            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
+
+        # Gestione del DependencyContainer
+        self.container = container
+        if container:
+            self.color_manager = container.resolve("color_manager")
+            self.focus_handler = container.resolve("focus_handler")
+
 
 
     def init_ui_elements(self):
@@ -89,7 +106,8 @@ class HearthstoneAppFrame(BasicView):
 
     def on_quit_button_click(self, event):
         """Chiude l'applicazione."""
-        self.Close()
+        #self.Close()
+        self.controller.question_quit_app(self)
 
 
 class last_HearthstoneAppFrame(BasicView):

@@ -2,7 +2,7 @@
         Modulo per la gestione dei prototipi delle finestre dell'interfaccia utente.
 
         path:
-            ./scr/views/proto_views.py
+            ./scr/views/builder/proto_views.py
 
     Descrizione:
         Questo modulo contiene classi base per la creazione di finestre di dialogo e componenti dell'interfaccia utente.
@@ -17,9 +17,10 @@ import wx
 import wx.lib.newevent
 from abc import ABC, abstractmethod
 from sqlalchemy.exc import SQLAlchemyError
-from ..db import session, Card, DeckCard, Deck
-from ..models import load_cards
-from .builder.color_system import ColorManager, AppColors, ColorTheme
+from ...db import session, Card, DeckCard, Deck
+from ...models import load_cards
+from .color_system import ColorManager, AppColors, ColorTheme
+from .focus_handler import FocusHandler
 import scr.views.builder.view_components as vc
 from utyls import helper as hp
 from utyls import enu_glob as eg
@@ -68,12 +69,26 @@ class BasicView(wx.Frame):
         Classe base per le finestre principali dell'interfaccia utente.
     """
     
-    def __init__(self, parent, title, size=(900, 700)):
+    def __init__(self, parent, title, size=(900, 700), container=None, **kwargs):
         super().__init__(parent=parent, title=title, size=size)
+        self.container = container  # Memorizza il container delle dipendenze
         self.parent = parent               # Finestra genitore
         self.controller = None             # Controller per l'interfaccia
         self.db_manager = None             # Gestore del database
-        self.cm = ColorManager()           # Gestore dei colori
+        self.color_manager = None
+        self.focus_handler = None
+        #self.cm = ColorManager()           # Gestore dei colori
+        #self.focus_handler = FocusHandler()  # Gestore degli eventi di focus
+
+        # Risolvi le dipendenze dal container
+        if self.container:
+            self.cm = self.container.resolve("color_manager")
+            self.color_manager = self.container.resolve("color_manager")
+            self.focus_handler = self.container.resolve("focus_handler")
+        else:
+            self.cm = ColorManager()
+            self.color_manager = ColorManager()
+            self.focus_handler = FocusHandler()
 
         # Colori personalizzati per lo stato attivo e inattivo
         self.FOCUS_BG_COLOR = self.cm.get_color(AppColors.FOCUS_BG)
@@ -307,9 +322,23 @@ class ListView(BasicView):
     Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
     """
 
-    def __init__(self, parent, title, size=(800, 600)):
+    def __init__(self, parent, title, size=(800, 600), container=None, **kwargs):
         super().__init__(parent, title, size)
         self.mode = None                                  # Modalità di visualizzazione (es. "collection", "decks", "deck")
+        self.parent = parent
+        self.controller = None
+        self.db_manager = None
+
+        # Risolvi le dipendenze dal container
+        if container:
+            self.cm = container.resolve("color_manager")
+            self.focus_handler = container.resolve("focus_handler")
+        else:
+            self.cm = ColorManager()
+            self.focus_handler = FocusHandler()
+
+        # Applica il tema scuro
+        self.cm.set_theme_dark()
 
         # Timer per il debounce
         self.timer = wx.Timer(self)

@@ -17,7 +17,7 @@
 import wx#, pyperclip
 import wx.lib.newevent
 from ..db import session, db_session, Card, DeckCard, Deck
-from .proto_views import BasicView, ListView
+from .builder.proto_views import BasicView, ListView
 from .deck_stats_dialog import DeckStatsDialog
 import scr.views.builder.view_components as vc              # Componenti dell'interfaccia utente
 from utyls import enu_glob as eg                            # Enumerazioni globali
@@ -34,14 +34,30 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
-    def __init__(self, parent=None, controller=None):
+    def __init__(self, parent=None, controller=None, container=None, **kwargs):
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
-        self.controller = controller
-        self.db_manager = self.parent.controller.db_manager
+        self.container = container
+        #self.db_manager = self.parent.controller.db_manager
         #self.controller = self.parent.controller.decks_controller
         self.mode = "decks"
+
+        # Gestione del controller
+        if controller:
+            self.controller = controller
+
+        elif container and container.has("main_controller"):
+            self.controller = container.resolve("main_controller")
+        else:
+            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
+
+        # Gestione del DependencyContainer
+        self.container = container
+        if container:
+            self.color_manager = container.resolve("color_manager")
+            self.focus_handler = container.resolve("focus_handler")
+            self.db_manager = container.resolve("db_manager")
 
         # Timer per il debounce
         self.timer = wx.Timer(self)

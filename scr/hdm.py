@@ -15,6 +15,7 @@
 # lib
 from scr.models import DbManager
 from scr.controller import MainController, CollectionController, DecksController, DeckController
+from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
 
@@ -27,14 +28,17 @@ class AppBuilder:
         """Inizializza l'AppBuilder e tutti i controller."""
 
         # Inizializza il DbManager (modello)
+        log.debug("Inizializzo il DbManager.")
         self.db_manager = DbManager()
 
         # Inizializza i controller
+        log.debug("Inizializzo i controller.")
         self.collection_controller = CollectionController(db_manager=self.db_manager)
         self.decks_controller = DecksController(db_manager=self.db_manager)
         self.deck_controller = DeckController(db_manager=self.db_manager)
 
         # Inizializza il MainController, passandogli gli altri controller
+        log.debug("Inizializzo il controller principale.")
         self.main_controller = MainController(
             db_manager=self.db_manager,
             collection_controller=self.collection_controller,
@@ -44,7 +48,9 @@ class AppBuilder:
 
     def build_app(self):
         """Restituisce l'applicazione inizializzata."""
+
         # Imposta i controller genitori
+        log.debug("Imposto i controller genitori.")
         self.collection_controller.parent = self.main_controller
         self.decks_controller.parent = self.main_controller
         self.deck_controller.parent = self.main_controller
@@ -53,9 +59,13 @@ class AppBuilder:
 
     def run_app(self):
         """Avvia l'applicazione."""
+
+        log.debug("Avvio dell'applicazione.")
         if self.main_controller:
+            log.debug("Avvio del controller main.")
             self.main_controller.run()
         else:
+            log.error("L'applicazione non è stata costruita correttamente.")
             raise ValueError("L'applicazione non è stata costruita correttamente.")
 
 

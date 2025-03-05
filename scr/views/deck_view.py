@@ -18,7 +18,7 @@ import wx.lib.newevent
 from ..db import session, Card, DeckCard, Deck
 from ..models import load_deck_from_db, load_cards
 from .builder.view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import BasicView, ListView
+from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .builder.color_system import AppColors
 from utyls import enu_glob as eg
@@ -33,31 +33,55 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class DeckViewFrame(ListView):
     """Finestra per gestire le carte di un mazzo."""
 
-    def __init__(self, parent, controller, deck_name):
+    #def __init__(self, parent=None, controller=None, container=None, deck_name="", **kwargs):
+    def __init__(self, parent=None, controller=None, container=None, deck_name="", **kwargs):
         """ Costruttore della classe DeckViewFrame. """
 
         # Inizializzazione delle variabili PRIMA di chiamare super().__init__
         title = f"Mazzo: {deck_name}"
-        self.parent = parent
-        self.controller = controller
         #super().__init__(parent, controller, deck_name)
+        self.parent = parent
+        self.container = container
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.card_list = None
         self.deck_name = deck_name
-        self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+        #self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+        self.deck_content = None
+
+        # Gestione del controller
+        if controller:
+            self.controller = controller
+
+        elif container and container.has("main_controller"):
+            self.controller = container.resolve("main_controller")
+        else:
+            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
+
+        # Gestione del DependencyContainer
+        self.container = container
+        if container:
+            self.color_manager = container.resolve("color_manager")
+            self.focus_handler = container.resolve("focus_handler")
+            self.db_manager = container.resolve("db_manager")
 
         # Se il mazzo non esiste, solleva un'eccezione
-        #if not self.deck_content:
+        if not self.deck_content:
             #raise ValueError(f"Mazzo non trovato: {deck_name}")
+            self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
         
         # Chiamata al costruttore della classe base
         #super().__init__(parent, controller, deck_name)
-        super().__init__(parent, title=title, size=(1200, 800))
+        #super().__init__(parent, title=title, size=(1200, 800))
+
+        if not controller:
+            controller = container.resolve("deck_controller") if container else None
+        title = f"Mazzo: {deck_name}"
+        super().__init__(parent=parent, title=title, controller=self.controller, deck_name=deck_name, **kwargs)
 
         # Timer per il debounce
-        self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+        #self.timer = wx.Timer(self)
+        #self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        #self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
 
     def init_ui_elements(self):
