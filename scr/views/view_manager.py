@@ -112,6 +112,11 @@ class WinController:
     def create_deck_window(self, parent=None, controller=None, deck_name=None):
         """Crea la finestra di un mazzo."""
         log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECK}")
+        if not deck_name:
+            log.error("'deck_name' è obbligatorio per DeckViewFrame")
+            raise ValueError("'deck_name' è obbligatorio per DeckViewFrame")
+
+        log.debug(f"chiamata alla factory per la creazione della finestra con chiave: {eg.WindowKey.DECK}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.DECK, deck_name=deck_name)
 
     def open_window(self, window_key, parent=None):
