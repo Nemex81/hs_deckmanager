@@ -21,7 +21,7 @@ import logging
 # Configurazione del logging
 logging.basicConfig(
     filename='hearthstone_manager.log',                             # File di log
-    level=logging.INFO,                                             # Livello di log
+    level=logging.DEBUG,                                             # Livello di log
     format='%(asctime)s - %(levelname)s - %(message)s',             # Formato del log
     datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
 )

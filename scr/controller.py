@@ -458,9 +458,9 @@ class DecksController:
         deck_name = self.get_selected_deck(frame.card_list)
         if deck_name:
             if self.db_manager.copy_deck_to_clipboard(deck_name):
+                self.select_and_focus_deck(frame, deck_name)
                 #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
                 wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
-                self.select_and_focus_deck(deck_name)
 
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
