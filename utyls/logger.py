@@ -20,10 +20,10 @@ import logging
 
 # Configurazione del logging
 logging.basicConfig(
-    filename='hearthstone_manager.log',  # File di log
-    level=logging.INFO,                  # Livello di log
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del log
-    datefmt='%Y-%m-%d %H:%M:%S'         # Formato della data
+    filename='hearthstone_manager.log',                             # File di log
+    level=logging.INFO,                                             # Livello di log
+    format='%(asctime)s - %(levelname)s - %(message)s',             # Formato del log
+    datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
 )
 
 
@@ -86,4 +86,4 @@ def debug(debug):
 
 # start del moodulo
 if __name__ == '__main__':
-    print("Carico: %s" % __file__)
+    debug(f"Carico: {__name__}")
