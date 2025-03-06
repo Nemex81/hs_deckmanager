@@ -35,13 +35,13 @@ class WidgetFactory:
     Utilizza il DependencyContainer per risolvere le dipendenze necessarie.
     """
 
-    def __init__(self, container=None):
+    def __init__(self, container: DependencyContainer=None):
         """
         Inizializza la factory con un container di dipendenze.
         Se non viene fornito un container, ne crea uno nuovo.
         """
 
-        self.container = container or DependencyContainer()
+        self.container = container
         self.color_manager = self.container.resolve("color_manager")
         self.focus_handler = self.container.resolve("focus_handler")
 
@@ -177,6 +177,28 @@ class NewViewFactory:
         # Crea il widget
         return widget_class(parent, color_manager=color_manager, focus_handler=focus_handler, **kwargs)
 
+
+
+
+class OldViewFactory:
+    """Factory per la creazione delle view, supporta entrambi gli approcci."""
+
+    def __init__(self, container=None, **kwargs):
+        self.use_new_framework = False
+        self.container = container
+
+    def create_window(self, key, parent=None, controller=None, **kwargs):
+        window_class = __all_win__.get(key)
+        if not window_class:
+            raise ValueError(f"Chiave finestra non valida: {key}")
+
+        # Crea la finestra
+        return window_class(
+            parent=parent,
+            controller=controller,
+            container=self.container,
+            **kwargs
+        )
 
 
 

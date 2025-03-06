@@ -8,14 +8,17 @@ Path:
 
 # lib
 from enum import Enum
-from scr.views.builder.color_system import ColorManager  # Nuovo sistema colori
-from scr.views.builder.focus_handler import FocusHandler  # Nuovo gestore focus
-from scr.views.builder.dependency_container import DependencyContainer  # Nuovo container
-from scr.views.builder.view_factory import NewViewFactory  # Nuova factory
+from scr.views.builder.color_system import ColorManager                         # Nuovo sistema colori
+from scr.views.builder.focus_handler import FocusHandler                        # Nuovo gestore focus
+from scr.views.builder.dependency_container import DependencyContainer          # Nuovo container
+from scr.views.builder.view_factory import NewViewFactory, OldViewFactory        # Factory per la creazione delle view
+from scr.views.builder.view_factory import WidgetFactory                        # Factory per la creazione dei widget
+
 from .main_views import HearthstoneAppFrame
 from .collection_view import CardCollectionFrame
 from .decks_view import DecksViewFrame
 from .deck_view import DeckViewFrame
+
 from utyls import enu_glob as eg
 from utyls import logger as log
 
@@ -26,25 +29,7 @@ __all_win__ = {
     eg.WindowKey.DECK: DeckViewFrame,
 }
 
-class OldViewFactory:
-    """Factory per la creazione delle view, supporta entrambi gli approcci."""
 
-    def __init__(self, container=None, **kwargs):
-        self.use_new_framework = False
-        self.container = container
-
-    def create_window(self, key, parent=None, controller=None, **kwargs):
-        window_class = __all_win__.get(key)
-        if not window_class:
-            raise ValueError(f"Chiave finestra non valida: {key}")
-
-        # Crea la finestra
-        return window_class(
-            parent=parent,
-            controller=controller,
-            container=self.container,
-            **kwargs
-        )
 
 class WinController:
     """ Controller per la gestione delle finestre. """
