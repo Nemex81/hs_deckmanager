@@ -10,7 +10,7 @@ Path:
 from enum import Enum
 
 from scr.views.builder.dependency_container import DependencyContainer          # Nuovo container
-from scr.views.builder.view_factory import NewViewFactory, OldViewFactory        # Factory per la creazione delle view
+from scr.views.builder.view_factory import ViewFactory        # Factory per la creazione delle view
 from scr.views.builder.view_factory import WidgetFactory                        # Factory per la creazione dei widget
 
 from utyls import enu_glob as eg
@@ -29,8 +29,10 @@ class WinController:
 
 
     def _select_factory(self):
-        """Seleziona la factory da utilizzare (vecchia o nuova)."""
-        return OldViewFactory(container=self.container) 
+        """ 
+        Seleziona la factory da utilizzare (impostare quì la logica pe rselezionare factory alternative).
+        """
+        return ViewFactory(container=self.container) 
 
 
     def create_window(self, parent=None, controller=None, key=None, **kwargs):
