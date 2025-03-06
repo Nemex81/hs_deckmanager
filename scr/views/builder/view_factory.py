@@ -184,7 +184,6 @@ class OldViewFactory:
     """Factory per la creazione delle view, supporta entrambi gli approcci."""
 
     def __init__(self, container=None, **kwargs):
-        self.use_new_framework = False
         self.container = container
 
     def create_window(self, key, parent=None, controller=None, **kwargs):

@@ -17,6 +17,7 @@ from scr.views.main_views import HearthstoneAppFrame
 from scr.views.collection_view import CardCollectionFrame
 from scr.views.decks_view import DecksViewFrame
 from scr.views.deck_view import DeckViewFrame
+from scr.views.builder.color_system import ColorTheme
 from utyls import enu_glob as eg
 from utyls import logger as log
 
@@ -33,24 +34,35 @@ class AppInitializer:
     Classe responsabile dell'inizializzazione dell'applicazione con il nuovo framework.
     """
 
-    def __init__(self, use_new_framework=False):
-        self.use_new_framework = use_new_framework
+    def __init__(self):
         self.container = DependencyContainer()
         self.win_controller = None
         self.main_controller = None
 
     def initialize_app(self):
+        """Inizializza l'applicazione con il nuovo framework."""
+
+        log.debug("Inizializzazione dell'applicazione.")
+
+        self._register_dependencies()                                                           # Registra le dipendenze
+        self.win_controller = WinController(container=self.container)                           # Inizializza il WinController
+        self._initialize_controllers()
+
+        # Avvia il ciclo principale dell'applicazione
+        #self.main_controller.run()  # Aggiunto: chiama il metodo per avviare wx.App.MainLoop
+
+
+    def last_initialize_app(self):
         """
         Inizializza l'applicazione con il framework selezionato.
         """
         log.debug("Inizializzazione dell'applicazione.")
 
         # Registra le dipendenze nel container (solo per il nuovo framework)
-        if self.use_new_framework:
-            self._register_dependencies()
+        self._register_dependencies()
 
-        # Inizializza il WinController con l'opzione use_new_framework e il container configurato
-        self.win_controller = WinController(use_new_framework=self.use_new_framework, container=self.container)
+        # Inizializza il WinController con il container configurato
+        self.win_controller = WinController(container=self.container)
 
         # Inizializza i controller
         self._initialize_controllers()
@@ -65,7 +77,7 @@ class AppInitializer:
         log.debug("Registrazione delle dipendenze nel container.")
 
         # Gestione colori e focus
-        self.container.register("color_manager", lambda: ColorManager(theme="DARK"))
+        self.container.register("color_manager", lambda: ColorManager(theme=ColorTheme.DARK))
         self.container.register("focus_handler", lambda: FocusHandler())
 
         # Gestione del database
@@ -73,9 +85,11 @@ class AppInitializer:
         self.container.register("db_manager", lambda: db_manager)
 
         # Controller
+        self.container.register("WinController", lambda: WinController(container=self.container))
         self.container.register("collection_controller", lambda: CollectionController(db_manager=db_manager))
         self.container.register("decks_controller", lambda: DecksController(db_manager=db_manager))
         self.container.register("deck_controller", lambda: DeckController(db_manager=db_manager))
+
         self.container.register("main_controller", lambda: MainController(
             db_manager=db_manager,
             collection_controller=self.container.resolve("collection_controller"),
@@ -108,15 +122,24 @@ class AppInitializer:
             deck_controller=DeckController(db_manager=db_manager)
         )
 
-    def _start_app(self):
+    def start_app(self):
         """
         Avvia l'applicazione.
         """
         log.debug("Avvio dell'applicazione.")
+        #  Avvia l'interfaccia grafica delapplicazione
+        import wx
+        app = wx.App(False)
 
         # Crea e mostra la finestra principale
         self.win_controller.create_main_window(parent=None, controller=self.main_controller)
-        self.win_controller.open_window(key="main")
+        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
+
+        # Avvia il ciclo principale dell'applicazione
+        app.MainLoop()
+
+
+
 
 
 

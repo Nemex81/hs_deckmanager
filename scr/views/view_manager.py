@@ -34,8 +34,7 @@ __all_win__ = {
 class WinController:
     """ Controller per la gestione delle finestre. """
 
-    def __init__(self, use_new_framework=False, container=None):
-        self.use_new_framework = use_new_framework      # Flag per l'utilizzo del nuovo framework
+    def __init__(self, container=None):
         self.container = container                      # Memorizza il container
         self.factory = self._select_factory()           # Seleziona la factory in base al flag
         self.windows = {}                               # Dizionario per memorizzare le finestre
@@ -44,12 +43,7 @@ class WinController:
 
     def _select_factory(self):
         """Seleziona la factory da utilizzare (vecchia o nuova)."""
-
-        if self.use_new_framework:
-            #return NewViewFactory(container=self.container)  # Usa il container configurato
-            return OldViewFactory(container=self.container)  # Usa il container configurato
-        else:
-            return OldViewFactory(container=self.container)  # Usa il container configurato
+        return OldViewFactory(container=self.container) 
 
 
     def create_window(self, parent=None, controller=None, key=None, **kwargs):

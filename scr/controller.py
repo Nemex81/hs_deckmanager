@@ -34,7 +34,7 @@ from utyls import logger as log
 class CollectionController:
     """Controller per la vista della collezione di carte."""
 
-    def __init__(self, parent=None, db_manager=None):
+    def __init__(self, parent=None, db_manager=None, **kwargs):
         self.parent = parent            # Riferimento al controller principale
         self.db_manager = db_manager    # Istanza di DbManager
 
@@ -144,7 +144,7 @@ class CollectionController:
 class DeckController:
     """ Controller per la view di un singoolo mazzo. """
 
-    def __init__(self, parent=None, db_manager=None):
+    def __init__(self, parent=None, db_manager=None, **kwargs):
         self.parent= parent
         self.db_manager = db_manager
 
@@ -158,7 +158,7 @@ class DeckController:
 class DecksController:
     """ Controller per la vista dei mazzi. """
 
-    def __init__(self, parent=None, db_manager=None):
+    def __init__(self, parent=None, db_manager=None, **kwargs):
         self.parent = parent
         self.db_manager = db_manager
         self.deck_controller = None
@@ -166,7 +166,12 @@ class DecksController:
 
     def run_deck_frame(self, parent=None, deck_name=None):
         """Apre la finestra di un mazzo specifico."""
-        self.parent.run_deck_frame(parent, deck_name)
+        window_key = eg.WindowKey.DECK
+        if not self.deck_controller:
+            self.deck_controller = DeckController(parent=self, db_manager=self.db_manager)
+
+        self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
+        self.win_controller.open_window(window_key=window_key, parent=parent)
 
 
     def load_decks(self, card_list=None):
@@ -516,7 +521,7 @@ class DecksController:
 
 
 class MainController:
-    def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None):
+    def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None, **kwargs):
         self.db_manager = db_manager
         self.win_controller = WinController()  # Inizializza il WinController
         self.collection_controller = collection_controller
@@ -544,12 +549,12 @@ class MainController:
         """Avvia l'applicazione."""
 
         log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
-        app = wx.App(False)
+        #app = wx.App(False)
         log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
         #self.win_controller.create_window(window_key=eg.WindowKey.MAIN, parent=None, controller=self)
-        self.win_controller.create_main_window(None, controller=self)
-        self.win_controller.open_window(eg.WindowKey.MAIN)
-        app.MainLoop()
+        #self.win_controller.create_main_window(None, controller=self)
+        #self.win_controller.open_window(eg.WindowKey.MAIN)
+        #app.MainLoop()
 
     def run_collection_frame(self, parent=None):
         """Apre la finestra della collezione."""
@@ -565,17 +570,9 @@ class MainController:
             log.debug("Controller per finestra mazzi assente, provvedo alla creazione di un nuovo controller per i mazzi.")
             self.decks_controller = DecksController(parent=self, db_manager=self.db_manager)
 
+        controller.win_controller = self.win_controller
         self.win_controller.create_decks_window(parent=parent, controller=self.decks_controller)
         self.win_controller.open_window(eg.WindowKey.DECKS)
-
-    def run_deck_frame(self, parent=None, deck_name=None):
-        """Apre la finestra di un mazzo specifico."""
-        window_key = eg.WindowKey.DECK
-        if not self.deck_controller:
-            self.deck_controller = DeckController(parent=self, db_manager=self.db_manager)
-
-        self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
-        self.win_controller.open_window(window_key, parent)
 
 
 
