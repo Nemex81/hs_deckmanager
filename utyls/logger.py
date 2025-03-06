@@ -19,13 +19,19 @@
 import logging
 
 # Configurazione del logging
+"""
 logging.basicConfig(
     filename='hearthstone_manager.log',                             # File di log
-    level=logging.DEBUG,                                             # Livello di log
+    level=logging.DEBUG,                                        # Livello di log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     format='%(asctime)s - %(levelname)s - %(message)s',             # Formato del log
     datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
 )
+"""
 
+from logging.handlers import RotatingFileHandler
+
+handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10)
+logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
 
 def setup_logging(log_file='hearthstone_manager.log', console_output=False):
