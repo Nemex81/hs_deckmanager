@@ -39,6 +39,7 @@ class AppInitializer:
         self.win_controller = None
         self.main_controller = None
 
+
     def initialize_app(self):
         """Inizializza l'applicazione con il nuovo framework."""
 
@@ -48,32 +49,13 @@ class AppInitializer:
         self.win_controller = WinController(container=self.container)                           # Inizializza il WinController
         self._initialize_controllers()
 
-        # Avvia il ciclo principale dell'applicazione
-        #self.main_controller.run()  # Aggiunto: chiama il metodo per avviare wx.App.MainLoop
-
-
-    def last_initialize_app(self):
-        """
-        Inizializza l'applicazione con il framework selezionato.
-        """
-        log.debug("Inizializzazione dell'applicazione.")
-
-        # Registra le dipendenze nel container (solo per il nuovo framework)
-        self._register_dependencies()
-
-        # Inizializza il WinController con il container configurato
-        self.win_controller = WinController(container=self.container)
-
-        # Inizializza i controller
-        self._initialize_controllers()
-
-        # Avvia l'applicazione
-        self._start_app()
+        log.debug("Inizializzazione completata.")
 
     def _register_dependencies(self):
         """
         Registra le dipendenze nel container.
         """
+
         log.debug("Registrazione delle dipendenze nel container.")
 
         # Gestione colori e focus
@@ -100,32 +82,18 @@ class AppInitializer:
         # gestione dizionario con le path delle classi per le finestre
         self.container.register("all_win", lambda: __all_win__)
 
+        log.debug("Registrazione delle dipendenze completata.")
 
     def _initialize_controllers(self):
         log.debug("Inizializzazione dei controller tramite DependencyContainer.")
         self.main_controller = self.container.resolve("main_controller")
 
-    def last__initialize_controllers(self):
-        """
-        Inizializza i controller dell'applicazione.
-        """
-        log.debug("Inizializzazione dei controller.")
-
-        # Inizializza DbManager
-        db_manager = DbManager()
-
-        # Inizializza i controller
-        self.main_controller = MainController(
-            db_manager=db_manager,
-            collection_controller=CollectionController(db_manager=db_manager),
-            decks_controller=DecksController(db_manager=db_manager),
-            deck_controller=DeckController(db_manager=db_manager)
-        )
 
     def start_app(self):
         """
         Avvia l'applicazione.
         """
+
         log.debug("Avvio dell'applicazione.")
         #  Avvia l'interfaccia grafica delapplicazione
         import wx
