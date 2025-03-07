@@ -25,26 +25,37 @@ from utyls import logger as log
 
 
 class HearthstoneAppFrame(BasicView):
-    #def __init__(self, parent=None, controller=None):
-    def __init__(self, parent=None, controller=None, container=None):
+    """ Finestra principale dell'applicazione. """
+
+    def __init__(self, parent=None, controller=None, container=None, **kwargs):
+
+        self.widget_factory = container.resolve("widget_factory")
+        if not self.widget_factory:
+            raise ValueError("WidgetFactory non definita.")
+
         super().__init__(parent=parent, title="Hearthstone Deck Manager by Nemex81", size=(900, 700), container=container)
-        #self.controller = controller
+        log.debug("Creazione finestra principale.")
+        self.controller = controller
 
         # Gestione del controller
-        if controller:
-            self.controller = controller
-
-        elif container and container.has("main_controller"):
-            self.controller = container.resolve("main_controller")
-        else:
+        self.controller = controller or (container and container.resolve("main_controller"))
+        if not self.controller:
             raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
 
-        # Gestione del DependencyContainer
-        self.container = container
-        if container:
-            self.color_manager = container.resolve("color_manager")
-            self.focus_handler = container.resolve("focus_handler")
+        # Risoluzione delle dipendenze
 
+        # Risoluzione del gestore dei colori
+        self.color_manager = container.resolve("color_manager")
+        if not self.color_manager:
+            log.error("ColorManager non definito.")
+
+        # Risoluzione del gestore del focus
+        self.focus_handler = container.resolve("focus_handler")
+        if not self.color_manager or not self.focus_handler:
+            log.error("ColorManager o FocusHandler non definiti.")  
+
+
+        log.info("Finestra principale creata.")
 
 
     def init_ui_elements(self):
@@ -55,21 +66,21 @@ class HearthstoneAppFrame(BasicView):
         image = image.Scale(1200, 790)  # Ridimensiona l'immagine
         bitmap = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap(image))
 
-        # Creazione pulsanti
-        self.collection_button = create_button(
-            self.panel, 
+        # Creazione pulsanti tramite WidgetFactory
+        self.collection_button = self.widget_factory.create_button(
+            parent=self.panel, 
             label="Collezione", 
             event_handler=self.on_collection_button_click
         )
 
-        self.decks_button = create_button(
-            self.panel, 
+        self.decks_button = self.widget_factory.create_button(
+            parent=self.panel, 
             label="Gestione Mazzi", 
             event_handler=self.on_decks_button_click
         )
 
-        self.quit_button = create_button(
-            self.panel,
+        self.quit_button = self.widget_factory.create_button(
+            parent=self.panel,
             label="Esci",
             event_handler=self.on_quit_button_click
         )

@@ -545,7 +545,7 @@ class MainController:
             frame.Close()   # Chiudi la finestra impostazioni account
 
 
-    def run(self):
+    def last_run(self):
         """Avvia l'applicazione."""
 
         log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")

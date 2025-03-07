@@ -10,7 +10,7 @@
 from .dependency_container import DependencyContainer
 from .color_system import ColorManager
 from .focus_handler import FocusHandler
-from .view_factory import NewViewFactory
+from .view_factory import ViewFactory
 from utyls import enu_glob as eg
 from utyls import logger as log
 
@@ -24,7 +24,7 @@ class WinBuildManager:
 
     def __init__(self):
         self.container = DependencyContainer()                  # Inizializza il container delle dipendenze
-        self.factory = NewViewFactory(self.container)            # Inizializza la WindowFactory
+        self.factory = ViewFactory(self.container)            # Inizializza la WindowFactory
         self._register_default_dependencies()                   # Registra le dipendenze di default
         self.windows = {}                                       # Dizionario per memorizzare le finestre attive
         self.current_window = None                              # Finestra corrente

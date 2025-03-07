@@ -9,26 +9,20 @@
 from scr.views.builder.dependency_container import DependencyContainer
 from scr.views.builder.color_system import ColorManager
 from scr.views.builder.focus_handler import FocusHandler
-#from scr.views.builder.win_builder_manager import WinBuildManager
+from scr.views.builder.view_factory import WidgetFactory
+
+from scr.views.collection_view import CardCollectionFrame
+from scr.views.decks_view import DecksViewFrame
+from scr.views.deck_view import DeckViewFrame
+
 from scr.views.view_manager import WinController
 from scr.controller import MainController, CollectionController, DecksController, DeckController
 from scr.models import DbManager
-
-#from scr.views.main_views import HearthstoneAppFrame
-#from scr.views.collection_view import CardCollectionFrame
-#from scr.views.decks_view import DecksViewFrame
-#from scr.views.deck_view import DeckViewFrame
-
+from scr.views.main_views import HearthstoneAppFrame
 from scr.views.builder.color_system import ColorTheme
 from utyls import enu_glob as eg
 from utyls import logger as log
 
-#__all_win__ = {
-    #eg.WindowKey.MAIN: HearthstoneAppFrame,
-    #eg.WindowKey.COLLECTION: CardCollectionFrame,
-    #eg.WindowKey.DECKS: DecksViewFrame,
-    #eg.WindowKey.DECK: DeckViewFrame,
-#}
 
 
 class AppInitializer:
@@ -38,8 +32,9 @@ class AppInitializer:
 
     def __init__(self):
         self.container = DependencyContainer()
-        self.win_controller = None
-        self.main_controller = None
+        #self.win_controller = None
+        #self.main_controller = None
+
 
 
     def initialize_app(self):
@@ -66,6 +61,17 @@ class AppInitializer:
         # Registra ColorManager e FocusHandler
         self.container.register("color_manager", lambda: ColorManager(theme=ColorTheme.DARK))
         self.container.register("focus_handler", lambda: FocusHandler())
+
+        self.container.register("widget_factory", lambda: WidgetFactory(
+            color_manager=self.container.resolve("color_manager"),
+            focus_handler=self.container.resolve("focus_handler"),
+        ))
+
+        # Verifica che WidgetFactory sia registrata
+        if not self.container.has("widget_factory"):
+            log.error("WidgetFactory non registrata correttamente.")
+        else:
+            log.info("WidgetFactory registrata correttamente.")
 
         # Gestione del database
         db_manager = DbManager()

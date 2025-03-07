@@ -35,15 +35,33 @@ class WidgetFactory:
     Utilizza il DependencyContainer per risolvere le dipendenze necessarie.
     """
 
-    def __init__(self, container=None):
+    def __init__(self, color_manager, focus_handler, **kwargs):
         """
         Inizializza la factory con un container di dipendenze.
         Se non viene fornito un container, ne crea uno nuovo.
         """
+        self.container = kwargs.get("container", None)
 
-        self.container = container
-        self.color_manager = self.container.resolve("color_manager")
-        self.focus_handler = self.container.resolve("focus_handler")
+        log.info("Inizializzazione WidgetFactory.")
+
+        # cerca il container di dipendenze nel kwargs
+        if not self.container and "container" in kwargs:
+            self.container = kwargs["container"]
+
+        self.color_manager = color_manager
+        if not self.color_manager:
+            log.error("ColorManager non fornito al WidgetFactory.")
+            raise ValueError("ColorManager non fornito al WidgetFactory.")
+        else:
+            log.info("ColorManager risolto correttamente in ViewFactory.")
+
+        self.focus_handler = focus_handler
+        if not self.focus_handler:
+            log.error("FocusHandler non fornito al WidgetFactory.")
+            raise ValueError("FocusHandler non fornito al WidgetFactory.")
+            
+        else:
+            log.info("FocusHandler risolto correttamente in ViewFactory.")
 
 
     def create_button(self, parent, label, size=(180, 70), font_size=16, event_handler=None):
@@ -124,6 +142,7 @@ class ViewFactory:
 
     def __init__(self, container=None, **kwargs):
         self.container = container
+        self.kwargs = kwargs
 
     def create_window(self, key, parent=None, controller=None, **kwargs):
         window_class = __all_win__.get(key)
