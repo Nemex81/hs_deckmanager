@@ -33,7 +33,6 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class DeckViewFrame(ListView):
     """Finestra per gestire le carte di un mazzo."""
 
-    #def __init__(self, parent=None, controller=None, container=None, deck_name="", **kwargs):
     def __init__(self, parent=None, controller=None, container=None, deck_name="", **kwargs):
         """ Costruttore della classe DeckViewFrame. """
 
@@ -68,10 +67,6 @@ class DeckViewFrame(ListView):
         if not self.deck_content:
             #raise ValueError(f"Mazzo non trovato: {deck_name}")
             self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
-        
-        # Chiamata al costruttore della classe base
-        #super().__init__(parent, controller, deck_name)
-        #super().__init__(parent, title=title, size=(1200, 800))
 
         if not controller:
             controller = container.resolve("deck_controller") if container else None
@@ -79,9 +74,9 @@ class DeckViewFrame(ListView):
         super().__init__(parent=parent, title=title, controller=self.controller, deck_name=deck_name, **kwargs)
 
         # Timer per il debounce
-        #self.timer = wx.Timer(self)
-        #self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-        #self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
 
     def init_ui_elements(self):

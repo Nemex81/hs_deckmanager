@@ -77,71 +77,68 @@ class DecksViewFrame(ListView):
 
         # titolo della finestra
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
-        self.card_list = vc.create_list_ctrl(
+        #self.card_list = vc.create_list_ctrl(
+        self.card_list = self.widget_factory.create_list_ctrl(
             parent=self.panel,
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
-
-        # Collega gli eventi di focus alla lista
-        #self.bind_focus_events(self.card_list)
 
         # Carichiamo i mazzi
         self.load_decks()
 
         # Barra di ricerca
-        self.search_bar = vc.create_search_bar(
-            self.panel,
+        #self.search_bar = vc.create_search_bar(
+        self.search_bar = self.widget_factory.create_search_bar(
+            parent=self.panel,
             placeholder="Cerca mazzo...",
             event_handler=self.on_search
         )
         self.search_bar.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
 
         # Pulsanti
-        #btn_add = vc.create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
+
         btn_add = self.widget_factory.create_button(
             parent=self.panel, 
             label="Aggiungi Mazzo", 
             event_handler=self.on_add_deck
         )
-            
-        #btn_copy = vc.create_button(self.panel, label="Copia Mazzo", event_handler=self.on_copy_deck)
+
         btn_copy = self.widget_factory.create_button(
             parent=self.panel, 
             label="Copia Mazzo", 
             event_handler=self.on_copy_deck
         )
 
-        #btn_view = vc.create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
         btn_view = self.widget_factory.create_button(
             parent=self.panel, 
             label="Visualizza Mazzo",
             event_handler=self.on_view_deck
         )   
-        #btn_stats = vc.create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
+
         btn_stats = self.widget_factory.create_button(
             parent=self.panel, 
             label="Statistiche Mazzo", 
             event_handler=self.on_view_stats
         )
-        #btn_update = vc.create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)
+
         btn_update = self.widget_factory.create_button(
             parent=self.panel, 
             label="Aggiorna Mazzo", 
             event_handler=self.on_update_deck
         )
-        #btn_delete = vc.create_button(self.panel, label="Elimina Mazzo", event_handler=self.on_delete_deck)
+
         btn_delete = self.widget_factory.create_button(
             parent=self.panel,
             label="Elimina Mazzo",
             event_handler=self.on_delete_deck
         )
-        #btn_collection = vc.create_button(self.panel, label="Collezione Carte", event_handler=self.on_view_collection)
+
         btn_collection = self.widget_factory.create_button(
             parent=self.panel, 
             label="Collezione Carte", 
             event_handler=self.on_view_collection
         )
-        #btn_exit = vc.create_button(self.panel, label="Chiudi", event_handler=self.on_close)
+
         btn_exit = self.widget_factory.create_button(
             parent=self.panel, 
             label="Chiudi", 
