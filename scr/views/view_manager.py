@@ -23,6 +23,10 @@ class WinController:
 
     def __init__(self, container=None):
         self.container = container                      # Memorizza il container
+        if not self.container:
+            log.error("Container non fornito al WinController.")
+            raise ValueError("Container non fornito al WinController.")
+
         self.factory = self._select_factory()           # Seleziona la factory in base al flag
         self.windows = {}                               # Dizionario per memorizzare le finestre
         self.current_window = None                      # Finestra corrente

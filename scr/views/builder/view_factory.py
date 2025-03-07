@@ -142,6 +142,9 @@ class ViewFactory:
 
     def __init__(self, container=None, **kwargs):
         self.container = container
+        if not self.container:
+            raise ValueError("DependencyContainer non fornito alla ViewFactory.")
+
         self.kwargs = kwargs
 
     def create_window(self, key, parent=None, controller=None, **kwargs):

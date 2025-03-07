@@ -35,6 +35,11 @@ class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent=None, controller=None, container=None, **kwargs):
+
+        self.widget_factory = container.resolve("widget_factory")
+        if not self.widget_factory:
+            raise ValueError("WidgetFactory non definita.")
+
         title = "Gestione Mazzi"
         super().__init__(parent=parent, title=title, size=(800, 600))
         self.parent = parent
@@ -47,8 +52,8 @@ class DecksViewFrame(ListView):
         if controller:
             self.controller = controller
 
-        elif container and container.has("main_controller"):
-            self.controller = container.resolve("main_controller")
+        elif container and container.has("decks_controller"):
+            self.controller = container.resolve("decks_controller")
         else:
             raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
 
@@ -92,8 +97,20 @@ class DecksViewFrame(ListView):
         self.search_bar.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
 
         # Pulsanti
-        btn_add = vc.create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
-        btn_copy = vc.create_button(self.panel, label="Copia Mazzo", event_handler=self.on_copy_deck)
+        #btn_add = vc.create_button(self.panel, label="Aggiungi Mazzo", event_handler=self.on_add_deck)
+        btn_add = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Aggiungi Mazzo", 
+            event_handler=self.on_add_deck
+        )
+            
+        #btn_copy = vc.create_button(self.panel, label="Copia Mazzo", event_handler=self.on_copy_deck)
+        btn_copy = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Copia Mazzo", 
+            event_handler=self.on_copy_deck
+        )
+
         btn_view = vc.create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
         btn_stats = vc.create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
         btn_update = vc.create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)

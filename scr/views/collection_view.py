@@ -37,12 +37,11 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-#class CardCollectionFrame(BasicView):
 class CardCollectionFrame(ListView):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent, controller, container):
-        super().__init__(parent, title="Collezione")
+    def __init__(self, parent, controller, container, **kwargs):
+        super().__init__(parent, title="Collezione", container=container)
         self.mode = "collection"
         self.parent = parent
 

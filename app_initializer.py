@@ -32,18 +32,14 @@ class AppInitializer:
 
     def __init__(self):
         self.container = DependencyContainer()
-        #self.win_controller = None
-        #self.main_controller = None
-
-
+        self.win_controller = None
 
     def initialize_app(self):
         """Inizializza l'applicazione con il nuovo framework."""
-
         log.info("Inizializzazione dell'applicazione.")
 
         # Registra le dipendenze
-        self._register_dependencies()                                                           # Registra le dipendenze
+        self._register_dependencies()
 
         # Inizializza il WinController
         self.win_controller = self.container.resolve("win_controller")
@@ -55,13 +51,13 @@ class AppInitializer:
         """
         Registra le dipendenze nel container.
         """
-
         log.info("Registrazione delle dipendenze nel container.")
 
         # Registra ColorManager e FocusHandler
         self.container.register("color_manager", lambda: ColorManager(theme=ColorTheme.DARK))
         self.container.register("focus_handler", lambda: FocusHandler())
 
+        # Registra WidgetFactory
         self.container.register("widget_factory", lambda: WidgetFactory(
             color_manager=self.container.resolve("color_manager"),
             focus_handler=self.container.resolve("focus_handler"),
@@ -78,18 +74,13 @@ class AppInitializer:
         self.container.register("db_manager", lambda: db_manager)
 
         # Registra i controller
-        self.container.register("win_controller", lambda: WinController(container=self.container))
-        self.container.register("collection_controller", lambda: CollectionController(db_manager=db_manager))
-        self.container.register("decks_controller", lambda: DecksController(db_manager=db_manager))
-        self.container.register("deck_controller", lambda: DeckController(db_manager=db_manager))
+        self.container.register("collection_controller", lambda: CollectionController(container=self.container))
+        self.container.register("decks_controller", lambda: DecksController(container=self.container))
+        self.container.register("deck_controller", lambda: DeckController(container=self.container))
+        self.container.register("main_controller", lambda: MainController(container=self.container))
 
-        # Registra MainController
-        self.container.register("main_controller", lambda: MainController(
-            db_manager=db_manager,
-            collection_controller=self.container.resolve("collection_controller"),
-            decks_controller=self.container.resolve("decks_controller"),
-            deck_controller=self.container.resolve("deck_controller")
-        ))
+        # Registra WinController
+        self.container.register("win_controller", lambda: WinController(container=self.container))
 
         # Registra il dizionario delle finestre
         self.container.register("all_win", lambda: {
@@ -102,18 +93,14 @@ class AppInitializer:
         log.info("Registrazione delle dipendenze completata.")
 
     def _initialize_controllers(self):
+        """Inizializza i controller tramite DependencyContainer."""
         log.info("Inizializzazione dei controller tramite DependencyContainer.")
         self.main_controller = self.container.resolve("main_controller")
         log.info("Inizializzazione dei controller completata.")
 
-
     def start_app(self):
-        """
-        Avvia l'applicazione.
-        """
-
+        """Avvia l'applicazione."""
         log.info("Avvio dell'applicazione.")
-        #  Avvia l'interfaccia grafica delapplicazione
         import wx
         app = wx.App(False)
 

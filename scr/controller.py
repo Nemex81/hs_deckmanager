@@ -34,9 +34,10 @@ from utyls import logger as log
 class CollectionController:
     """Controller per la vista della collezione di carte."""
 
-    def __init__(self, parent=None, db_manager=None, **kwargs):
-        self.parent = parent            # Riferimento al controller principale
-        self.db_manager = db_manager    # Istanza di DbManager
+    def __init__(self, container=None, **kwargs):
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
     def load_collection(self, filters=None, card_list=None):
@@ -144,13 +145,14 @@ class CollectionController:
 class DeckController:
     """ Controller per la view di un singoolo mazzo. """
 
-    def __init__(self, parent=None, db_manager=None, **kwargs):
-        self.parent= parent
-        self.db_manager = db_manager
+    def __init__(self, container=None, **kwargs):
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
     def get_deck_details(self, deck_name):
-        """ Restituisce i dettagli di un mazzo. """
+        """Restituisce i dettagli di un mazzo."""
         return self.db_manager.get_deck_details(deck_name)
 
 
@@ -158,9 +160,10 @@ class DeckController:
 class DecksController:
     """ Controller per la vista dei mazzi. """
 
-    def __init__(self, parent=None, db_manager=None, **kwargs):
-        self.parent = parent
-        self.db_manager = db_manager
+    def __init__(self, container=None, **kwargs):
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
         self.deck_controller = None
 
 
@@ -168,7 +171,7 @@ class DecksController:
         """Apre la finestra di un mazzo specifico."""
         window_key = eg.WindowKey.DECK
         if not self.deck_controller:
-            self.deck_controller = DeckController(parent=self, db_manager=self.db_manager)
+            self.deck_controller = self.container.resolve("deck_controller")
 
         self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
         self.win_controller.open_window(window_key=window_key, parent=parent)
@@ -521,40 +524,27 @@ class DecksController:
 
 
 class MainController:
-    def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None, **kwargs):
-        self.db_manager = db_manager
-        self.win_controller = WinController()  # Inizializza il WinController
-        self.collection_controller = collection_controller
-        self.decks_controller = decks_controller
-        self.deck_controller = deck_controller
+
+    def __init__(self, container=None, **kwargs):
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.collection_controller = self.container.resolve("collection_controller")
+        self.decks_controller = self.container.resolve("decks_controller")
+        self.deck_controller = self.container.resolve("deck_controller")
+        self.win_controller = self.container.resolve("win_controller")
 
     def question_quit_app(self, frame):
         """Gestisce la richiesta di chiusura applicazione."""
-
-        # Mostra una finestra di dialogo di conferma
         dlg = wx.MessageDialog(
             frame,
             "Confermi l'uscita dall'applicazione?",
             "Conferma Uscita",
             wx.YES_NO | wx.ICON_QUESTION
         )
-
-        # Se l'utente conferma, esci dall'applicazione
         if dlg.ShowModal() == wx.ID_YES:
-            dlg.Destroy()  # Distruggi la finestra di dialogo
-            frame.Close()   # Chiudi la finestra impostazioni account
+            dlg.Destroy()
+            frame.Close()
 
-
-    def last_run(self):
-        """Avvia l'applicazione."""
-
-        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
-        #app = wx.App(False)
-        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
-        #self.win_controller.create_window(window_key=eg.WindowKey.MAIN, parent=None, controller=self)
-        #self.win_controller.create_main_window(None, controller=self)
-        #self.win_controller.open_window(eg.WindowKey.MAIN)
-        #app.MainLoop()
 
     def run_collection_frame(self, parent=None):
         """Apre la finestra della collezione."""
