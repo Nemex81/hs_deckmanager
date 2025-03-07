@@ -237,14 +237,16 @@ class CustomListCtrl(wx.ListCtrl):
 
     def __init__(self, parent, color_manager, focus_handler, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.cm = color_manager  # Componente per la gestione dei colori
-        self.fh = focus_handler  # Componente per la gestione del focus
+        self.cm = color_manager                     # Componente per la gestione dei colori
+        self.fh = focus_handler                     # Componente per la gestione del focus
+        self.cm.apply_default_style(self)           # applica i colori di default per la lista
 
         # Collega gli eventi di focus
-        #self.fh.bind_focus_events(self)
+        #self.Bind(wx.EVT_SET_FOCUS, self.on_list_focus)
+        #self.Bind(wx.EVT_KILL_FOCUS, self.on_list_kill_focus)
 
         # Collega l'evento di selezione degli elementi
-        #self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
     def on_item_focused(self, event):
         """

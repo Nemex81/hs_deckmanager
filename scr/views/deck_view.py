@@ -62,6 +62,11 @@ class DeckViewFrame(ListView):
             self.focus_handler = container.resolve("focus_handler")
             self.db_manager = container.resolve("db_manager")
 
+        self.widget_factory = container.resolve("widget_factory") if container else None
+        if not self.widget_factory:
+            log.error("WidgetFactory non definita.")
+            raise ValueError("WidgetFactory non definita.")
+
         # Se il mazzo non esiste, solleva un'eccezione
         if not self.deck_content:
             #raise ValueError(f"Mazzo non trovato: {deck_name}")
@@ -102,7 +107,7 @@ class DeckViewFrame(ListView):
         add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
-        self.card_list = create_list_ctrl(
+        self.card_list = self.widget_factory.create_list_ctrl(
             parent=self.panel,
             columns=[
                 ("Nome", 250),
@@ -120,7 +125,7 @@ class DeckViewFrame(ListView):
         )
 
         # Collega gli eventi di focus alla lista
-        #self.bind_focus_events(self.card_list)
+        self.bind_focus_events(self.card_list)
 
         # Applica lo stile predefinito alla lista
         #self.cm.apply_default_style(self.card_list)
@@ -279,33 +284,6 @@ class DeckViewFrame(ListView):
 
         #aggiorna la visualizzazione della card_list
         self.card_list.Refresh()
-
-
-    def very_last_load_cards(self, filters=None):
-        """vecchia versioen del metodo che Carica le carte nel mazzo, applicando eventuali filtri."""
-
-        if not hasattr(self, "deck_content") or not self.deck_content:
-            return  # Esce se il mazzo non è stato caricato correttamente
-
-        # Pulisce la lista delle carte
-        self.card_list.DeleteAllItems()
-
-        # Filtra le carte in base ai criteri specificati
-        for card_data in self.deck_content["cards"]:
-            if filters and "name" in filters:
-                if filters["name"].lower() not in card_data["name"].lower():
-                    continue  # Salta le carte che non corrispondono al filtro
-
-            # Aggiunge la carta alla lista
-            self._add_card_to_list(card_data)
-
-        # Applica lo stile predefinito a tutte le righe
-        self.cm.apply_default_style(self.card_list)
-
-        # Applica lo stile di focus alla prima riga
-        if self.card_list.GetItemCount() > 0:
-            #self.cm.apply_focus_style(self.card_list, 0)
-            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
 
 
     def refresh_card_list(self):
