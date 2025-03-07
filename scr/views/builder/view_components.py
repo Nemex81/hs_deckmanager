@@ -261,8 +261,10 @@ class CustomListCtrl(wx.ListCtrl):
     def SetFocus(self):
         """Imposta il focus sulla ListCtrl e riapplica i colori corretti."""
         super().SetFocus()
-        self.reset_focus_style_for_all_items()  # Riapplica i colori dark a tutte le righe
+        #self.reset_focus_style_for_all_items()  # Riapplica i colori dark a tutte le righe
         #self.apply_selection_style(self.GetFocusedItem())  # Riapplica lo stile di selezione
+        #self.Refresh()
+
 
     def reset_focus_style_for_all_items(self, selected_item=None):
         """
@@ -481,18 +483,6 @@ def create_separator(parent, style=wx.LI_HORIZONTAL, thickness=1, color=None):
         separator.SetBackgroundColour(color)
     separator.SetMinSize((-1, thickness))  # Imposta lo spessore della linea
     return separator
-
-def question_box(parent, message, title="Conferma", style=wx.YES_NO | wx.ICON_QUESTION):
-    """
-    Crea una finestra di dialogo per messaggi di conferma.
-
-    :param parent: Il genitore della finestra di dialogo.
-    :param message: Il messaggio da visualizzare.
-    :param title: Il titolo della finestra. Default: "Conferma".
-    :param style: Lo stile della finestra. Default: wx.YES_NO | wx.ICON_QUESTION.
-    :return: Un'istanza di wx.MessageDialog.
-    """
-    return wx.MessageDialog(parent, message, title, style)
 
 
 

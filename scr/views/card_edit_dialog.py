@@ -22,6 +22,7 @@ from ..models import load_cards
 from .builder.view_components import create_button, create_check_list_box, create_separator, create_common_controls
 from .builder.proto_views import SingleCardView
 from utyls.enu_glob import EnuCardType, EnuSpellType, EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
+from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb

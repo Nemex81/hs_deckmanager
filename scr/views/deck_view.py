@@ -172,7 +172,7 @@ class DeckViewFrame(ListView):
             #self.cm.apply_selection_style_to_list(self.card_list)
 
             # Aggiorna la finestra
-            self.card_list.Refresh()
+            #self.card_list.Refresh()
 
         # forza la riscrittura del layout
         #self.Layout()
