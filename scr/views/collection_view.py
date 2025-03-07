@@ -41,6 +41,11 @@ class CardCollectionFrame(ListView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller, container, **kwargs):
+        self.widget_factory = container.resolve("widget_factory")
+        if not self.widget_factory:
+            log.error("WidgetFactory non definita.")
+            raise ValueError("WidgetFactory non definita.")
+
         super().__init__(parent, title="Collezione", container=container)
         self.mode = "collection"
         self.parent = parent
@@ -49,7 +54,7 @@ class CardCollectionFrame(ListView):
         if controller:
             self.controller = controller
 
-        elif container and container.has("main_controller"):
+        elif container and container.has("collection_controller"):
             self.controller = container.resolve("main_controller")
         else:
             raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
@@ -76,30 +81,30 @@ class CardCollectionFrame(ListView):
         # Creazione degli elementi dell'interfaccia
 
         # Barra di ricerca e filtri
-        search_sizer = create_sizer(wx.HORIZONTAL)
-        self.search_ctrl = create_search_bar(
+        search_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = self.widget_factory.create_search_bar(
             self.panel,
             placeholder="Cerca per nome...",
             event_handler=self.on_search
         )
         self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
-        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.widget_factory.add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsante filtri avanzati
-        self.btn_filters = create_button(
+        self.btn_filters = self.widget_factory.create_button(
             self.panel,
             label="Filtri Avanzati",
             event_handler=self.on_show_filters
         )
         self.reset_focus_style(self.btn_filters)
         self.bind_focus_events(self.btn_filters)  # Collega gli eventi di focus
-        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+        self.widget_factory.add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
 
         # Aggiungo la barra di ricerca e i filtri al layout
-        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
-        self.card_list = create_list_ctrl(
+        self.card_list = self.widget_factory.create_list_ctrl(
             parent=self.panel,
             #color_manager=self.cm,
             columns=[
@@ -122,11 +127,11 @@ class CardCollectionFrame(ListView):
         #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
-        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
-        btn_sizer = create_sizer(wx.HORIZONTAL)
+        btn_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
 
         # Creazione dei pulsanti
         buttons = [
@@ -139,20 +144,20 @@ class CardCollectionFrame(ListView):
 
         # Aggiungi i pulsanti al pannello
         for label, handler in buttons:
-            btn = create_button(btn_panel, label=label, event_handler=handler)
+            btn = self.widget_factory.create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
             self.reset_focus_style(btn)
-            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
+            self.widget_factory.add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         #resetto i colori di tutti i pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
 
         # Separatore tra pulsanti e fondo finestra
-        add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Carica le carte
         self.load_cards()

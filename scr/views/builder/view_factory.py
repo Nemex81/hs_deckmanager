@@ -143,6 +143,93 @@ class WidgetFactory:
         return search_ctrl
 
 
+    def create_sizer(self, orientation=wx.VERTICAL):
+        """
+        Crea un sizer per organizzare gli elementi dell'interfaccia utente.
+
+        :param orientation: Orientamento del sizer (wx.VERTICAL o wx.HORIZONTAL). Default: wx.VERTICAL.
+        :return: Un'istanza di wx.BoxSizer.
+        """
+        return wx.BoxSizer(orientation)
+
+    def add_to_sizer(self, sizer, element, proportion=0, flag=wx.ALL, border=10):
+        """
+        Aggiunge un elemento a un sizer con parametri predefiniti.
+
+        :param sizer: Il sizer a cui aggiungere l'elemento.
+        :param element: L'elemento da aggiungere (es. un pulsante o una lista).
+        :param proportion: Proporzione dell'elemento nel sizer. Default: 0.
+        :param flag: Flag di allineamento. Default: wx.ALL.
+        :param border: Spazio intorno all'elemento. Default: 10.
+        """
+        sizer.Add(element, proportion=proportion, flag=flag, border=border)
+
+    def create_common_controls(self):
+        """
+        Crea controlli comuni per la ricerca di carte.
+
+        :return: Un dizionario con i controlli creati.
+        """
+        common_controls = [
+            ("nome", "Nome", wx.TextCtrl),
+            ("costo_mana", "Costo Mana", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("tipo", "Tipo", wx.ComboBox, {"choices": [t.value for t in eg.EnuCardType], "style": wx.CB_READONLY}),
+            ("tipo_magia", "Tipo Magia", wx.ComboBox, {"choices": [st.value for st in eg.EnuSpellType], "style": wx.CB_READONLY}),
+            ("sottotipo", "Sottotipo", wx.ComboBox, {"choices": [], "style": wx.CB_READONLY}),
+            ("attacco", "Attacco", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("vita", "Vita", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("durability", "Durabilità", wx.SpinCtrl, {"min": 0, "max": 20}),
+            ("rarita", "Rarità", wx.ComboBox, {"choices": [r.value for r in eg.EnuRarity], "style": wx.CB_READONLY}),
+            ("espansione", "Espansione", wx.ComboBox, {"choices": [e.value for e in eg.EnuExpansion], "style": wx.CB_READONLY})
+        ]
+        return common_controls
+
+    def create_checklistbox(self, parent, choices, event_handler=None):
+        """
+        Crea un controllo CheckListBox per la selezione multipla.
+
+        :param parent: Il genitore del controllo.
+        :param choices: Lista di scelte da mostrare nel CheckListBox.
+        :param event_handler: Funzione da chiamare quando un elemento viene selezionato (opzionale).
+        :return: Un'istanza di wx.CheckListBox.
+        """
+        checklistbox = wx.CheckListBox(parent, choices=choices)
+        if event_handler:
+            checklistbox.Bind(wx.EVT_CHECKLISTBOX, event_handler)
+        return checklistbox
+
+    def create_check_list_box(self, parent, choices, label=""):
+        """
+        Crea una casella di selezione multipla (wx.CheckListBox).
+
+        :param parent: Il genitore del controllo.
+        :param choices: Lista di opzioni da visualizzare.
+        :param label: Etichetta da visualizzare sopra la casella di selezione (opzionale).
+        :return: Un'istanza di wx.CheckListBox.
+        """
+        label_ctrl = wx.StaticText(parent, label=label)
+        check_list_box = wx.CheckListBox(parent, choices=choices)
+        return label_ctrl, check_list_box
+
+    def create_separator(self, parent, style=wx.LI_HORIZONTAL, thickness=1, color=None):
+        """
+        Crea un separatore orizzontale o verticale per gli elementi dell'interfaccia utente.
+
+        :param parent: Il genitore del separatore.
+        :param style: Stile della linea (wx.LI_HORIZONTAL o wx.LI_VERTICAL). Default: wx.LI_HORIZONTAL.
+        :param thickness: Spessore della linea. Default: 1.
+        :param color: Colore della linea (opzionale). Esempio: wx.Colour(200, 200, 200).
+        :return: Un'istanza di wx.StaticLine.
+        """
+        separator = wx.StaticLine(parent, style=style)
+        if color:
+            separator.SetBackgroundColour(color)
+        separator.SetMinSize((-1, thickness))
+        return separator
+
+
+
+
 
 class ViewFactory:
     """Factory per la creazione delle view, supporta entrambi gli approcci."""
@@ -167,6 +254,18 @@ class ViewFactory:
             **kwargs
         )
 
+
+    def question_box(self, parent, message, title="Conferma", style=wx.YES_NO | wx.ICON_QUESTION):
+        """
+        Crea una finestra di dialogo per messaggi di conferma.
+
+        :param parent: Il genitore della finestra di dialogo.
+        :param message: Il messaggio da visualizzare.
+        :param title: Il titolo della finestra. Default: "Conferma".
+        :param style: Lo stile della finestra. Default: wx.YES_NO | wx.ICON_QUESTION.
+        :return: Un'istanza di wx.MessageDialog.
+        """
+        return wx.MessageDialog(parent, message, title, style)
 
 
 #@@@# Start del modulo

@@ -94,17 +94,17 @@ class DeckViewFrame(ListView):
         self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
 
         # Creazione degli elementi dell'interfaccia
-        search_sizer = create_sizer(wx.HORIZONTAL)
-        self.search_ctrl = create_search_bar(
+        search_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = self.widget_factory.create_search_bar(
             self.panel,
             placeholder="Cerca per nome...",
             event_handler=self.on_search
         )
         self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
-        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.widget_factory.add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Aggiungo la barra di ricerca al layout
-        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
         self.card_list = self.widget_factory.create_list_ctrl(
@@ -131,11 +131,11 @@ class DeckViewFrame(ListView):
         #self.cm.apply_default_style(self.card_list)
 
         # Aggiungo la lista alla finestra
-        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
-        btn_sizer = create_sizer(wx.HORIZONTAL)
+        btn_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
 
         # Creazione dei pulsanti
         buttons = [
@@ -147,19 +147,19 @@ class DeckViewFrame(ListView):
         ]
 
         for label, handler in buttons:
-            btn = create_button(btn_panel, label=label, event_handler=handler)
+            btn = self.widget_factory.create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
-            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
+            self.widget_factory.add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         # resetto i colori dei pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
 
         # Separatore tra pulsanti e fondo finestra
-        add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
@@ -172,7 +172,7 @@ class DeckViewFrame(ListView):
             #self.cm.apply_selection_style_to_list(self.card_list)
 
             # Aggiorna la finestra
-            #self.card_list.Refresh()
+            self.card_list.Refresh()
 
         # forza la riscrittura del layout
         #self.Layout()

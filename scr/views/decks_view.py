@@ -77,7 +77,6 @@ class DecksViewFrame(ListView):
 
         # titolo della finestra
         lbl_title = wx.StaticText(self.panel, label="Elenco Mazzi")
-        #self.card_list = vc.create_list_ctrl(
         self.card_list = self.widget_factory.create_list_ctrl(
             parent=self.panel,
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
@@ -88,7 +87,6 @@ class DecksViewFrame(ListView):
         self.load_decks()
 
         # Barra di ricerca
-        #self.search_bar = vc.create_search_bar(
         self.search_bar = self.widget_factory.create_search_bar(
             parent=self.panel,
             placeholder="Cerca mazzo...",
@@ -147,18 +145,18 @@ class DecksViewFrame(ListView):
         )
 
         # Layout principale
-        main_sizer = vc.create_sizer(wx.VERTICAL)
-        vc.add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
-        vc.add_to_sizer(main_sizer, self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
+        main_sizer = self.widget_factory.create_sizer(wx.VERTICAL)
+        self.widget_factory.add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
+        self.widget_factory.add_to_sizer(main_sizer, self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Separatore tra barra di ricerca e lista dei mazzi
-        vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Aggiungi la lista dei mazzi al sizer
-        vc.add_to_sizer(main_sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(main_sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
-        vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Layout pulsanti
         btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
@@ -170,10 +168,10 @@ class DecksViewFrame(ListView):
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungi i pulsanti al sizer principale
-        vc.add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra pulsanti e barra di stato
-        vc.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Imposta il sizer principale
         self.panel.SetSizer(main_sizer)
