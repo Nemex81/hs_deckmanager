@@ -82,6 +82,7 @@ class DecksViewFrame(ListView):
             parent=self.panel,
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
+        self.color_manager.apply_theme_to_window(self.card_list)  # Applica il tema alla lista
 
         # Carichiamo i mazzi
         self.load_decks()

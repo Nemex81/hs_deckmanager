@@ -244,7 +244,7 @@ class CustomListCtrl(wx.ListCtrl):
         #self.fh.bind_focus_events(self)
 
         # Collega l'evento di selezione degli elementi
-        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
+        #self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
     def on_item_focused(self, event):
         """
@@ -256,6 +256,12 @@ class CustomListCtrl(wx.ListCtrl):
         self.Refresh()
         event.Skip()
 
+    def SetFocus(self):
+        """Imposta il focus sulla ListCtrl e riapplica i colori corretti."""
+        super().SetFocus()
+        self.reset_focus_style_for_all_items()  # Riapplica i colori dark a tutte le righe
+        #self.apply_selection_style(self.GetFocusedItem())  # Riapplica lo stile di selezione
+
     def reset_focus_style_for_all_items(self, selected_item=None):
         """
         Resetta lo stile di tutte le righe tranne quella selezionata.
@@ -263,6 +269,7 @@ class CustomListCtrl(wx.ListCtrl):
         for i in range(self.GetItemCount()):
             if i != selected_item:
                 self.cm.apply_default_style_to_list_item(self, i)
+
         self.Refresh()
 
     def apply_selection_style(self, item_index):

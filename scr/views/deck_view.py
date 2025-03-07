@@ -44,7 +44,6 @@ class DeckViewFrame(ListView):
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
         self.card_list = None
         self.deck_name = deck_name
-        #self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
         self.deck_content = None
 
         # Gestione del controller
@@ -70,6 +69,7 @@ class DeckViewFrame(ListView):
 
         if not controller:
             controller = container.resolve("deck_controller") if container else None
+
         title = f"Mazzo: {deck_name}"
         super().__init__(parent=parent, title=title, controller=self.controller, deck_name=deck_name, **kwargs)
 

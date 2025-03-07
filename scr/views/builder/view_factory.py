@@ -13,6 +13,7 @@ import wx
 #from .color_system import ColorManager
 #from .focus_handler import FocusHandler
 #from scr.views.builder.dependency_container import DependencyContainer
+import scr.views.builder.view_components as vc
 from scr.views.main_views import  HearthstoneAppFrame
 from scr.views.collection_view import CardCollectionFrame
 from scr.views.decks_view import DecksViewFrame
@@ -99,7 +100,14 @@ class WidgetFactory:
         :return: Un'istanza di wx.ListCtrl.
         """
 
-        list_ctrl = wx.ListCtrl(parent, style=style)
+        color_manager = self.color_manager
+        focus_handler = self.focus_handler
+        list_ctrl = vc.CustomListCtrl(
+            parent,
+            color_manager=color_manager,
+            focus_handler=focus_handler,
+            style=style
+        )
 
         # Aggiungi le colonne alla lista
         for idx, (col_name, width) in enumerate(columns):
@@ -107,7 +115,6 @@ class WidgetFactory:
 
         # Applica lo stile predefinito e collega gli eventi di focus
         self.color_manager.apply_default_style(list_ctrl)
-        self.focus_handler.bind_focus_events(list_ctrl)
 
         log.debug(f"Creata ListCtrl con colonne: {columns}")
         return list_ctrl
