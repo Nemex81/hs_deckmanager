@@ -111,12 +111,42 @@ class DecksViewFrame(ListView):
             event_handler=self.on_copy_deck
         )
 
-        btn_view = vc.create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
-        btn_stats = vc.create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
-        btn_update = vc.create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)
-        btn_delete = vc.create_button(self.panel, label="Elimina Mazzo", event_handler=self.on_delete_deck)
-        btn_collection = vc.create_button(self.panel, label="Collezione Carte", event_handler=self.on_view_collection)
-        btn_exit = vc.create_button(self.panel, label="Chiudi", event_handler=self.on_close)
+        #btn_view = vc.create_button(self.panel, label="Visualizza Mazzo", event_handler=self.on_view_deck)
+        btn_view = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Visualizza Mazzo",
+            event_handler=self.on_view_deck
+        )   
+        #btn_stats = vc.create_button(self.panel, label="Statistiche Mazzo", event_handler=self.on_view_stats)
+        btn_stats = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Statistiche Mazzo", 
+            event_handler=self.on_view_stats
+        )
+        #btn_update = vc.create_button(self.panel, label="Aggiorna Mazzo", event_handler=self.on_update_deck)
+        btn_update = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Aggiorna Mazzo", 
+            event_handler=self.on_update_deck
+        )
+        #btn_delete = vc.create_button(self.panel, label="Elimina Mazzo", event_handler=self.on_delete_deck)
+        btn_delete = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Elimina Mazzo",
+            event_handler=self.on_delete_deck
+        )
+        #btn_collection = vc.create_button(self.panel, label="Collezione Carte", event_handler=self.on_view_collection)
+        btn_collection = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Collezione Carte", 
+            event_handler=self.on_view_collection
+        )
+        #btn_exit = vc.create_button(self.panel, label="Chiudi", event_handler=self.on_close)
+        btn_exit = self.widget_factory.create_button(
+            parent=self.panel, 
+            label="Chiudi", 
+            event_handler=self.on_close
+        )
 
         # Layout principale
         main_sizer = vc.create_sizer(wx.VERTICAL)
