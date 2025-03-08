@@ -167,16 +167,6 @@ class DecksController:
         self.deck_controller = None
 
 
-    def run_deck_frame(self, parent=None, deck_name=None):
-        """Apre la finestra di un mazzo specifico."""
-        window_key = eg.WindowKey.DECK
-        if not self.deck_controller:
-            self.deck_controller = self.container.resolve("deck_controller")
-
-        self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
-        self.win_controller.open_window(window_key=window_key, parent=parent)
-
-
     def load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
 
@@ -544,27 +534,6 @@ class MainController:
         if dlg.ShowModal() == wx.ID_YES:
             dlg.Destroy()
             frame.Close()
-
-
-    def run_collection_frame(self, parent=None):
-        """Apre la finestra della collezione."""
-        self.win_controller.create_collection_window(parent=parent, controller=self.collection_controller)
-        self.win_controller.open_window(eg.WindowKey.COLLECTION)
-
-    def run_decks_frame(self, parent=None):
-        """Apre la finestra dei mazzi."""
-
-        log.debug(f"Controller DecksController: {self.decks_controller}")
-        controller = self.decks_controller
-        if not controller:
-            log.debug("Controller per finestra mazzi assente, provvedo alla creazione di un nuovo controller per i mazzi.")
-            self.decks_controller = DecksController(parent=self, db_manager=self.db_manager)
-
-        controller.win_controller = self.win_controller
-        self.win_controller.create_decks_window(parent=parent, controller=self.decks_controller)
-        self.win_controller.open_window(eg.WindowKey.DECKS)
-
-
 
 
 
