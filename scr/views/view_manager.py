@@ -76,6 +76,7 @@ class WinController:
         """Crea la finestra principale."""
         log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.MAIN}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.MAIN)
+        self.open_window(eg.WindowKey.MAIN, parent)
 
 
     def create_collection_window(self, parent=None, controller=None):
@@ -89,6 +90,7 @@ class WinController:
         """Crea la finestra dei mazzi."""
         log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECKS}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.DECKS)
+        self.open_window(eg.WindowKey.DECKS, parent)
 
 
     def create_deck_window(self, parent=None, controller=None, deck_name=None):
@@ -109,8 +111,10 @@ class WinController:
             deck_name=deck_name
         )
 
+        self.open_window(eg.WindowKey.DECK, parent)
 
-    def open_window(self, window_key, parent=None):
+
+    def open_window(self, window_key, parent=None, **kwargs):
         """
         Rende visibile una finestra e nasconde la corrente.
         
@@ -118,29 +122,65 @@ class WinController:
             window_key (WindowKey): Chiave della finestra da aprire.
             parent: Finestra genitore.
         """
-
         if window_key not in self.windows:
             log.error(f"Finestra '{window_key}' non creata.")
             raise ValueError(f"Finestra '{window_key}' non creata.")
         
+        # Nasconde la finestra corrente, se presente
         if self.current_window:
             self.current_window.Hide()
             log.debug(f"Finestra corrente nascosta: {self.current_window}")
         
+        # Mostra la nuova finestra
         self.current_window = self.windows[window_key]
         self.current_window.Show()
         log.debug(f"Finestra corrente impostata: {self.current_window}")
+        
+        # Imposta la finestra genitore, se specificata
         if parent:
             self.current_window.parent = parent
             log.debug(f"Finestra genitore impostata: {parent}")
+            
+            # Nasconde la finestra genitore
+            parent.Hide()
+            log.debug(f"Finestra genitore nascosta: {parent}")
 
+
+    def close_window(self, window_key):
+        """
+        Chiude una finestra specifica e ripristina il genitore.
+        
+        Args:
+            window_key (WindowKey): Chiave della finestra da chiudere.
+        """
+        if window_key not in self.windows:
+            log.error(f"Finestra '{window_key}' non trovata.")
+            return
+        
+        window = self.windows[window_key]
+        parent = window.GetParent()
+        
+        # Nasconde la finestra corrente
+        window.Hide()
+        
+        # Ripristina la finestra genitore, se presente
+        if parent:
+            log.debug(f"Ripristino finestra genitore: {parent}")
+            self.current_window = parent
+            parent.Show()
+        else:
+            log.debug("Nessuna finestra genitore trovata.")
+            self.current_window = None
 
     def close_current_window(self):
-        """Chiude la finestra corrente e ripristina il genitore."""
-
+        """
+        Chiude la finestra corrente e ripristina il genitore.
+        """
         if self.current_window:
             parent = self.current_window.GetParent()
             self.current_window.Hide()
+            
+            # Ripristina la finestra genitore, se presente
             if parent:
                 log.debug(f"Ripristino finestra genitore: {parent}")
                 self.current_window = parent

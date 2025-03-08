@@ -214,6 +214,7 @@ class BasicView(wx.Frame):
         """Chiude la finestra."""
         if self.parent:
             self.parent.Show()
+
         self.Destroy()
 
     def on_close(self, event):
