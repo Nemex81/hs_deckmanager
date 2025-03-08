@@ -160,31 +160,6 @@ class WinController:
                 log.debug("Nessuna finestra genitore trovata.")
                 self.current_window = None
 
-    def last_close_window(self, window_key):
-        """
-        Chiude una finestra specifica e ripristina il genitore.
-        
-        Args:
-            window_key (WindowKey): Chiave della finestra da chiudere.
-        """
-        if window_key not in self.windows:
-            log.error(f"Finestra '{window_key}' non trovata.")
-            return
-        
-        window = self.windows[window_key]
-        parent = window.GetParent()
-        
-        # Nasconde la finestra corrente
-        window.Hide()
-        
-        # Ripristina la finestra genitore, se presente
-        if parent:
-            log.debug(f"Ripristino finestra genitore: {parent}")
-            self.current_window = parent
-            parent.Show()
-        else:
-            log.debug("Nessuna finestra genitore trovata.")
-            self.current_window = None
 
     def close_current_window(self):
         """
