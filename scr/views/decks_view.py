@@ -368,19 +368,6 @@ class DecksViewFrame(ListView):
         self.controller.apply_search_filter(self, search_text)
 
 
-    def last_on_search(self, event):
-        """Filtra i mazzi in base al testo di ricerca."""
-
-        # cerchiamo la parola richiesta dall'utente sia nei nomi dei mazzi sia nella classe
-        search_text = self.search_bar.GetValue()
-        self.card_list.DeleteAllItems()
-        decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
-        for deck in decks:
-            Index = self.card_list.InsertItem(self.card_list.GetItemCount(), deck.name)
-            self.card_list.SetItem(Index, 1, deck.player_class)
-            self.card_list.SetItem(Index, 2, deck.game_format)
-
-
     def on_close(self, event):
         """Chiude l'applicazione."""
         self.parent.Show()  # Mostra la finestra principale
