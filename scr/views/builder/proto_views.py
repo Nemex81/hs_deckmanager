@@ -79,6 +79,7 @@ class BasicView(wx.Frame):
         # Risolvi le dipendenze dal container
         if self.container:
             self.win_controller = self.container.resolve("win_controller")
+            self.controller = self.container.resolve("main_controller")
             self.cm = self.container.resolve("color_manager")
             self.color_manager = self.container.resolve("color_manager")
             self.focus_handler = self.container.resolve("focus_handler")
