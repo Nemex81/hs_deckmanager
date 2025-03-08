@@ -31,6 +31,7 @@ class WinController:
         self.factory = self._select_factory()           # Seleziona la factory in base al flag
         self.windows = {}                               # Dizionario per memorizzare le finestre
         self.current_window = None                      # Finestra corrente
+        self.parent_stack = []                          # Stack per tenere traccia delle finestre genitore
 
 
     def _select_factory(self):
@@ -118,6 +119,29 @@ class WinController:
 
 
     def open_window(self, window_key, parent=None, **kwargs):
+        if window_key not in self.windows:
+            log.error(f"Finestra '{window_key}' non creata.")
+            raise ValueError(f"Finestra '{window_key}' non creata.")
+
+        # Nasconde la finestra corrente, se presente
+        if self.current_window:
+            self.current_window.Hide()
+            log.debug(f"Finestra corrente nascosta: {self.current_window}")
+            self.parent_stack.append(self.current_window)  # Salva la finestra corrente nello stack
+
+        # Mostra la nuova finestra
+        self.current_window = self.windows[window_key]
+        self.current_window.Show()
+        log.debug(f"Finestra corrente impostata: {self.current_window}")
+
+        # Imposta la finestra genitore, se specificata
+        if parent:
+            self.current_window.parent = parent
+            log.debug(f"Finestra genitore impostata: {parent}")
+            parent.Hide()
+        log.debug(f"Finestra genitore nascosta: {parent}")
+
+    def last_open_window(self, window_key, parent=None, **kwargs):
         """
         Rende visibile una finestra e nasconde la corrente.
         
@@ -146,10 +170,27 @@ class WinController:
             
             # Nasconde la finestra genitore
             parent.Hide()
+            self.parent_stack.append(self.current_window)               # Salva la finestra corrente nello stack
             log.debug(f"Finestra genitore nascosta: {parent}")
 
 
-    def close_window(self, window_key):
+    def close_current_window(self):
+        """
+        Chiude la finestra corrente e ripristina il genitore.
+        """
+        if self.current_window:
+            self.current_window.Hide()
+
+            # Ripristina la finestra genitore dallo stack
+            if self.parent_stack:
+                self.current_window = self.parent_stack.pop()
+                self.current_window.Show()
+                log.debug(f"Ripristino finestra genitore: {self.current_window}")
+            else:
+                log.debug("Nessuna finestra genitore trovata.")
+                self.current_window = None
+
+    def last_close_window(self, window_key):
         """
         Chiude una finestra specifica e ripristina il genitore.
         
