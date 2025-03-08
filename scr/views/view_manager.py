@@ -82,6 +82,7 @@ class WinController:
         """Crea la finestra della collezione."""
         log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.COLLECTION}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.COLLECTION)
+        self.open_window(eg.WindowKey.COLLECTION, parent)
 
 
     def create_decks_window(self, parent=None, controller=None):

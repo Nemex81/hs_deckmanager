@@ -35,13 +35,16 @@ class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent=None, controller=None, container=None, **kwargs):
+        self.win_controller = container.resolve("win_controller")
+        if not self.win_controller:
+            log.error("WinController non passato a DecksViewFrame")
+            raise ValueError("WinController non passato a DecksViewFrame")
 
         self.widget_factory = container.resolve("widget_factory")
         if not self.widget_factory:
             raise ValueError("WidgetFactory non definita.")
 
-        title = "Gestione Mazzi"
-        super().__init__(parent=parent, title=title, size=(800, 600))
+        super().__init__(parent=parent, title="Gestione Mazzi", size=(800, 600))
         self.parent = parent
         self.container = container
         #self.db_manager = self.parent.controller.db_manager
@@ -298,7 +301,7 @@ class DecksViewFrame(ListView):
             deck_content = self.controller.get_deck_details(deck_name)
             if deck_content:
                 # Apri la finestra di visualizzazione del mazzo
-                self.controller.run_deck_frame(parent=self, deck_name=deck_name)
+                self.win_controller.create_deck_window(parent=self, deck_name=deck_name)
 
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
@@ -336,8 +339,7 @@ class DecksViewFrame(ListView):
 
     def on_view_collection(self, event):
         """Mostra la collezione delle carte."""
-        app_controller = self.parent.controller
-        app_controller.run_collection_frame(parent=self)
+        self.win_controller.create_collection_window(parent=self)
 
 
     def on_delete_deck(self, event):
