@@ -356,43 +356,6 @@ class DecksController:
         return True
 
 
-    def last_add_deck(self):
-        """Aggiunge un mazzo dagli appunti."""
-
-        try:
-            deck_string = pyperclip.paste()
-            if not self.db_manager.is_valid_deck(deck_string):
-                wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
-                return False
-
-            # Estrae i metadati del mazzo
-            metadata = self.db_manager.parse_deck_metadata(deck_string)
-            deck_name = metadata["name"]
-
-            # Verifica se il mazzo esiste già
-            if self.db_manager.get_deck(deck_name):
-                log.error("Il mazzo è già presente nella collezione.")
-                wx.MessageBox("Il mazzo è già presente nella collezione.", "Errore")
-                return False
-
-            # Aggiunge il mazzo al database
-            success = self.db_manager.add_deck_from_clipboard(deck_string)
-            if success:
-                deck_name = metadata["name"]
-                log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
-                wx.MessageBox(f"Mazzo {deck_name} aggiunto con successo.", "Successo")
-                return True
-            else:
-                log.error(f"Errore durante l'aggiunta del mazzo '{deck_name}'.")
-                wx.MessageBox(f"Errore durante l'aggiunta del mazzo{deck_name}.", "Errore")
-                return False
-
-        except Exception as e:
-            log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {e}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
-            return False
-
-
     def delete_deck(self, frame, deck_name):
         """Elimina un mazzo utilizzando DbManager."""
 
@@ -406,32 +369,6 @@ class DecksController:
         self.select_last_deck(frame)
         log.info(f"Mazzo '{deck_name}' eliminato con successo.")
         wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
-
-
-    def last_delete_deck(self, deck_name):
-        """ Elimina un mazzo dal database. """
-
-        try:
-            with db_session() as session:  # Usa il contesto db_session
-                success = self.db_manager.delete_deck(deck_name)
-                if success:
-                    log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-                    wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
-                    return True
-                else:
-                    log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
-                    wx.MessageBox(f"Errore durante l'eliminazione del mazzo '{deck_name}'.", "Errore")
-                    return False
-
-        except SQLAlchemyError as e:
-            log.error("Errore del database. Verificare le procedure.")
-            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
-            return False
-
-        except Exception as e:
-            log.error("Si è verificato un errore imprevisto.")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
-            return False
 
 
     def copy_deck(self, frame):
