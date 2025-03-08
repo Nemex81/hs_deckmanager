@@ -3,13 +3,13 @@
 
         **Path:**
             ```
-                scr/logger.py
+            utyls/logger.py
             ```
 
     ---
 
-        **Versione:** 0.2
-        **Data:** 11 ottobre 2024  
+        **Versione:** 0.5
+        **Data:** 08 marzo 2025
         **Autore:** [Nemex]
 
     ---
