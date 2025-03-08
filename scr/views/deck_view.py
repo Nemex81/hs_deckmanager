@@ -77,7 +77,7 @@ class DeckViewFrame(ListView):
         super().__init__(parent=parent, title=title, controller=self.controller, deck_name=deck_name, **kwargs)
 
         # Timer per il debounce
-        self.timer = wx.Timer(self)
+        #self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 

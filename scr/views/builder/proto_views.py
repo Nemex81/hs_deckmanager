@@ -446,12 +446,27 @@ class ListView(BasicView):
             self.card_list.EnsureVisible(0)
 
 
+    def apply_search_filter(self, search_text):
+        """
+        Applica un filtro di ricerca alla lista.
+        :param search_text: Testo da cercare.
+        """
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            self.load_items()  # Ricarica tutti gli elementi
+        else:
+            self.load_items(filters={"name": search_text})  # Filtra gli elementi
+
+
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
-
         search_text = self.search_ctrl.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
+
+
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+        self.apply_search_filter(event.search_text)
 
 
     def on_search_text_change(self, event):
@@ -467,18 +482,10 @@ class ListView(BasicView):
         self.timer.Start(500, oneShot=True)
     
 
-    def on_search_event(self, event):
-        """Gestisce l'evento di ricerca con debounce."""
-        search_text = event.search_text
-        self._apply_search_filter(search_text)
-        self.set_focus_to_list()
-
-
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
 
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        self._apply_search_filter(search_text)
+        pass
 
 
     def on_item_focused(self, event):
