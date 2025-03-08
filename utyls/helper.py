@@ -15,6 +15,21 @@ from utyls import logger as log
 #import pdb
 
 
+# crea una funzione chiamata dlen che ritorhni il numero totale di elementi presenti inun dizionario passato come argomento
+def dlen(d):
+    """
+        Restituisce il numero totale di elementi presenti in un dizionario passato come argomento.
+
+        :param d:
+                        Dizionario di cui si vuole conoscere la lunghezza.
+
+        :return:
+                        Numero totale di elementi presenti nel dizionario.
+
+    """
+    return len(d)
+
+       
 def assemble_classes_string(classes_list):
     """
         Assemblare una stringa da un elenco di classi, separate da virgole.

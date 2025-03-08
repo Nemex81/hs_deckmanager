@@ -1,5 +1,5 @@
 """
-
+    Modulo per l'inizializzazione dell'applicazione con il nuovo framework.
 
     path:
         ./app_initializer.py
@@ -20,6 +20,7 @@ from scr.controller import MainController, CollectionController, DecksController
 from scr.models import DbManager
 from scr.views.main_views import HearthstoneAppFrame
 from scr.views.builder.color_system import ColorTheme
+from utyls.screen_reader import ScreenReader
 from utyls import enu_glob as eg
 from utyls import logger as log
 
@@ -63,6 +64,14 @@ class AppInitializer:
             focus_handler=self.container.resolve("focus_handler"),
         ))
 
+        # verifica che ColorManager sia registrato
+        if not self.container.has("color_manager"):
+            log.error("ColorManager non registrato correttamente.")
+
+        # Verifica che FocusHandler sia registrato
+        if not self.container.has("focus_handler"):
+            log.error("FocusHandler non registrato correttamente.")
+
         # Verifica che WidgetFactory sia registrata
         if not self.container.has("widget_factory"):
             log.error("WidgetFactory non registrata correttamente.")
@@ -72,6 +81,13 @@ class AppInitializer:
         # Gestione del database
         db_manager = DbManager()
         self.container.register("db_manager", lambda: db_manager)
+        if not self.container.has("db_manager"):
+            log.error("DbManager non registrato correttamente.")
+
+        # Registra ScreenReader
+        self.container.register("vocalizer", lambda: ScreenReader())
+        if not self.container.has("vocalizer"):
+            log.error("ScreenReader non registrato correttamente.")
 
         # Registra i controller
         self.container.register("collection_controller", lambda: CollectionController(container=self.container))

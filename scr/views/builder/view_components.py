@@ -36,24 +36,58 @@ class CustomTextCtrl(wx.TextCtrl, wx.Accessible):
 
     def __init__(self, parent, color_manager, focus_handler, placeholder="", *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        #wx.Accessible.__init__(self)  # Inizializza wx.Accessible
         self.cm = color_manager         # Gestione dei colori
         self.fh = focus_handler         # Gestione del focus
         self.placeholder = placeholder  # Testo placeholder (opzionale)
-
-        # Imposta il nome e la descrizione accessibile
-        self.SetAccessibleName("Casella di testo")
-        self.SetAccessibleDescription(f"Per inserire testo, digitare qui.")
 
         # Imposta lo stile predefinito
         self.cm.apply_default_style(self)
         self.SetHint(self.placeholder)  # Imposta il placeholder
 
         # Collega gli eventi di focus
-        self.fh.bind_focus_events(self)
+        self.bind_focus_events(self)
+
+
+    def on_focus(self, event):
+        """Gestisce l'evento di focus sulla casella di testo."""
+        self.fh.apply_focus_style(self)
+        event.Skip()
+
+    def on_kill_focus(self, event):
+        """Gestisce l'evento di perdita del focus dalla casella di testo."""
+        self.fh.reset_focus_style(self)
+        event.Skip()
+
+    def bind_focus_events(self):
+        """Collega gli eventi di focus alla casella di testo."""        
+        self.Bind(wx.EVT_SET_FOCUS, self.on_focus)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
+
+
+
+    def GetName(self):
+        """Restituisce il nome accessibile."""
+        return "Casella di testo"
 
     def GetDescription(self):
         """Restituisce una descrizione accessibile."""
         return f"Casella di testo per: {self.placeholder}"
+
+    def GetRole(self):
+        """Restituisce il ruolo del widget."""
+        return wx.ACC_ROLE_TEXT
+
+    def GetState(self):
+        """Restituisce lo stato corrente."""
+        state = wx.ACC_STATE_FOCUSABLE
+        if self.IsEnabled():
+            state |= wx.ACC_STATE_ENABLED
+
+        if self.HasFocus():
+            state |= wx.ACC_STATE_FOCUSED
+
+        return state
 
     def SetFocus(self):
         """Imposta il focus sulla casella di testo."""
@@ -67,7 +101,7 @@ class CustomTextCtrl(wx.TextCtrl, wx.Accessible):
 
 
 
-class CustomCheckBox(wx.CheckBox):
+class CustomCheckBox(wx.CheckBox, wx.Accessible):
     """
     Checkbox personalizzata con gestione del focus e temi.
     """

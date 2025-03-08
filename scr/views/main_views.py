@@ -54,6 +54,9 @@ class HearthstoneAppFrame(BasicView):
             log.error("ColorManager o FocusHandler non definiti.")  
 
 
+        # catturo gli eventi da tastiera
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+
         log.info("Finestra principale creata.")
 
 
@@ -99,11 +102,22 @@ class HearthstoneAppFrame(BasicView):
         main_sizer.Add(bitmap, proportion=0, flag=wx.ALL, border=10)
         main_sizer.Add(button_sizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
 
+        self.Bind(wx.EVT_KEY_DOWN, self.controller.on_key_down)                 # Collega l'evento di pressione dei tasti
+
         self.panel.SetSizer(main_sizer)
         self.Layout()
 
 
     #@@# sezione metodi collegati agli eventi
+
+    def on_key_down(self, event):
+        """Gestisce l'evento di pressione dei tasti."""
+
+        key_code = event.GetKeyCode()
+        self.controller.on_key_down(frame=self, event=event)
+        event.Skip()
+ 
+            
 
 
     def on_collection_button_click(self, event):

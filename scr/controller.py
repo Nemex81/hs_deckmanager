@@ -26,7 +26,68 @@ class DefaultController:
     def __init__(self, container=None, **kwargs):
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
+        self.vocalizer = self.container.resolve("vocalizer")  # Risolve Vocalizer
+        self.win_controller = self.container.resolve("win_controller")  # Risolve WinController
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+
+
+    def speak(self, text):
+        """ Vocalizza un testo. """
+        self.vocalizer.speak(text)
+
+    def on_focus(self, event):
+        """
+        Gestisce l'evento di focus su un elemento e vocalizza la descrizione.
+        """
+
+        element = event.GetEventObject()
+        name = element.GetName()
+        #description = element.GetName()
+        if name:# and description:
+            output = f"Elemento in focus: {name}."
+            self.speak(output)
+
+        event.Skip()
+
+
+    def on_kill_focus(self, event):
+        """
+        Gestisce l'evento di perdita del focus su un elemento.
+        """
+        element = event.GetEventObject()
+        event.Skip()
+
+
+    def on_key_down(self, frame, event):
+        """
+        Gestisce l'evento di pressione di un tasto.
+        """
+
+        key_code = event.GetKeyCode()
+        if key_code == wx.WXK_ESCAPE:
+            log.debug(f"Finestra da chiudere: {frame}")
+            self.question_quit_app(frame)
+
+        elif key_code == ord("F"):
+            self.read_focused_element()
+
+
+    def read_focused_element(self):
+        """
+        Legge il nome dell'elemento che ha attualmente il focus.
+        """
+
+        focused_element = wx.Window.FindFocus()  # Ottieni l'elemento con il focus
+        if focused_element:
+            description = focused_element.GetName()  # Recupera la descrizione
+            if description:
+                self.speak(description)  # Vocalizza la descrizione
+
+            else:
+                self.speak("Nessuna descrizione disponibile per questo elemento.")
+
+        else:
+            self.speak("Nessun elemento ha il focus.")
 
 
     #@@# sezione per gestione deicomandi  generici disponibiliin ogni finestra
@@ -165,6 +226,7 @@ class DefaultController:
 
     def question_quit_app(self, frame):
         """Gestisce la richiesta di chiusura applicazione."""
+
         dlg = wx.MessageDialog(
             frame,
             "Confermi l'uscita dall'applicazione?",
@@ -181,6 +243,7 @@ class CollectionController(DefaultController):
     """Controller per la vista della collezione di carte."""
 
     def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
@@ -215,6 +278,7 @@ class DeckController(DefaultController):
     """ Controller per la view di un singoolo mazzo. """
 
     def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
@@ -225,6 +289,7 @@ class DecksController(DefaultController):
     """ Controller per la vista dei mazzi. """
 
     def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
@@ -459,13 +524,13 @@ class DecksController(DefaultController):
 class MainController(DefaultController):
 
     def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
         self.collection_controller = self.container.resolve("collection_controller")
         self.decks_controller = self.container.resolve("decks_controller")
         self.deck_controller = self.container.resolve("deck_controller")
         self.win_controller = self.container.resolve("win_controller")
-
 
 
 

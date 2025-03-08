@@ -41,6 +41,10 @@ class WinController:
         return ViewFactory(container=self.container) 
 
 
+    def get_current_window(self):
+        """ Restituisce la finestra corrente. """
+        return self.current_window
+
     def create_window(self, parent=None, controller=None, key=None, **kwargs):
         """
         Crea una finestra senza renderla visibile utilizzando la factory.
