@@ -10,9 +10,6 @@
 
 # lib
 import wx
-#from .color_system import ColorManager
-#from .focus_handler import FocusHandler
-#from scr.views.builder.dependency_container import DependencyContainer
 import scr.views.builder.view_components as vc
 from scr.views.main_views import  HearthstoneAppFrame
 from scr.views.collection_view import CardCollectionFrame
