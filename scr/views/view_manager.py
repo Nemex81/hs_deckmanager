@@ -139,39 +139,9 @@ class WinController:
             self.current_window.parent = parent
             log.debug(f"Finestra genitore impostata: {parent}")
             parent.Hide()
+
         log.debug(f"Finestra genitore nascosta: {parent}")
 
-    def last_open_window(self, window_key, parent=None, **kwargs):
-        """
-        Rende visibile una finestra e nasconde la corrente.
-        
-        Args:
-            window_key (WindowKey): Chiave della finestra da aprire.
-            parent: Finestra genitore.
-        """
-        if window_key not in self.windows:
-            log.error(f"Finestra '{window_key}' non creata.")
-            raise ValueError(f"Finestra '{window_key}' non creata.")
-        
-        # Nasconde la finestra corrente, se presente
-        if self.current_window:
-            self.current_window.Hide()
-            log.debug(f"Finestra corrente nascosta: {self.current_window}")
-        
-        # Mostra la nuova finestra
-        self.current_window = self.windows[window_key]
-        self.current_window.Show()
-        log.debug(f"Finestra corrente impostata: {self.current_window}")
-        
-        # Imposta la finestra genitore, se specificata
-        if parent:
-            self.current_window.parent = parent
-            log.debug(f"Finestra genitore impostata: {parent}")
-            
-            # Nasconde la finestra genitore
-            parent.Hide()
-            self.parent_stack.append(self.current_window)               # Salva la finestra corrente nello stack
-            log.debug(f"Finestra genitore nascosta: {parent}")
 
 
     def close_current_window(self):
