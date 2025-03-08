@@ -56,6 +56,7 @@ class HearthstoneAppFrame(BasicView):
 
         # catturo gli eventi da tastiera
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+        #self.Bind(wx.EVT_SET_FOCUS, self.read_focused_element)
 
         log.info("Finestra principale creata.")
 
@@ -74,6 +75,7 @@ class HearthstoneAppFrame(BasicView):
             label="Collezione", 
             event_handler=self.on_collection_button_click
         )
+        self.collection_button.Bind(wx.EVT_SET_FOCUS, self.on_focus)
 
         self.decks_button = self.widget_factory.create_button(
             parent=self.panel, 
@@ -108,7 +110,17 @@ class HearthstoneAppFrame(BasicView):
         self.Layout()
 
 
+    def read_focused_element(self, event):
+        """Legge l'elemento attualmente in focus."""
+        self.controller.read_focused_element(event=event, frame=self)
+        log.debug(f"Elemento in focus: {event.GetEventObject()}")
+        event.Skip()
+
     #@@# sezione metodi collegati agli eventi
+
+    def on_focus(self, event):
+        """Gestisce l'evento di focus."""
+        self.controller.on_focus(event=event, frame=self)
 
     def on_key_down(self, event):
         """Gestisce l'evento di pressione dei tasti."""

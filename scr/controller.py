@@ -35,7 +35,7 @@ class DefaultController:
         """ Vocalizza un testo. """
         self.vocalizer.speak(text)
 
-    def on_focus(self, event):
+    def on_focus(self, event, frame):
         """
         Gestisce l'evento di focus su un elemento e vocalizza la descrizione.
         """
@@ -69,10 +69,10 @@ class DefaultController:
             self.question_quit_app(frame)
 
         elif key_code == ord("F"):
-            self.read_focused_element()
+            self.read_focused_element(event=event, frame=frame)
 
 
-    def read_focused_element(self):
+    def read_focused_element(self, event, frame):
         """
         Legge il nome dell'elemento che ha attualmente il focus.
         """
@@ -81,6 +81,7 @@ class DefaultController:
         if focused_element:
             description = focused_element.GetName()  # Recupera la descrizione
             if description:
+                description += f". Tipo: {focused_element.GetClassName()}"
                 self.speak(description)  # Vocalizza la descrizione
 
             else:
@@ -88,6 +89,8 @@ class DefaultController:
 
         else:
             self.speak("Nessun elemento ha il focus.")
+
+        event.skip()
 
 
     #@@# sezione per gestione deicomandi  generici disponibiliin ogni finestra
