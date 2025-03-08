@@ -20,37 +20,70 @@ from utyls import logger as log
 
 
 
-class CollectionController:
-    """Controller per la vista della collezione di carte."""
-
+class DefaultController:
+    """ Controller predefinito per la gestione delle finestre. """
+    
     def __init__(self, container=None, **kwargs):
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
-    def load_collection(self, filters=None, card_list=None):
-        """
-        Carica la collezione di carte dal database, applicando eventuali filtri.
+    #@@# sezione per gestione deicomandi  generici disponibiliin ogni finestra
 
-        Args:
-            filters (dict, optional): Dizionario di filtri da applicare. Default è None.
+    def get_deck_details(self, deck_name):
+        """ Restituisce i dettagli di un mazzo. """
+        return self.db_manager.get_deck_details(deck_name)
 
+
+    def get_deck_statistics(self, deck_name):
+        """ Restituisce le statistiche di un mazzo. """
+        return self.db_manager.get_deck_statistics(deck_name)
+
+    def set_focus_to_list(self, frame):
         """
+        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
+        """
+        
+        if hasattr(frame, "card_list") and frame.card_list.GetItemCount() > 0:
+            frame.card_list.SetFocus()  # Imposta il focus sulla lista
+            frame.card_list.Select(0)   # Seleziona il primo elemento
+            frame.card_list.Focus(0)    # Sposta il focus sul primo elemento
+            frame.card_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
+
+    def select_list_element(self, frame=None):
+        """ colora la riga del mazzo selezionato nell'elenco. """
+
+        if not frame:
+            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
+            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
+            return
+
+        # colora la riga selezionata
+        frame.card_list.SetBackgroundColour('blue')
+        frame.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        frame.card_list.SetForegroundColour('white')
+
+
+    def get_total_cards_in_deck(self, deck_name):
+        """Calcola il numero totale di carte in un mazzo."""
 
         try:
-            # carica le carte della collezione dal db
-            cards = self.db_manager.get_cards(filters=filters)
-
-            # Aggiorna la lista delle carte nella vista
-            card_list.cards = cards
-
-            # Forza il ridisegno della lista
-            card_list.Refresh()
+            with db_session() as session:
+                deck = self.db_manager.get_deck(deck_name)
+                if deck:
+                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
+                    total_cards = sum(card["quantity"] for card in deck["cards"])
+                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
+                    return total_cards
+                else:
+                    log.error(f"Mazzo '{deck_name}' non trovato.")
+                    return 0
 
         except Exception as e:
-            log.error(f"Errore durante il caricamento della collezione: {str(e)}")
-            return []
+            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
+            return 0
+
 
     def add_card(self, card_data):
         """
@@ -130,8 +163,55 @@ class CollectionController:
             return False
 
 
+    def question_quit_app(self, frame):
+        """Gestisce la richiesta di chiusura applicazione."""
+        dlg = wx.MessageDialog(
+            frame,
+            "Confermi l'uscita dall'applicazione?",
+            "Conferma Uscita",
+            wx.YES_NO | wx.ICON_QUESTION
+        )
+        if dlg.ShowModal() == wx.ID_YES:
+            dlg.Destroy()
+            frame.Close()
 
-class DeckController:
+
+
+class CollectionController(DefaultController):
+    """Controller per la vista della collezione di carte."""
+
+    def __init__(self, container=None, **kwargs):
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+
+
+    def load_collection(self, filters=None, card_list=None):
+        """
+        Carica la collezione di carte dal database, applicando eventuali filtri.
+
+        Args:
+            filters (dict, optional): Dizionario di filtri da applicare. Default è None.
+
+        """
+
+        try:
+            # carica le carte della collezione dal db
+            cards = self.db_manager.get_cards(filters=filters)
+
+            # Aggiorna la lista delle carte nella vista
+            card_list.cards = cards
+
+            # Forza il ridisegno della lista
+            card_list.Refresh()
+
+        except Exception as e:
+            log.error(f"Errore durante il caricamento della collezione: {str(e)}")
+            return []
+
+
+
+class DeckController(DefaultController):
     """ Controller per la view di un singoolo mazzo. """
 
     def __init__(self, container=None, **kwargs):
@@ -140,13 +220,8 @@ class DeckController:
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
-    def get_deck_details(self, deck_name):
-        """Restituisce i dettagli di un mazzo."""
-        return self.db_manager.get_deck_details(deck_name)
 
-
-
-class DecksController:
+class DecksController(DefaultController):
     """ Controller per la vista dei mazzi. """
 
     def __init__(self, container=None, **kwargs):
@@ -183,6 +258,7 @@ class DecksController:
             wx.MessageBox("Seleziona un mazzo prima di procedere.", "Errore")
             return False
 
+
     def apply_search_filter(self, frame, search_text):
         """Applica il filtro di ricerca alla lista dei mazzi."""
 
@@ -207,38 +283,6 @@ class DecksController:
         self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
 
 
-    def set_focus_to_list(self, frame):
-        """
-        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
-        """
-        
-        if hasattr(frame, "card_list") and frame.card_list.GetItemCount() > 0:
-            frame.card_list.SetFocus()  # Imposta il focus sulla lista
-            frame.card_list.Select(0)   # Seleziona il primo elemento
-            frame.card_list.Focus(0)    # Sposta il focus sul primo elemento
-            frame.card_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
-
-
-    def get_total_cards_in_deck(self, deck_name):
-        """Calcola il numero totale di carte in un mazzo."""
-
-        try:
-            with db_session() as session:
-                deck = self.db_manager.get_deck(deck_name)
-                if deck:
-                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
-                    total_cards = sum(card["quantity"] for card in deck["cards"])
-                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
-                    return total_cards
-                else:
-                    log.error(f"Mazzo '{deck_name}' non trovato.")
-                    return 0
-
-        except Exception as e:
-            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
-            return 0
-
-
     def select_last_deck(self, frame):
         """Seleziona l'ultimo mazzo nella lista."""
 
@@ -251,20 +295,6 @@ class DecksController:
         card_list.EnsureVisible(end_list-1)
         card_list.SetFocus()
         card_list.Refresh()
-
-
-    def select_list_element(self, frame=None):
-        """ colora la riga del mazzo selezionato nell'elenco. """
-
-        if not frame:
-            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
-            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
-            return
-
-        # colora la riga selezionata
-        frame.card_list.SetBackgroundColour('blue')
-        frame.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        frame.card_list.SetForegroundColour('white')
 
 
     def select_and_focus_deck(self, frame, deck_name):
@@ -349,9 +379,6 @@ class DecksController:
             wx.MessageBox("Errore durante l'aggiunta del mazzo.", "Errore")
             return False
 
-        #card_list = frame.card_list
-        #self.update_card_list(card_list)
-        #self.select_last_deck(self)
         log.info("Mazzo aggiunto con successo.")
         return True
 
@@ -386,16 +413,6 @@ class DecksController:
 
         else:
             wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
-
-
-    def get_deck_details(self, deck_name):
-        """ Restituisce i dettagli di un mazzo. """
-        return self.db_manager.get_deck_details(deck_name)
-
-
-    def get_deck_statistics(self, deck_name):
-        """ Restituisce le statistiche di un mazzo. """
-        return self.db_manager.get_deck_statistics(deck_name)
 
 
     def update_card_list(self, card_list =None):
@@ -439,7 +456,7 @@ class DecksController:
 
 
 
-class MainController:
+class MainController(DefaultController):
 
     def __init__(self, container=None, **kwargs):
         self.container = container  # Memorizza il container
@@ -449,17 +466,6 @@ class MainController:
         self.deck_controller = self.container.resolve("deck_controller")
         self.win_controller = self.container.resolve("win_controller")
 
-    def question_quit_app(self, frame):
-        """Gestisce la richiesta di chiusura applicazione."""
-        dlg = wx.MessageDialog(
-            frame,
-            "Confermi l'uscita dall'applicazione?",
-            "Conferma Uscita",
-            wx.YES_NO | wx.ICON_QUESTION
-        )
-        if dlg.ShowModal() == wx.ID_YES:
-            dlg.Destroy()
-            frame.Close()
 
 
 
