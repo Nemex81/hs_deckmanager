@@ -14,8 +14,7 @@
 """
 
 # lib
-import wx, pyperclip
-from .builder.view_components import create_button
+import wx#, pyperclip
 from .builder.proto_views import BasicView
 from utyls import enu_glob as eg
 from utyls import helper as hp

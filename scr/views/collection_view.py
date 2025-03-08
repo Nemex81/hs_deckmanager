@@ -21,9 +21,8 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-from ..db import session, db_session, Card, DeckCard, Deck
+from ..db import Card
 from ..models import load_cards
-from .builder.view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
 from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog

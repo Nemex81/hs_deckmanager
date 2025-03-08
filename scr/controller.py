@@ -6,24 +6,13 @@
     Path:
         scr/controller.py
 
-    Descrizione:
-                Questo modulo rappresenta il cuore dell'applicazione, coordinando l'interazione tra le interfacce grafiche, il database e la logica di gestione.
-                La classe HearthstoneManager si occupa di inizializzare l'applicazione, creare le finestre principali e gestire le operazioni di visualizzazione e modifica dei mazzi e delle carte.
-                L'applicazione segue il pattern MVC, con la classe HearthstoneManager che funge da controller, le finestre come viste e il database come modello.
-
 """
 
 # lib
 import wx
 import pyperclip
-from enum import Enum
 from sqlalchemy.exc import SQLAlchemyError
-from .models import load_cards, db_session, Deck
-from.views.view_manager import WinController
-from .views.main_views import HearthstoneAppFrame
-from .views.collection_view import CardCollectionFrame
-from .views.deck_view import DeckViewFrame
-from .views.decks_view import DecksViewFrame
+from .models import db_session, Deck
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log

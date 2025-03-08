@@ -16,7 +16,7 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-from ..db import session, db_session, Card, DeckCard, Deck
+from ..db import Deck
 from .builder.proto_views import BasicView, ListView
 from .deck_stats_dialog import DeckStatsDialog
 import scr.views.builder.view_components as vc              # Componenti dell'interfaccia utente
