@@ -15,7 +15,7 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-from ..db import Card
+from ..db import Card, session
 from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .builder.color_system import AppColors

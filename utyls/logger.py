@@ -34,7 +34,7 @@ logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
 
 
-def setup_logging(log_file='hearthstone_manager.log', console_output=False):
+def setup_logging(log_file='logs/hdm.log', console_output=False):
     """ 
         Configura il logging dell'applicazione.
 

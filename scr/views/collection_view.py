@@ -22,7 +22,7 @@
 import wx#, pyperclip
 import wx.lib.newevent
 from ..db import Card
-from ..models import load_cards
+from ..models import load_cards, session
 from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog

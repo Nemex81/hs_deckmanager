@@ -7,6 +7,7 @@ Path:
 """
 
 # lib
+import wx
 from enum import Enum
 
 from scr.views.builder.dependency_container import DependencyContainer          # Nuovo container
@@ -65,8 +66,10 @@ class WinController:
         )
 
         if view:
+            view.Bind(wx.EVT_CLOSE, lambda e: self.close_current_window())
             self.windows[key] = view
             log.debug(f"Finestra creata: {self.windows[key]}")
+            log.debug(f"Apertura finestra '{key}' con genitore: {parent}")
         else:
             log.error(f"Finestra '{key}' non creata.")
             raise ValueError(f"Finestra '{key}' non creata.")
