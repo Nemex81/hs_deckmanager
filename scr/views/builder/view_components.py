@@ -29,7 +29,7 @@ DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
 
 #@@# sezione classi personalizzate per la gestione degli elementi dell'interfaccia utente
 
-class CustomTextCtrl(wx.TextCtrl):
+class CustomTextCtrl(wx.TextCtrl, wx.Accessible):
     """
     Casella di testo personalizzata con gestione del focus e temi.
     """
@@ -40,12 +40,20 @@ class CustomTextCtrl(wx.TextCtrl):
         self.fh = focus_handler         # Gestione del focus
         self.placeholder = placeholder  # Testo placeholder (opzionale)
 
+        # Imposta il nome e la descrizione accessibile
+        self.SetAccessibleName("Casella di testo")
+        self.SetAccessibleDescription(f"Per inserire testo, digitare qui.")
+
         # Imposta lo stile predefinito
         self.cm.apply_default_style(self)
         self.SetHint(self.placeholder)  # Imposta il placeholder
 
         # Collega gli eventi di focus
         self.fh.bind_focus_events(self)
+
+    def GetDescription(self):
+        """Restituisce una descrizione accessibile."""
+        return f"Casella di testo per: {self.placeholder}"
 
     def SetFocus(self):
         """Imposta il focus sulla casella di testo."""
