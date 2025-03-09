@@ -185,6 +185,23 @@ class CardCollectionFrame(ListView):
         self.card_list.Refresh()
 
 
+    def _get_list_columns(self):
+        """Definisce le colonne specifiche per la gestione della collezione."""
+        return [
+            ("Nome", 250),
+            ("Mana", 50),
+            ("Classe", 120),
+            ("Tipo", 120),
+            ("Tipo Magia", 120),
+            ("Sottotipo", 120),
+            ("Attacco", 50),
+            ("Vita", 50),
+            ("Durabilità", 50),
+            ("Rarità", 120),
+            ("Espansione", 500)
+        ]
+
+
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
 
@@ -242,6 +259,14 @@ class CardCollectionFrame(ListView):
 
         # forza il ridisegno della lista
         self.Layout()
+
+
+    def on_item_activated(self, event):
+        """Gestisce il doppio clic su una riga per modificare la carta."""
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            self.on_edit_card(event)
 
 
     def on_show_filters(self, event):

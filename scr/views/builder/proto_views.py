@@ -175,27 +175,6 @@ class BasicView(wx.Frame):
         self.controller.on_key_down(event=event, frame=self)
 
 
-    def on_item_focused(self, event):
-        """Gestisce l'evento di focus su una riga della lista."""
-
-        # Imposta lo stile della riga selezionata
-        selected_item = event.GetIndex()
-
-        # Resetta lo stile di tutte le righe
-        #self.reset_focus_style_for_card_list(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        self.select_element(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        self.cm.apply_default_style(self.card_list)
-
-        # Forza il ridisegno della lista
-        self.card_list.Refresh()
-
-        # forza il ridisegno della lista
-        self.Layout()
-
     def init_ui(self):
         """ Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre. """
         self.panel = wx.Panel(self)
@@ -330,7 +309,7 @@ class ListView(BasicView):
         super().__init__(parent, title, size, container, **kwargs)
         self.mode = None  # Modalità di visualizzazione (es. "collection", "decks", "deck")
         #self.card_list = None  # Lista di carte
-        self.search_ctrl = None  # Barra di ricerca
+        #self.search_ctrl = None  # Barra di ricerca
 
         # Timer per il debounce della ricerca
         self.timer = wx.Timer(self)
@@ -462,10 +441,8 @@ class ListView(BasicView):
                 self.color_manager.apply_default_style_to_list_item(self.card_list, i)
         self.card_list.Refresh()
 
-
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
-
         if hasattr(self, "card_list"):
             self.card_list.SetFocus()
             self.card_list.Select(0)

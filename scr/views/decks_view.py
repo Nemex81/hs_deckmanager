@@ -30,7 +30,6 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-#class DecksViewFrame(BasicView):
 class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
@@ -47,6 +46,78 @@ class DecksViewFrame(ListView):
     #@@# metodi ausigliari della classe
 
     def init_ui_elements(self):
+        """Inizializza gli elementi dell'interfaccia utente."""
+        super().init_ui_elements()
+
+        # Aggiungi pulsanti specifici per la gestione dei mazzi
+        btn_add = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Aggiungi Mazzo",
+            event_handler=self.on_add_deck
+        )
+
+        btn_copy = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Copia Mazzo",
+            event_handler=self.on_copy_deck
+        )
+
+        btn_view = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Visualizza Mazzo",
+            event_handler=self.on_view_deck
+        )
+
+        btn_stats = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Statistiche Mazzo",
+            event_handler=self.on_view_stats
+        )
+
+        btn_update = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Aggiorna Mazzo",
+            event_handler=self.on_update_deck
+        )
+
+        btn_delete = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Elimina Mazzo",
+            event_handler=self.on_delete_deck
+        )
+
+        btn_collection = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Collezione Carte",
+            event_handler=self.on_view_collection
+        )
+
+        btn_exit = self.widget_factory.create_button(
+            parent=self.panel,
+            label="Chiudi",
+            event_handler=self.on_close
+        )
+
+        # Layout pulsanti
+        btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
+        for btn in [btn_add, btn_copy, btn_view, btn_stats, btn_update, btn_delete, btn_collection, btn_exit]:
+            self.bind_focus_events(btn)  # Collega gli eventi di focus
+            btn_sizer.Add(btn, flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Resetta i colori di tutti i pulsanti
+        self.reset_focus_style_for_all_buttons(btn_sizer)
+
+        # Aggiungi i pulsanti al layout principale
+        self.sizer.Add(btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Carica i mazzi
+        self.load_decks()
+
+        # Imposta il focus sulla lista
+        self.set_focus_to_list()
+
+
+    def last_init_ui_elements(self):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
         # Creazione degli elementi dell'interfaccia
@@ -63,12 +134,12 @@ class DecksViewFrame(ListView):
         self.load_decks()
 
         # Barra di ricerca
-        self.search_bar = self.widget_factory.create_search_bar(
+        self.search_ctrl = self.widget_factory.create_search_bar(
             parent=self.panel,
             placeholder="Cerca mazzo...",
             event_handler=self.on_search
         )
-        self.search_bar.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
 
         # Pulsanti
 
@@ -123,7 +194,7 @@ class DecksViewFrame(ListView):
         # Layout principale
         main_sizer = self.widget_factory.create_sizer(wx.VERTICAL)
         self.widget_factory.add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
-        self.widget_factory.add_to_sizer(main_sizer, self.search_bar, flag=wx.EXPAND | wx.ALL, border=5)
+        self.widget_factory.add_to_sizer(main_sizer, self.search_ctrl, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Separatore tra barra di ricerca e lista dei mazzi
         self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
@@ -157,7 +228,7 @@ class DecksViewFrame(ListView):
         #self.status_bar.SetStatusText("Pronto")
 
         # Imposta il focus sul search bar
-        #self.search_bar.SetFocus()
+        #self.search_ctrl.SetFocus()
 
         # Imposta il focus sul primo deck della lista delle carte
         #self.select_and_focus_deck(self.card_list.GetItemText(0))
@@ -190,12 +261,70 @@ class DecksViewFrame(ListView):
         pass
 
 
+    def _get_list_columns(self):
+        """Definisce le colonne specifiche per la gestione dei mazzi."""
+        return [
+            ("Mazzo", 600),
+            ("Classe", 500),
+            ("Formato", 300),
+            ("Carte Totali", 300)
+        ]
+
+    def sort_cards(self, col):
+        """Ordina i mazzi in base alla colonna selezionata, con logica specifica."""
+        items = []
+        for i in range(self.card_list.GetItemCount()):
+            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+            items.append(item)
+
+
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+        if col == 3:  # Colonna "Carte Totali" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        self.card_list.DeleteAllItems()
+        for item in items:
+            self.card_list.Append(item)
+
+
+    def apply_search_filter(self, search_text):
+        """Applica un filtro di ricerca alla lista dei mazzi."""
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            self.load_decks()  # Ricarica tutti i mazzi se la casella di ricerca è vuota
+        else:
+            # Filtra i mazzi in base al nome
+            items = []
+            for i in range(self.card_list.GetItemCount()):
+                item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+                if search_text.lower() in item[0].lower():  # Filtra per nome del mazzo (colonna 0)
+                    items.append(item)
+
+            self.card_list.DeleteAllItems()
+            for item in items:
+                self.card_list.Append(item)
+
+
         #@@# sezione metodi collegati agli eventi
+
+    def on_item_activated(self, event):
+        """Gestisce il doppio clic su una riga per visualizzare il mazzo."""
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            deck_name = self.card_list.GetItemText(selected)
+            self.on_view_deck(event)
+
 
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
 
-        search_text = self.search_bar.GetValue().strip().lower()
+        search_text = self.search_ctrl.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
 
@@ -203,7 +332,7 @@ class DecksViewFrame(ListView):
     def on_search_text_change(self, event):
         """Gestisce la ricerca in tempo reale mentre l'utente digita."""
 
-        search_text = self.search_bar.GetValue().strip().lower()
+        search_text = self.search_ctrl.GetValue().strip().lower()
         if not search_text:
             # ripulisci la list aprim adi ricaricare
             self.card_list.DeleteAllItems()
@@ -318,9 +447,9 @@ class DecksViewFrame(ListView):
 
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
-        search_text = self.search_bar.GetValue().strip().lower()
+        search_text = self.search_ctrl.GetValue().strip().lower()
         #self._apply_search_filter(search_text)
-        self.controller.apply_search_filter(self, search_text)
+        self.apply_search_filter(search_text)
 
 
     def on_close(self, event):

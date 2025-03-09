@@ -149,6 +149,54 @@ class DeckViewFrame(ListView):
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
 
 
+    def _get_list_columns(self):
+        """Definisce le colonne specifiche per la gestione dei mazzi."""
+        return [
+            ("Nome", 250),
+            ("Mana", 50),
+            ("Quantità", 50),
+            ("Tipo", 200),
+            ("Tipo Magia", 200),
+            ("Sottotipo", 200),
+            ("Attacco", 50),
+            ("Vita", 50),
+            ("Durabilità", 50),
+            ("Rarità", 120),
+            ("Espansione", 500)
+        ]
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata, con logica specifica per i mazzi."""
+        items = []
+        for i in range(self.card_list.GetItemCount()):
+            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+            items.append(item)
+
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        elif col == 2:  # Colonna "Quantità" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        self.card_list.DeleteAllItems()
+        for item in items:
+            self.card_list.Append(item)
+
+    def on_item_activated(self, event):
+        """Gestisce il doppio clic su una riga per modificare la carta."""
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            self._edit_card_in_deck(card_name)
+
+
     #@@# sezione metodi collegati agli eventi
 
     def on_timer(self, event):
