@@ -180,6 +180,8 @@ class DeckViewFrame(ListView):
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
 
 
+    #@@# sezione metodi collegati agli eventi
+
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
 
@@ -206,16 +208,6 @@ class DeckViewFrame(ListView):
         search_text = event.search_text
         self._apply_search_filter(search_text)
         self.set_focus_to_list()
-
-
-    def set_focus_to_list(self):
-        """Imposta il focus sulla prima carta della lista carte."""
-
-        if hasattr(self, "card_list"):
-            self.card_list.SetFocus()
-            self.card_list.Select(0)
-            self.card_list.Focus(0)
-            self.card_list.EnsureVisible(0)
 
 
     def _add_card_to_list(self, card_data):
@@ -332,6 +324,70 @@ class DeckViewFrame(ListView):
         self.card_list.EnsureVisible(0)
 
 
+    def on_add_card(self, event):
+        """Aggiunge una nuova carta al mazzo."""
+
+        dlg = CardEditDialog(self)
+        if dlg.ShowModal() == wx.ID_OK:
+            card_name = dlg.get_card_name()
+            if card_name:
+                self._add_card_to_deck(card_name)
+
+        dlg.Destroy()
+
+
+    def on_edit_card(self, event):
+        """Modifica la carta selezionata."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            self._edit_card_in_deck(card_name)
+
+        else:
+            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
+
+
+    def on_delete_card(self, event):
+        """Elimina la carta selezionata."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            if wx.MessageBox(f"Eliminare la carta '{card_name}'?", "Conferma", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
+                self._delete_card_from_deck(card_name)
+
+        else:
+            wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
+
+
+    def on_column_click(self, event):
+        """Ordina le carte in base alla colonna selezionata."""
+
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+
+    def on_key_press(self, event):
+        """Gestisce i tasti premuti per ordinare la lista."""
+
+        key_code = event.GetKeyCode()
+        if ord('1') <= key_code <= ord('9'):
+            col = key_code - ord('1')
+            if col < self.card_list.GetColumnCount():
+                self.sort_cards(col)
+
+        event.Skip()
+
+
+    def on_close(self, event):
+        """Chiude la finestra."""
+        self.parent.Show()
+        self.Close()
+
+
+    #@@# sezione metodi ausigliari della classe
+
     def _add_card_to_deck(self, card_name):
         """Aggiunge una nuova carta al mazzo."""
 
@@ -378,43 +434,6 @@ class DeckViewFrame(ListView):
         wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
 
 
-    def on_add_card(self, event):
-        """Aggiunge una nuova carta al mazzo."""
-
-        dlg = CardEditDialog(self)
-        if dlg.ShowModal() == wx.ID_OK:
-            card_name = dlg.get_card_name()
-            if card_name:
-                self._add_card_to_deck(card_name)
-
-        dlg.Destroy()
-
-
-    def on_edit_card(self, event):
-        """Modifica la carta selezionata."""
-
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            self._edit_card_in_deck(card_name)
-
-        else:
-            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
-
-
-    def on_delete_card(self, event):
-        """Elimina la carta selezionata."""
-
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            if wx.MessageBox(f"Eliminare la carta '{card_name}'?", "Conferma", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
-                self._delete_card_from_deck(card_name)
-
-        else:
-            wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
-
-
     def _sort_items(self, items, col):
         """Ordina gli elementi in base alla colonna selezionata."""
 
@@ -447,44 +466,7 @@ class DeckViewFrame(ListView):
             self.card_list.Append(item)
 
 
-    def on_column_click(self, event):
-        """Ordina le carte in base alla colonna selezionata."""
 
-        col = event.GetColumn()
-        self.sort_cards(col)
-
-
-    def select_card_by_name(self, card_name):
-        """Seleziona una carta nella lista in base al nome."""
-
-        if not card_name:
-            return
-
-        for i in range(self.card_list.GetItemCount()):
-            if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)
-                self.card_list.Focus(i)
-                self.card_list.EnsureVisible(i)
-                self.card_list.SetFocus()
-                break
-
-
-    def on_key_press(self, event):
-        """Gestisce i tasti premuti per ordinare la lista."""
-
-        key_code = event.GetKeyCode()
-        if ord('1') <= key_code <= ord('9'):
-            col = key_code - ord('1')
-            if col < self.card_list.GetColumnCount():
-                self.sort_cards(col)
-
-        event.Skip()
-
-
-    def on_close(self, event):
-        """Chiude la finestra."""
-        self.parent.Show()
-        self.Close()
 
 
 

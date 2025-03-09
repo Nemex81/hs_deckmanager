@@ -481,6 +481,30 @@ class DefaultController:
         #self.load_collection(card_list=card_list)
 
 
+    #@@# sezione gestione selezione degli elementi e cambio colore
+
+    def reset_focus_style_for_card_list(self, frame=None, selected_item=None):
+        """ Resetta lo stile di tutte le righe. """
+
+        card_list = frame.card_list
+        for i in range(card_list.GetItemCount()):
+            if i != selected_item:
+                frame.color_manager.apply_default_style_to_list_item(self.card_list, i)
+
+        # Forza il ridisegno della lista
+        card_list.Refresh()
+
+
+    def select_element(self, frame=None, row=None):
+        """ Seleziona l'elemento attivo. """
+
+        if hasattr(frame, "card_list"):
+            card_list = frame.card_list
+            card_list.SetItemBackgroundColour(row, 'blue')
+            card_list.SetItemTextColour(row, 'white')
+            card_list.Refresh()
+
+
 
 class CollectionController(DefaultController):
     """Controller per la vista della collezione di carte."""
