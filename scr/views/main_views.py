@@ -27,32 +27,8 @@ class HearthstoneAppFrame(BasicView):
     """ Finestra principale dell'applicazione. """
 
     def __init__(self, parent=None, controller=None, container=None, **kwargs):
-
-        self.widget_factory = container.resolve("widget_factory")
-        if not self.widget_factory:
-            raise ValueError("WidgetFactory non definita.")
-
         super().__init__(parent=parent, title="Hearthstone Deck Manager by Nemex81", size=(900, 700), container=container)
         log.debug("Creazione finestra principale.")
-        self.controller = controller
-
-        # Gestione del controller
-        self.controller = controller or (container and container.resolve("main_controller"))
-        if not self.controller:
-            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
-
-        # Risoluzione delle dipendenze
-
-        # Risoluzione del gestore dei colori
-        self.color_manager = container.resolve("color_manager")
-        if not self.color_manager:
-            log.error("ColorManager non definito.")
-
-        # Risoluzione del gestore del focus
-        self.focus_handler = container.resolve("focus_handler")
-        if not self.color_manager or not self.focus_handler:
-            log.error("ColorManager o FocusHandler non definiti.")  
-
 
         # catturo gli eventi da tastiera
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)

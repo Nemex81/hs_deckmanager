@@ -35,39 +35,8 @@ class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent=None, controller=None, container=None, **kwargs):
-
-        self.win_controller = container.resolve("win_controller")
-        if not self.win_controller:
-            log.error("WinController non passato a DecksViewFrame")
-            raise ValueError("WinController non passato a DecksViewFrame")
-
-        self.widget_factory = container.resolve("widget_factory")
-        if not self.widget_factory:
-            raise ValueError("WidgetFactory non definita.")
-
-        super().__init__(parent=parent, title="Gestione Mazzi", size=(800, 600))
-        self.parent = parent
-        self.container = container
-        #self.db_manager = self.parent.controller.db_manager
-        #self.controller = self.parent.controller.decks_controller
+        super().__init__(parent=parent, title="Gestione Mazzi", size=(800, 600), container=container, **kwargs)
         self.mode = "decks"
-
-        # Gestione del controller
-        if not controller:
-            if container and container.has("main_controller"):
-                self.controller = container.resolve("main_controller")
-            else:
-                raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
-
-        else:
-            self.controller = controller
-
-        # Gestione del DependencyContainer
-        self.container = container
-        if container:
-            self.color_manager = container.resolve("color_manager")
-            self.focus_handler = container.resolve("focus_handler")
-            self.db_manager = container.resolve("db_manager")
 
         # Timer per il debounce
         #self.timer = wx.Timer(self)

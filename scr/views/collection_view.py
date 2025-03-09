@@ -40,30 +40,8 @@ class CardCollectionFrame(ListView):
     """Finestra per gestire la collezione di carte."""
 
     def __init__(self, parent, controller, container, **kwargs):
-
-        self.widget_factory = container.resolve("widget_factory")
-        if not self.widget_factory:
-            log.error("WidgetFactory non definita.")
-            raise ValueError("WidgetFactory non definita.")
-
-        super().__init__(parent, title="Collezione", container=container)
+        super().__init__(parent=parent, title="Collezione", container=container, **kwargs)
         self.mode = "collection"
-        self.parent = parent
-
-        # Gestione del controller
-        if controller:
-            self.controller = controller
-
-        elif container and container.has("collection_controller"):
-            self.controller = container.resolve("main_controller")
-        else:
-            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
-
-        # Gestione del DependencyContainer
-        self.container = container
-        if container:
-            self.color_manager = container.resolve("color_manager")
-            self.focus_handler = container.resolve("focus_handler")
 
         # Inizializza il timer per il debounce
         #self.timer = wx.Timer(self)                                 # Timer per il debounce

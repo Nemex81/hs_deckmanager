@@ -32,49 +32,18 @@ class DeckViewFrame(ListView):
     """Finestra per gestire le carte di un mazzo."""
 
     def __init__(self, parent=None, controller=None, container=None, deck_name="", **kwargs):
-        """ Costruttore della classe DeckViewFrame. """
-
-        # Inizializzazione delle variabili PRIMA di chiamare super().__init__
-        title = f"Mazzo: {deck_name}"
-        #super().__init__(parent, controller, deck_name)
-        self.parent = parent
-        self.container = container
+        super().__init__(parent=parent, title=f"Mazzo: {deck_name}", deck_name=deck_name, container=container, **kwargs)
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
-        self.card_list = None
         self.deck_name = deck_name
         self.deck_content = None
 
-        # Gestione del controller
-        if controller:
-            self.controller = controller
-
-        elif container and container.has("main_controller"):
-            self.controller = container.resolve("main_controller")
-        else:
-            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
-
-        # Gestione del DependencyContainer
-        self.container = container
-        if container:
-            self.color_manager = container.resolve("color_manager")
-            self.focus_handler = container.resolve("focus_handler")
-            self.db_manager = container.resolve("db_manager")
-
-        self.widget_factory = container.resolve("widget_factory") if container else None
-        if not self.widget_factory:
-            log.error("WidgetFactory non definita.")
-            raise ValueError("WidgetFactory non definita.")
-
-        # Se il mazzo non esiste, solleva un'eccezione
+        # Se il mazzo non esiste, assembla il mazzo richeisto
         if not self.deck_content:
-            #raise ValueError(f"Mazzo non trovato: {deck_name}")
             self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+            # aggiorna la lista delle carte
+            self.load_cards()
+            self.set_focus_to_list()
 
-        if not controller:
-            controller = container.resolve("deck_controller") if container else None
-
-        title = f"Mazzo: {deck_name}"
-        super().__init__(parent=parent, title=title, controller=self.controller, deck_name=deck_name, **kwargs)
 
         # Timer per il debounce
         #self.timer = wx.Timer(self)

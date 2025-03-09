@@ -71,10 +71,8 @@ class BasicView(wx.Frame):
         self.parent = parent               # Finestra genitore
         self.controller = None             # Controller per l'interfaccia
         self.db_manager = None             # Gestore del database
-        self.color_manager = None
-        self.focus_handler = None
-        #self.cm = ColorManager()           # Gestore dei colori
-        #self.focus_handler = FocusHandler()  # Gestore degli eventi di focus
+        self.color_manager = None           # Gestore dei colori
+        self.focus_handler = None           # Gestore degli eventi di focus
 
         # Risolvi le dipendenze dal container
         if self.container:
@@ -84,6 +82,7 @@ class BasicView(wx.Frame):
             self.color_manager = self.container.resolve("color_manager")
             self.focus_handler = self.container.resolve("focus_handler")
             self.widget_factory = self.container.resolve("widget_factory")
+
         else:
             self.cm = ColorManager()
             self.color_manager = ColorManager()
@@ -330,19 +329,11 @@ class ListView(BasicView):
     """
 
     def __init__(self, parent, title, size=(800, 600), container=None, **kwargs):
-        super().__init__(parent, title, size)
+        super().__init__(parent, title, size, container)
         self.mode = None                                  # Modalità di visualizzazione (es. "collection", "decks", "deck")
-        self.parent = parent
-        self.controller = None
-        self.db_manager = None
-
-        # Risolvi le dipendenze dal container
-        if container:
-            self.cm = container.resolve("color_manager")
-            self.focus_handler = container.resolve("focus_handler")
-        else:
-            self.cm = ColorManager()
-            self.focus_handler = FocusHandler()
+        #self.card_list = None                              # Lista di carte
+        #self.deck_content = None                           # Contenuto del mazzo
+        self.search_ctrl = None                            # Controllo di ricerca
 
         # Applica il tema scuro
         self.cm.set_theme_dark()
