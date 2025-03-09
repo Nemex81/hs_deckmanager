@@ -321,7 +321,7 @@ class SingleCardView(BasicDialog):
         btn_sizer.Add(cancel_btn, flag=wx.ALL, border=5)
 
 
-class NewListView(BasicView):
+class ListView(BasicView):
     """
     Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
     """
@@ -329,7 +329,7 @@ class NewListView(BasicView):
     def __init__(self, parent, title, size=(800, 600), container=None, **kwargs):
         super().__init__(parent, title, size, container, **kwargs)
         self.mode = None  # Modalità di visualizzazione (es. "collection", "decks", "deck")
-        self.card_list = None  # Lista di carte
+        #self.card_list = None  # Lista di carte
         self.search_ctrl = None  # Barra di ricerca
 
         # Timer per il debounce della ricerca
@@ -463,7 +463,18 @@ class NewListView(BasicView):
         self.card_list.Refresh()
 
 
-class ListView(BasicView):
+    def set_focus_to_list(self):
+        """Imposta il focus sulla prima carta della lista carte."""
+
+        if hasattr(self, "card_list"):
+            self.card_list.SetFocus()
+            self.card_list.Select(0)
+            self.card_list.Focus(0)
+            self.card_list.EnsureVisible(0)
+
+
+
+class LastListView(BasicView):
     """
     Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
     Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
