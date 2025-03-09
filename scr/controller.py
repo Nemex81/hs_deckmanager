@@ -31,9 +31,10 @@ class DefaultController:
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
-    def speak(self, text):
         """ Vocalizza un testo. """
+    def speak(self, text):
         self.vocalizer.speak(text)
+
 
     def on_focus(self, event, frame):
         """
@@ -58,18 +59,24 @@ class DefaultController:
         event.Skip()
 
 
-    def on_key_down(self, frame, event):
+    def on_key_down(self, event, frame):
         """
         Gestisce l'evento di pressione di un tasto.
         """
 
         key_code = event.GetKeyCode()
         if key_code == wx.WXK_ESCAPE:
-            log.debug(f"Finestra da chiudere: {frame}")
-            self.question_quit_app(frame)
+            #log.debug(f"Finestra da chiudere: {frame}")
+            self.question_quit_app(frame=frame)
 
         elif key_code == ord("F"):
             self.read_focused_element(event=event, frame=frame)
+
+        else:
+            nome_tasto = chr(key_code)
+            log.warning(f"Tasto premuto non gestito: {key_code} che corrisponde al tasto: {nome_tasto}")
+
+        event.Skip()
 
 
     def read_focused_element(self, event, frame):
@@ -77,18 +84,15 @@ class DefaultController:
         Legge il nome dell'elemento che ha attualmente il focus.
         """
 
-        focused_element = wx.Window.FindFocus()  # Ottieni l'elemento con il focus
+        focused_element = wx.Window.FindFocus()                                # Ottieni l'elemento con il focus
         if focused_element:
-            description = focused_element.GetName()  # Recupera la descrizione
+            description = focused_element.GetName()                            # Recupera la descrizione
             if description:
-                description += f". Tipo: {focused_element.GetClassName()}"
-                self.speak(description)  # Vocalizza la descrizione
+                description += f". Tipo: {focused_element.GetClassName()}"      # Aggiungi il tipo di elemento
+                self.speak(description)                                         # Vocalizza la descrizione
 
             else:
                 self.speak("Nessuna descrizione disponibile per questo elemento.")
-
-        else:
-            self.speak("Nessun elemento ha il focus.")
 
         event.skip()
 

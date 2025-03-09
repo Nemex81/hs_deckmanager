@@ -75,7 +75,7 @@ class HearthstoneAppFrame(BasicView):
             label="Collezione", 
             event_handler=self.on_collection_button_click
         )
-        self.collection_button.Bind(wx.EVT_SET_FOCUS, self.on_focus)
+        #self.collection_button.Bind(wx.EVT_SET_FOCUS, self.on_focus)
 
         self.decks_button = self.widget_factory.create_button(
             parent=self.panel, 
@@ -104,8 +104,6 @@ class HearthstoneAppFrame(BasicView):
         main_sizer.Add(bitmap, proportion=0, flag=wx.ALL, border=10)
         main_sizer.Add(button_sizer, 1, wx.ALIGN_CENTER | wx.ALL, 0)
 
-        self.Bind(wx.EVT_KEY_DOWN, self.controller.on_key_down)                 # Collega l'evento di pressione dei tasti
-
         self.panel.SetSizer(main_sizer)
         self.Layout()
 
@@ -113,7 +111,6 @@ class HearthstoneAppFrame(BasicView):
     def read_focused_element(self, event):
         """Legge l'elemento attualmente in focus."""
         self.controller.read_focused_element(event=event, frame=self)
-        log.debug(f"Elemento in focus: {event.GetEventObject()}")
         event.Skip()
 
     #@@# sezione metodi collegati agli eventi
@@ -121,29 +118,45 @@ class HearthstoneAppFrame(BasicView):
     def on_focus(self, event):
         """Gestisce l'evento di focus."""
         self.controller.on_focus(event=event, frame=self)
+        event.Skip()
+
+    def on_kill_focus(self, event):
+        """Gestisce l'evento di perdita del focus."""
+        self.controller.on_kill_focus(event=event, frame=self)
+        event.Skip()
+
 
     def on_key_down(self, event):
         """Gestisce l'evento di pressione dei tasti."""
 
         key_code = event.GetKeyCode()
-        self.controller.on_key_down(frame=self, event=event)
-        event.Skip()
- 
-            
+        log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
+
+        # gestione del tasto esc premuto
+        if key_code == wx.WXK_ESCAPE:
+            self.on_quit_button_click(event)
+            event.Skip(False)           # con il vlaore false impedisce al sistema operativo di intercettare l'evento.
+            return
+
+        # Gestione di un altro  tasto premuto
+        self.controller.on_key_down(event=event, frame=self)
+        event.Skip()           # con il valore false impedisce al sistema operativo di intercettare l'evento.
 
 
     def on_collection_button_click(self, event):
         """Apre la finestra della collezione."""
         self.win_controller.create_collection_window(parent=self)
 
+
     def on_decks_button_click(self, event):
         """Apre la finestra dei mazzi."""
         self.win_controller.create_decks_window(parent=self)
 
+
     def on_quit_button_click(self, event):
         """Chiude l'applicazione."""
-        #self.Close()
-        self.controller.question_quit_app(self)
+        self.controller.question_quit_app(frame=self)
+        event.Skip(False)           # con il vlaore false impedisce al sistema operativo di intercettare l'evento.
 
 
 

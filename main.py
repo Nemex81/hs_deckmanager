@@ -38,8 +38,8 @@ def start_app():
     Avvia l'applicazione Hearthstone Deck Manager.
     """
 
-    log.setup_logging(log_file='hearthstone_manager.log', console_output=False)
-    log.debug("Inizializzazione dell'applicazione.")
+    log.setup_logging(log_file='./logs/hdm.log', console_output=False)
+    log.info("Inizializzazione dell'applicazione.")
     app_initializer = AppInitializer()
     app_initializer.initialize_app()
     app_initializer.start_app()
