@@ -321,6 +321,147 @@ class SingleCardView(BasicDialog):
         btn_sizer.Add(cancel_btn, flag=wx.ALL, border=5)
 
 
+class NewListView(BasicView):
+    """
+    Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
+    """
+
+    def __init__(self, parent, title, size=(800, 600), container=None, **kwargs):
+        super().__init__(parent, title, size, container, **kwargs)
+        self.mode = None  # Modalità di visualizzazione (es. "collection", "decks", "deck")
+        self.card_list = None  # Lista di carte
+        self.search_ctrl = None  # Barra di ricerca
+
+        # Timer per il debounce della ricerca
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+
+    @abstractmethod
+    def load_items(self, filters=None):
+        """Carica gli elementi nella lista. Deve essere implementato dalle classi derivate."""
+        raise NotImplementedError("Il metodo load_items deve essere implementato nelle classi derivate.")
+
+    @abstractmethod
+    def _get_list_columns(self):
+        """Restituisce le colonne della lista. Deve essere implementato dalle classi derivate."""
+        raise NotImplementedError("Il metodo _get_list_columns deve essere implementato nelle classi derivate.")
+
+    def init_ui_elements(self):
+        """Inizializza gli elementi dell'interfaccia utente."""
+        # Barra di ricerca
+        self.search_ctrl = self.widget_factory.create_search_bar(
+            parent=self.panel,
+            placeholder="Cerca...",
+            event_handler=self.on_search
+        )
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
+
+        # Lista delle carte
+        self.card_list = self.widget_factory.create_list_ctrl(
+            parent=self.panel,
+            columns=self._get_list_columns()  # Metodo astratto per definire le colonne
+        )
+
+        # Aggiungi la barra di ricerca e la lista al layout
+        self.sizer.Add(self.search_ctrl, 0, wx.EXPAND | wx.ALL, 5)
+        self.sizer.Add(self.card_list, 1, wx.EXPAND | wx.ALL, 5)
+
+    # Metodi comuni per la ricerca e l'ordinamento
+    def on_timer(self, event):
+        """Esegue la ricerca dopo il timeout del debounce."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
+
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+        self.apply_search_filter(event.search_text)
+
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        if not search_text:
+            self.load_items()  # Ricarica tutti gli elementi se la casella di ricerca è vuota
+        self.timer.Stop()
+        self.timer.Start(500, oneShot=True)
+
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self.apply_search_filter(search_text)
+
+    def apply_search_filter(self, search_text):
+        """Applica un filtro di ricerca alla lista."""
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            self.load_items()  # Ricarica tutti gli elementi
+        else:
+            self.load_items(filters={"name": search_text})  # Filtra gli elementi
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata."""
+        items = []
+        for i in range(self.card_list.GetItemCount()):
+            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+            items.append(item)
+
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        self.card_list.DeleteAllItems()
+        for item in items:
+            self.card_list.Append(item)
+
+    def on_column_click(self, event):
+        """Gestisce il clic sulle intestazioni delle colonne per ordinare la lista."""
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+    def on_key_press(self, event):
+        """Gestisce i tasti premuti per ordinare la lista."""
+        key_code = event.GetKeyCode()
+        if ord('1') <= key_code <= ord('9'):
+            col = key_code - ord('1')
+            if col < self.card_list.GetColumnCount():
+                self.sort_cards(col)
+        event.Skip()
+
+    def select_card_by_name(self, card_name):
+        """Seleziona una carta nella lista in base al nome."""
+        if not card_name:
+            return
+        for i in range(self.card_list.GetItemCount()):
+            if self.card_list.GetItemText(i) == card_name:
+                self.card_list.Select(i)
+                self.card_list.Focus(i)
+                self.card_list.EnsureVisible(i)
+                self.card_list.SetFocus()
+                break
+
+    def select_element(self, row):
+        """Seleziona l'elemento attivo e applica lo stile di focus."""
+        if hasattr(self, "card_list"):
+            self.color_manager.apply_selection_style_to_list(self.card_list, row)
+            for i in range(self.card_list.GetItemCount()):
+                if i != row:
+                    self.color_manager.apply_default_style_to_list_item(self.card_list, i)
+            self.card_list.Refresh()
+
+    def reset_focus_style_for_card_list(self, selected_item=None):
+        """Resetta lo stile di tutte le righe tranne quella selezionata."""
+        for i in range(self.card_list.GetItemCount()):
+            if i != selected_item:
+                self.color_manager.apply_default_style_to_list_item(self.card_list, i)
+        self.card_list.Refresh()
+
 
 class ListView(BasicView):
     """
