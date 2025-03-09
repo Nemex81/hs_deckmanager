@@ -218,11 +218,10 @@ class DecksViewFrame(ListView):
         return control.get_total_cards_in_deck(deck_name)
 
 
-    def update_card_list(self):
+    def update_decks_list(self):
         """ Aggiorna la lista dei mazzi. """
-
-        controller = self.parent.controller.decks_controller
-        self.controller.update_card_list(self.card_list)
+        self.controller.update_decks_list(self.card_list)
+        #self.card_list.Refresh()
 
 
     def update_status(self, message):
@@ -278,7 +277,7 @@ class DecksViewFrame(ListView):
             return
 
         if self.controller.add_deck():
-            self.update_card_list()
+            self.update_decks_list()
             self.controller.select_last_deck(self)
             wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
         else:
@@ -315,7 +314,7 @@ class DecksViewFrame(ListView):
 
         deck_name = self.get_selected_deck()
         if self.controller.upgrade_deck(deck_name):
-                self.update_card_list()
+                self.update_decks_list()
                 self.controller.select_and_focus_deck(frame=self, deck_name=deck_name)  # Seleziona e mette a fuoco il mazzo                
 
 
@@ -350,8 +349,10 @@ class DecksViewFrame(ListView):
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 if self.controller.delete_deck(frame=self, deck_name=deck_name):
-                    self.update_card_list()
+                    self.update_decks_list()
                     self.controller.select_last_deck(self)
+                    wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
+                    
             else:
                 log.info("Operazione annullata.")
                 wx.MessageBox("Operazione annullata.", "Annullato")

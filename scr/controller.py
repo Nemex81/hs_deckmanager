@@ -247,16 +247,7 @@ class DefaultController:
             frame.Close()
 
 
-
-class CollectionController(DefaultController):
-    """Controller per la vista della collezione di carte."""
-
-    def __init__(self, container=None, **kwargs):
-        super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
-
+    #@@# sezione collezzione di carte
 
     def load_collection(self, filters=None, card_list=None):
         """
@@ -282,28 +273,7 @@ class CollectionController(DefaultController):
             return []
 
 
-
-class DeckController(DefaultController):
-    """ Controller per la view di un singoolo mazzo. """
-
-    def __init__(self, container=None, **kwargs):
-        super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
-
-
-
-class DecksController(DefaultController):
-    """ Controller per la vista dei mazzi. """
-
-    def __init__(self, container=None, **kwargs):
-        super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
-        self.deck_controller = None
-
+    #@@# sezione mazzi 
 
     def load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
@@ -333,35 +303,11 @@ class DecksController(DefaultController):
             return False
 
 
-    def apply_search_filter(self, frame, search_text):
-        """Applica il filtro di ricerca alla lista dei mazzi."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
-            frame.card_list.DeleteAllItems()
-            # mostra tutti i mazzi
-            frame.load_decks()
-            # sposta il cursore nella lista deimazzi
-            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
-
-        else:
-            # Filtra i mazzi in base al nome o alla classe
-            frame.card_list.DeleteAllItems()
-            with db_session() as session:
-                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
-                for deck in decks:
-                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
-                    frame.card_list.SetItem(index, 1, deck.player_class)
-                    frame.card_list.SetItem(index, 2, deck.game_format)
-
-        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
-
-
     def select_last_deck(self, frame):
         """Seleziona l'ultimo mazzo nella lista."""
 
         card_list = frame.card_list
-        self.update_card_list(card_list)
+        self.update_decks_list(card_list)
         frame.set_focus_to_list()
         end_list = card_list.GetItemCount()
         card_list.Select(end_list-1)
@@ -450,7 +396,6 @@ class DecksController(DefaultController):
 
         if not self.db_manager.add_deck_from_clipboard():
             log.error("Errore durante l'aggiunta del mazzo.")
-            wx.MessageBox("Errore durante l'aggiunta del mazzo.", "Errore")
             return False
 
         log.info("Mazzo aggiunto con successo.")
@@ -466,7 +411,7 @@ class DecksController(DefaultController):
             return False
 
         card_list = frame.card_list
-        self.update_card_list(card_list)
+        self.update_decks_list(card_list)
         self.select_last_deck(frame)
         log.info(f"Mazzo '{deck_name}' eliminato con successo.")
         wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
@@ -487,23 +432,6 @@ class DecksController(DefaultController):
 
         else:
             wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
-
-
-    def update_card_list(self, card_list =None):
-        """Aggiorna la lista dei mazzi."""
-
-        #card_list = frame.card_list
-        card_list.DeleteAllItems()  # Pulisce la lista
-        with db_session() as session:  # Usa il contesto db_session
-            decks = session.query(Deck).all()
-            for deck in decks:
-                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
-                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-                
-                # Calcola e visualizza il numero totale di carte
-                total_cards = self.get_total_cards_in_deck(deck.name)
-                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
 
     def upgrade_deck(self, deck_name):
@@ -527,6 +455,91 @@ class DecksController(DefaultController):
         else:
             wx.MessageBox("Seleziona un mazzo prima di aggiornarlo.", "Errore")
             return False
+
+
+    def update_decks_list(self, card_list =None):
+        """Aggiorna la lista dei mazzi."""
+
+        #card_list = frame.card_list
+        card_list.DeleteAllItems()  # Pulisce la lista
+        with db_session() as session:  # Usa il contesto db_session
+            decks = session.query(Deck).all()
+            for deck in decks:
+                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
+                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+                
+                # Calcola e visualizza il numero totale di carte
+                total_cards = self.get_total_cards_in_deck(deck.name)
+                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
+
+
+    #def update_card_list(self, card_list):
+        """Aggiorna la lista di carte."""
+
+        #card_list.DeleteAllItems()
+        #self.load_collection(card_list=card_list)
+
+
+
+class CollectionController(DefaultController):
+    """Controller per la vista della collezione di carte."""
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+
+
+
+class DeckController(DefaultController):
+    """ Controller per la view di un singoolo mazzo. """
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+
+
+
+class DecksController(DefaultController):
+    """ Controller per la vista dei mazzi. """
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+        self.deck_controller = None
+
+
+    def apply_search_filter(self, frame, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
+            frame.card_list.DeleteAllItems()
+            # mostra tutti i mazzi
+            frame.load_decks()
+            # sposta il cursore nella lista deimazzi
+            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
+        else:
+            # Filtra i mazzi in base al nome o alla classe
+            frame.card_list.DeleteAllItems()
+            with db_session() as session:
+                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
+                for deck in decks:
+                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
+                    frame.card_list.SetItem(index, 1, deck.player_class)
+                    frame.card_list.SetItem(index, 2, deck.game_format)
+
+        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
+
+
 
 
 
