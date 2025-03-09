@@ -125,7 +125,6 @@ class BasicView(wx.Frame):
         Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
         """
         self.reset_focus_style_for_all_buttons()
-        #log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
         self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
         #element.Refresh()                           # Forza il ridisegno dell'elemento
 
@@ -359,7 +358,6 @@ class ListView(BasicView):
         Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
         """
         self.reset_focus_style_for_all_buttons()
-        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
         self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
         #element.Refresh()                           # Forza il ridisegno dell'elemento
 
