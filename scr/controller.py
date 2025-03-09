@@ -285,6 +285,30 @@ class DefaultController:
         return True
 
 
+    def apply_search_decks_filter(self, frame, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
+            frame.card_list.DeleteAllItems()
+            # mostra tutti i mazzi
+            frame.load_decks()
+            # sposta il cursore nella lista deimazzi
+            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
+        else:
+            # Filtra i mazzi in base al nome o alla classe
+            frame.card_list.DeleteAllItems()
+            with db_session() as session:
+                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
+                for deck in decks:
+                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
+                    frame.card_list.SetItem(index, 1, deck.player_class)
+                    frame.card_list.SetItem(index, 2, deck.game_format)
+
+        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
+
     def get_selected_deck(self, card_list=None):
         """Restituisce il mazzo selezionato nella lista."""
 
@@ -481,6 +505,26 @@ class DefaultController:
         #self.load_collection(card_list=card_list)
 
 
+    #@@#  sezione gestione di un singolo mazzo
+
+    def add_card_to_deck(self, card_name):
+        """Aggiunge una nuova carta al mazzo."""
+
+        pass
+
+
+    def edit_card_in_deck(self, card_name):
+        """Modifica la carta selezionata."""
+
+        pass
+
+
+    def delete_card_from_deck(self, deck_content, card_name):
+        """Elimina la carta selezionata."""
+
+        pass
+
+
     #@@# sezione gestione selezione degli elementi e cambio colore
 
     def reset_focus_style_for_card_list(self, frame=None, selected_item=None):
@@ -537,33 +581,6 @@ class DecksController(DefaultController):
         self.db_manager = self.container.resolve("db_manager")
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
         self.deck_controller = None
-
-
-    def apply_search_filter(self, frame, search_text):
-        """Applica il filtro di ricerca alla lista dei mazzi."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
-            frame.card_list.DeleteAllItems()
-            # mostra tutti i mazzi
-            frame.load_decks()
-            # sposta il cursore nella lista deimazzi
-            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
-
-        else:
-            # Filtra i mazzi in base al nome o alla classe
-            frame.card_list.DeleteAllItems()
-            with db_session() as session:
-                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
-                for deck in decks:
-                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
-                    frame.card_list.SetItem(index, 1, deck.player_class)
-                    frame.card_list.SetItem(index, 2, deck.game_format)
-
-        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
-
-
-
 
 
 

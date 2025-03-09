@@ -301,6 +301,8 @@ class DeckViewFrame(ListView):
             self.load_cards(filters={"name": search_text})
 
 
+    #@@# sezione metodi collegati agli eventi
+
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
 
@@ -465,6 +467,14 @@ class DeckViewFrame(ListView):
         for item in items:
             self.card_list.Append(item)
 
+        # Applica lo stile predefinito a tutte le righe
+        self.cm.apply_default_style(self.card_list)
+
+        # Seleziona la prima carta, se presente
+        if self.card_list.GetItemCount() > 0:
+            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
+
+        self.card_list.Refresh()
 
 
 

@@ -249,7 +249,7 @@ class DecksViewFrame(ListView):
         """Gestisce l'evento di ricerca con debounce."""
 
         search_text = event.search_text
-        self.controller.apply_search_filter(frame=self, search_text=search_text)
+        self.controller.apply_search_decks_filter(frame=self, search_text=search_text)
         self.set_focus_to_list()
 
 

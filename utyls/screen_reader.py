@@ -29,7 +29,7 @@ from utyls import logger as log
 #import pdb #pdb.set_trace() da impostare dove si vuol far partire il debugger
 
 # Imposta la configurazione del logger
-#logging.basicConfig(filename='log.txt', level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
+#logging.basicConfig(filename='./logs/log_reader.log', level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 #logger = logging.getLogger()
 #logger.setLevel(logging.DEBUG)
@@ -37,8 +37,11 @@ from utyls import logger as log
 # inizializzo l'engine per la vocalizzazione
 engine = accessible_output2.outputs.auto.Auto()
 
-#@@@# classe per la gestione dell'interfaccia utente
+
+
 class ScreenReader:
+    """ classe per la gestione delle sintesi vocali """
+
     def __init__(self):
         # costanti
         self.syspath = "./"  # path di sistema per la directory del gioco
@@ -234,9 +237,6 @@ class ScreenReader:
 
 
 
-#@@@# Start del modulo
+#@@# start del modulo
 if __name__ == "__main__":
-    print("compilazione di %s completata." % __name__)
-
-else:
     log.debug(f"Carico: {__name__}")

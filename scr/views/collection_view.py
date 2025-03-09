@@ -207,63 +207,17 @@ class CardCollectionFrame(ListView):
         self.card_list.Refresh()
 
 
-    def last_reset_focus_style_for_card_list(self, selected_item=None):
-        """ Resetta lo stile di tutte le righe. """
-
-
-        for i in range(self.card_list.GetItemCount()):
-            if i != selected_item:
-                self.cm.apply_default_style_to_list_item(self.card_list, i)
-
-        # Forza il ridisegno della lista
-        self.card_list.Refresh()
-
-
-    def select_element(self, row):
-        """ Seleziona l'elemento attivo. """
-
-        if hasattr(self, "card_list"):
-            self.card_list.SetItemBackgroundColour(row, 'blue')
-            self.card_list.SetItemTextColour(row, 'white')
-            self.card_list.Refresh()
-
-
-    def reset_filters(self):
-        """Resetta i filtri e ricarica la lista delle carte."""
-
-        self.search_ctrl.SetValue("")
-        self.load_cards()  # Ricarica la lista delle carte senza filtri
-
-
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
 
-        # Ottieni i dati dalla lista
-        items = []
-        for i in range(self.card_list.GetItemCount()):
-            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
-            items.append(item)
+        # Ordina le carte in base alla colonna selezionata
+        super().sort_cards(col)
 
-        # Funzione lambda per gestire la conversione sicura a intero
-        def safe_int(value):
-            """ Converte il valore in intero, restituendo infinito per i valori non numerici. """
+        # sposta il focus sulla lista
+        self.set_focus_to_list()
 
-            try:
-                return int(value)
-            except ValueError:
-                # Assegna un valore predefinito per valori non numerici
-                return float('inf') if value == "-" else value
-
-        # Ordina i dati in base alla colonna selezionata
-        if col == 1:  # Colonna "Mana" (numerica)
-            items.sort(key=lambda x: safe_int(x[col]))
-        else:  # Altre colonne (testuali)
-            items.sort(key=lambda x: x[col])
-
-        # Aggiorna la lista con i dati ordinati
-        self.card_list.DeleteAllItems()
-        for item in items:
-            self.card_list.Append(item)
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
 
 
     def search_from_name(self, search_text , event):
@@ -340,7 +294,9 @@ class CardCollectionFrame(ListView):
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
-        self.set_focus_to_list()  # Sposta il focus sulla prima carta della lista carte di questa finestra
+
+        # Sposta il focus sulla prima carta della lista carte di questa finestra
+        self.set_focus_to_list()
 
 
     def on_column_click(self, event):

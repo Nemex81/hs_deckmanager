@@ -39,7 +39,6 @@ def start_app():
     """
 
     log.setup_logging(log_file='./logs/hdm.log', console_output=False)
-    log.info("Inizializzazione dell'applicazione.")
     app_initializer = AppInitializer()
     app_initializer.initialize_app()
     app_initializer.start_app()

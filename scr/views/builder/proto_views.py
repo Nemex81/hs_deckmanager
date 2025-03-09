@@ -391,15 +391,31 @@ class ListView(BasicView):
 
 
     def sort_cards(self, col):
-        """Ordina le carte in base alla colonna selezionata."""
+        """ Ordina le carte in base alla colonna selezionata. """
 
+        # Ottieni i dati dalla lista
         items = []
         for i in range(self.card_list.GetItemCount()):
             item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
             items.append(item)
 
-        self._sort_items(items, col)
+        # Funzione lambda per gestire la conversione sicura a intero
+        def safe_int(value):
+            """ Converte il valore in intero, restituendo infinito per i valori non numerici. """
 
+            try:
+                return int(value)
+            except ValueError:
+                # Assegna un valore predefinito per valori non numerici
+                return float('inf') if value == "-" else value
+
+        # Ordina i dati in base alla colonna selezionata
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        # Aggiorna la lista con i dati ordinati
         self.card_list.DeleteAllItems()
         for item in items:
             self.card_list.Append(item)
@@ -435,6 +451,13 @@ class ListView(BasicView):
 
             # Forza il ridisegno della lista
             self.card_list.Refresh()
+
+
+    def reset_filters(self):
+        """Resetta i filtri e ricarica la lista delle carte."""
+
+        self.search_ctrl.SetValue("")
+        self.load_cards()  # Ricarica la lista delle carte senza filtri
 
 
     def set_focus_to_list(self):
