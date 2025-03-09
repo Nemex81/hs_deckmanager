@@ -73,6 +73,8 @@ class DecksViewFrame(ListView):
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
 
+    #@@# sezione metodi ausigliari della classe
+
     def init_ui_elements(self):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """
 
@@ -211,32 +213,13 @@ class DecksViewFrame(ListView):
         self.parent.controller.decks_controller.select_list_element(self)
 
 
-    def get_total_cards_in_deck(self, deck_name):
-        """Calcola il numero totale di carte in un mazzo."""
-
-        control = self.parent.controller.decks_controller
-        return control.get_total_cards_in_deck(deck_name)
-
-
-    def update_decks_list(self):
-        """ Aggiorna la lista dei mazzi. """
-        self.controller.update_decks_list(self.card_list)
-        #self.card_list.Refresh()
-
-
     def update_status(self, message):
         """Aggiorna la barra di stato."""
         #self.status_bar.SetStatusText(message)
         pass
 
 
-    def get_selected_deck(self):
-        """Restituisce il mazzo selezionato nella lista."""
-
-        selection = self.card_list.GetFirstSelected()
-        if selection != wx.NOT_FOUND:
-            return self.card_list.GetItemText(selection)
-
+        #@@# sezione metodi collegati agli eventi
 
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
@@ -277,7 +260,7 @@ class DecksViewFrame(ListView):
             return
 
         if self.controller.add_deck():
-            self.update_decks_list()
+            self.controller.update_decks_list(self.card_list)
             self.controller.select_last_deck(self)
             wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
         else:
@@ -295,7 +278,7 @@ class DecksViewFrame(ListView):
     def on_view_deck(self, event):
         """Mostra il mazzo selezionato in una finestra dettagliata."""
 
-        deck_name = self.get_selected_deck()
+        deck_name = self.controller.get_selected_deck(self.card_list)
         if deck_name:
             deck_content = self.controller.get_deck_details(deck_name)
             if deck_content:
@@ -312,16 +295,16 @@ class DecksViewFrame(ListView):
     def on_update_deck(self, event):
         """ Aggiorna il mazzo selezionato. """
 
-        deck_name = self.get_selected_deck()
+        deck_name = self.controller.get_selected_deck(self.card_list)
         if self.controller.upgrade_deck(deck_name):
-                self.update_decks_list()
+                self.controller.update_decks_list(self.card_list)
                 self.controller.select_and_focus_deck(frame=self, deck_name=deck_name)  # Seleziona e mette a fuoco il mazzo                
 
 
     def on_view_stats(self, event):
         """Mostra le statistiche del mazzo selezionato."""
 
-        deck_name = self.get_selected_deck()
+        deck_name = self.controller.get_selected_deck(self.card_list)
         if deck_name:
             stats = self.controller.get_deck_statistics(deck_name)
             if stats:
@@ -345,11 +328,11 @@ class DecksViewFrame(ListView):
         """ Elimina il mazzo selezionato. """
 
         #controller = self.parent.controller.decks_controller
-        deck_name = self.get_selected_deck()
+        deck_name = self.controller.get_selected_deck(self.card_list)
         if deck_name:
             if wx.MessageBox(f"Sei sicuro di voler eliminare '{deck_name}'?", "Conferma", wx.YES_NO) == wx.YES:
                 if self.controller.delete_deck(frame=self, deck_name=deck_name):
-                    self.update_decks_list()
+                    self.controller.update_decks_list(self.card_list)
                     self.controller.select_last_deck(self)
                     wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
                     
