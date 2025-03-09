@@ -35,6 +35,7 @@ class DecksViewFrame(ListView):
     """ Finestra di gestione dei mazzi. """
 
     def __init__(self, parent=None, controller=None, container=None, **kwargs):
+
         self.win_controller = container.resolve("win_controller")
         if not self.win_controller:
             log.error("WinController non passato a DecksViewFrame")
@@ -52,13 +53,14 @@ class DecksViewFrame(ListView):
         self.mode = "decks"
 
         # Gestione del controller
-        if controller:
-            self.controller = controller
+        if not controller:
+            if container and container.has("main_controller"):
+                self.controller = container.resolve("main_controller")
+            else:
+                raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
 
-        elif container and container.has("decks_controller"):
-            self.controller = container.resolve("decks_controller")
         else:
-            raise ValueError("Il controller non è stato fornito né può essere risolto dal container.")
+            self.controller = controller
 
         # Gestione del DependencyContainer
         self.container = container
@@ -73,7 +75,7 @@ class DecksViewFrame(ListView):
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
 
-    #@@# sezione metodi ausigliari della classe
+    #@@# metodi ausigliari della classe
 
     def init_ui_elements(self):
         """ Inizializza l'interfaccia utente utilizzando le funzioni helper. """

@@ -60,7 +60,9 @@ class WinController:
 
         # Risolvi il controller dal container se non è stato passato
         if not controller and self.container.has(f"{key.value.lower()}_controller"):
-            controller = self.container.resolve(f"{key.value.lower()}_controller")
+            #controller = self.container.resolve(f"{key.value.lower()}_controller")
+            controller = self.container.resolve("main_controller") #passo il controller unificato a tutte le finestre create anzichè il controller specifico di una finestra (vecchio approccio obsoleto)
+            
 
         # Crea la finestra utilizzando la factory
         view = self.factory.create_window(
