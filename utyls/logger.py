@@ -29,7 +29,7 @@ import logging
     #datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
 #)
 
-handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10)
+handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
 logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
 

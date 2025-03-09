@@ -169,6 +169,14 @@ class BasicView(wx.Frame):
             self.card_list.Refresh()
 
 
+    def on_key_down(self, event):
+        """Gestisce l'evento di pressione dei tasti."""
+
+        key_code = event.GetKeyCode()
+        #log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
+        self.controller.on_key_down(event=event, frame=self)
+
+
     def on_item_focused(self, event):
         """Gestisce l'evento di focus su una riga della lista."""
 

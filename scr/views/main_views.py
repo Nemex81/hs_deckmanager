@@ -130,7 +130,7 @@ class HearthstoneAppFrame(BasicView):
         """Gestisce l'evento di pressione dei tasti."""
 
         key_code = event.GetKeyCode()
-        log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
+        #log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
         self.controller.on_key_down(event=event, frame=self)
 
 

@@ -56,7 +56,7 @@ class WinController:
             **kwargs: Parametri aggiuntivi specifici per la finestra.
         """
 
-        log.debug(f"Creazione finestra: {key}")
+        log.info(f"Creazione finestra: {key}")
 
         # Risolvi il controller dal container se non è stato passato
         if not controller and self.container.has(f"{key.value.lower()}_controller"):
@@ -75,8 +75,7 @@ class WinController:
         if view:
             view.Bind(wx.EVT_CLOSE, lambda e: self.close_current_window())
             self.windows[key] = view
-            log.debug(f"Finestra creata: {self.windows[key]}")
-            log.debug(f"Apertura finestra '{key}' con genitore: {parent}")
+            log.info(f"Apertura finestra '{key}' con genitore: {parent}")
         else:
             log.error(f"Finestra '{key}' non creata.")
             raise ValueError(f"Finestra '{key}' non creata.")
@@ -84,21 +83,21 @@ class WinController:
 
     def create_main_window(self, parent=None, controller=None):
         """Crea la finestra principale."""
-        log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.MAIN}")
+        log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.MAIN}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.MAIN)
         self.open_window(eg.WindowKey.MAIN, parent)
 
 
     def create_collection_window(self, parent=None, controller=None):
         """Crea la finestra della collezione."""
-        log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.COLLECTION}")
+        log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.COLLECTION}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.COLLECTION)
         self.open_window(eg.WindowKey.COLLECTION, parent)
 
 
     def create_decks_window(self, parent=None, controller=None):
         """Crea la finestra dei mazzi."""
-        log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECKS}")
+        log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECKS}")
         self.create_window(parent=parent, controller=controller, key=eg.WindowKey.DECKS)
         self.open_window(eg.WindowKey.DECKS, parent)
 
@@ -106,7 +105,7 @@ class WinController:
     def create_deck_window(self, parent=None, controller=None, deck_name=None):
         """Crea la finestra di un mazzo."""
 
-        log.debug(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECK}")
+        log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECK}")
         if not deck_name:
             log.error("'deck_name' è obbligatorio per DeckViewFrame")
             raise ValueError("'deck_name' è obbligatorio per DeckViewFrame")
@@ -163,7 +162,7 @@ class WinController:
                 self.current_window.Show()
                 log.debug(f"Ripristino finestra genitore: {self.current_window}")
             else:
-                log.debug("Nessuna finestra genitore trovata.")
+                log.warning("Nessuna finestra genitore trovata.")
                 self.current_window = None
 
 
@@ -177,11 +176,11 @@ class WinController:
             
             # Ripristina la finestra genitore, se presente
             if parent:
-                log.debug(f"Ripristino finestra genitore: {parent}")
+                log.info(f"Ripristino finestra genitore: {parent}")
                 self.current_window = parent
                 parent.Show()
             else:
-                log.debug("Nessuna finestra genitore trovata.")
+                log.warning("Nessuna finestra genitore trovata.")
                 self.current_window = None
 
 

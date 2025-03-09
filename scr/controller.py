@@ -74,9 +74,9 @@ class DefaultController:
         elif key_code == ord("F"):
             self.read_focused_element(event=event, frame=frame)
 
-        else:
-            nome_tasto = chr(key_code)
-            log.warning(f"Tasto premuto non gestito: {key_code} che corrisponde al tasto: {nome_tasto}")
+        #else:
+            #nome_tasto = chr(key_code)
+            #log.warning(f"Tasto premuto non gestito: {key_code} che corrisponde al tasto: {nome_tasto}")
 
         event.Skip()
 
