@@ -131,16 +131,7 @@ class HearthstoneAppFrame(BasicView):
 
         key_code = event.GetKeyCode()
         log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
-
-        # gestione del tasto esc premuto
-        if key_code == wx.WXK_ESCAPE:
-            self.on_quit_button_click(event)
-            event.Skip(False)           # con il vlaore false impedisce al sistema operativo di intercettare l'evento.
-            return
-
-        # Gestione di un altro  tasto premuto
         self.controller.on_key_down(event=event, frame=self)
-        event.Skip()           # con il valore false impedisce al sistema operativo di intercettare l'evento.
 
 
     def on_collection_button_click(self, event):
@@ -156,7 +147,6 @@ class HearthstoneAppFrame(BasicView):
     def on_quit_button_click(self, event):
         """Chiude l'applicazione."""
         self.controller.question_quit_app(frame=self)
-        event.Skip(False)           # con il vlaore false impedisce al sistema operativo di intercettare l'evento.
 
 
 

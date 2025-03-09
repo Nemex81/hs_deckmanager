@@ -68,6 +68,8 @@ class DefaultController:
         if key_code == wx.WXK_ESCAPE:
             #log.debug(f"Finestra da chiudere: {frame}")
             self.question_quit_app(frame=frame)
+            event.Skip(False)  # Impedisce la propagazione al sistema operativo
+            return
 
         elif key_code == ord("F"):
             self.read_focused_element(event=event, frame=frame)
