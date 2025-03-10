@@ -61,6 +61,44 @@ class DefaultController:
 
     def on_key_down(self, event, frame):
         """
+            Gestisce i tasti premuti .
+
+        :param event:
+            Evento di pressione di un tasto.
+
+        Descrizione:
+            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
+            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
+
+        """
+
+        key_code = event.GetKeyCode()
+
+        # Gestione dei tasti speciali (es. ESC, F, ecc.)
+        if key_code == wx.WXK_ESCAPE:
+            self.question_quit_app(frame=frame)
+            event.Skip(False)  # Impedisce la propagazione al sistema operativo
+            return wx.WXK_ESCAPE
+
+        elif key_code == ord("F"):
+            self.read_focused_element(event=event, frame=frame)
+            event.Skip(False)
+            return
+
+        # Gestione dei tasti numerici per l'ordinamento delle colonne
+        if ord('1') <= key_code <= ord('9'):
+            col = key_code - ord('1')
+            if hasattr(frame, "sort_cards") and col < frame.card_list.GetColumnCount():
+                frame.sort_cards(col)
+                event.Skip(False)
+                return
+
+        # Passa l'evento alla vista per la gestione di altri tasti
+        event.Skip()
+
+    def last_on_key_down(self, event, frame):
+        """
         Gestisce l'evento di pressione di un tasto.
         """
 

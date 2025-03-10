@@ -101,6 +101,7 @@ class BasicView(wx.Frame):
 
         # Cattura gli eventi da tastiera
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
 
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
@@ -200,11 +201,15 @@ class BasicView(wx.Frame):
 
         Descrizione:
             - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
+            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
         """
 
         key_code = event.GetKeyCode()
-        self.controller.on_key_down(event=event, frame=self)
-        event.Skip()
+        suc = self.controller.on_key_down(event=event, frame=self)
+        if suc == wx.WXK_ESCAPE:
+            event.Skip(False)
+        #event.Skip()
 
     def Close(self):
         """Chiude la finestra."""
@@ -389,6 +394,7 @@ class ListView(BasicView):
 
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
+
         items = []
         for i in range(self.card_list.GetItemCount()):
             item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
@@ -399,6 +405,7 @@ class ListView(BasicView):
                 return int(value)
             except ValueError:
                 return float('inf') if value == "-" else value
+
 
         if col == 1:  # Colonna "Mana" (numerica)
             items.sort(key=lambda x: safe_int(x[col]))
@@ -414,30 +421,6 @@ class ListView(BasicView):
         """Gestisce il clic sulle intestazioni delle colonne per ordinare la lista."""
         col = event.GetColumn()
         self.sort_cards(col)
-
-
-    def on_key_down(self, event):
-        """
-            Gestisce i tasti premuti .
-
-        :param event:
-            Evento di pressione di un tasto.
-
-        Descrizione:
-            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
-            - Gestisce anche la pressione dei tasti numerici per ordinare la lista in base alla colonna.
-        """
-
-        key_code = event.GetKeyCode()
-        if ord('1') <= key_code <= ord('9'):
-            col = key_code - ord('1')
-            if col < self.card_list.GetColumnCount():
-                self.sort_cards(col)
-
-        else:
-            self.controller.on_key_down(event=event, frame=self)
-
-        event.Skip()
 
 
     def select_card_by_name(self, card_name):

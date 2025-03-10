@@ -41,7 +41,7 @@ class DecksViewFrame(ListView):
         #self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
-        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+        #self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
 
 
     #@@# metodi ausigliari della classe
@@ -328,22 +328,8 @@ class DecksViewFrame(ListView):
         #@@# sezione metodi collegati agli eventi
 
     def on_key_down(self, event):
-        """
-                    Gestisce i tasti premuti .
-
-        :param event: 
-                        Evento di pressione di un tasto.
-
-        Descrizione:
-                    - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
-                    - Il metodo super è chiamato per garantire che l'evento venga gestito correttamente.
-                    - Il metodo sfrutta la gestione del metodo della classe genitore coem base di partenza.
-                    - PPer sovrascrivere completamente il comportamento è garantire una nuova ed indipendente 
-                        gestione dell'evento è sufficente non chiamare il metodo super().
-
-        """
-        super().on_key_down(event)
-        event.Skip()                    # Passa l'evento al prossimo handler (se presente, altrimenti lo cattura il sistema operativo)
+        super().on_key_down(event)      # Chiamata al metodo della classe genitore
+        return True
 
 
     def on_column_click(self, event):
