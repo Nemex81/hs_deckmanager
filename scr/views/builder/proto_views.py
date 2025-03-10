@@ -191,6 +191,21 @@ class BasicView(wx.Frame):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
+    def on_key_down(self, event):
+        """
+            Gestisce i tasti premuti .
+
+        :param event:
+            Evento di pressione di un tasto.
+
+        Descrizione:
+            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+        """
+
+        key_code = event.GetKeyCode()
+        self.controller.on_key_down(event=event, frame=self)
+        event.Skip()
+
     def Close(self):
         """Chiude la finestra."""
         if self.parent:
@@ -402,7 +417,16 @@ class ListView(BasicView):
 
 
     def on_key_down(self, event):
-        """Gestisce i tasti premuti per ordinare la lista."""
+        """
+            Gestisce i tasti premuti .
+
+        :param event:
+            Evento di pressione di un tasto.
+
+        Descrizione:
+            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+            - Gestisce anche la pressione dei tasti numerici per ordinare la lista in base alla colonna.
+        """
 
         key_code = event.GetKeyCode()
         if ord('1') <= key_code <= ord('9'):

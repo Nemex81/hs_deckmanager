@@ -103,11 +103,23 @@ class HearthstoneAppFrame(BasicView):
 
 
     def on_key_down(self, event):
-        """Gestisce l'evento di pressione dei tasti."""
+        """
 
-        key_code = event.GetKeyCode()
-        #log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
-        self.controller.on_key_down(event=event, frame=self)
+            Gestisce i tasti premuti .
+
+            :param event: 
+                        Evento di pressione di un tasto.
+
+        Descrizione:
+                    - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+                    - Il metodo super è chiamato per garantire che l'evento venga gestito correttamente.
+                    - Il metodo sfrutta la gestione del metodo della classe genitore coem base di partenza.
+                    - PPer sovrascrivere completamente il comportamento è garantire una nuova ed indipendente 
+                        gestione dell'evento è sufficente non chiamare il metodo super().
+
+        """
+        super().on_key_down(event)
+        event.Skip()                    # Passa l'evento al prossimo handler (se presente, altrimenti lo cattura il sistema operativo)
 
 
     def on_collection_button_click(self, event):
