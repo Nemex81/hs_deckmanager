@@ -77,13 +77,8 @@ class DefaultController:
         """
             Gestisce i tasti premuti .
 
-        :param event:
-            Evento di pressione di un tasto.
-
-        Descrizione:
-            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
-            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
-            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
+        :param event:       Evento di pressione di un tasto.
+        :param frame:       Finestra corrente.
 
         """
 
@@ -97,8 +92,21 @@ class DefaultController:
             return wx.WXK_ESCAPE
 
         elif key_code == wx.WXK_TAB:
+            #self.read_focused_element(event=event, frame=frame)
             event.Skip()
             return wx.WXK_TAB
+
+        # intercetto le 4 frecce
+        elif key_code in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
+            #self.read_focused_element(event=event, frame=frame)
+            event.Skip()
+            #return key_code
+
+        # intercetto il tasto invio
+        elif key_code == wx.WXK_RETURN:
+            #self.read_focused_element(event=event, frame=frame) 
+            event.Skip()
+            #return wx.WXK_RETURN
 
         elif key_code == ord("F"):
             self.read_focused_element(event=event, frame=frame)
@@ -106,7 +114,7 @@ class DefaultController:
             return ord("F")
 
         # Gestione dei tasti numerici per l'ordinamento delle colonne
-        if ord('1') <= key_code <= ord('9'):
+        elif ord('1') <= key_code <= ord('9'):
             col = key_code - ord('1')
             if hasattr(frame, "sort_cards") and col < frame.card_list.GetColumnCount():
                 frame.sort_cards(col)
@@ -132,7 +140,7 @@ class DefaultController:
             else:
                 self.speak("Nessuna descrizione disponibile per questo elemento.")
 
-        event.skip()
+        #event.skip()
 
 
     #@@# sezione per gestione deicomandi  generici disponibiliin ogni finestra

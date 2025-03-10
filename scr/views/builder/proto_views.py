@@ -194,22 +194,26 @@ class BasicView(wx.Frame):
 
     def on_key_down(self, event):
         """
-            Gestisce i tasti premuti .
+        Gestisce i tasti premuti .
 
         :param event:
-            Evento di pressione di un tasto.
+                            Evento di pressione di un tasto.
 
         Descrizione:
-            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
-            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
-            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
+                            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+                            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
+                            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
         """
 
         key_code = event.GetKeyCode()
         suc = self.controller.on_key_down(event=event, frame=self)
+
+        # intercetto il tasto ESC
         if suc == wx.WXK_ESCAPE:
             event.Skip(False)
-        else:
+
+        # intercetto le 4 frecce
+        elif key_code in [wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT]:
             event.Skip()
 
 
@@ -363,9 +367,12 @@ class ListView(BasicView):
         self.sizer.Add(self.search_ctrl, 0, wx.EXPAND | wx.ALL, 5)
         self.sizer.Add(self.card_list, 1, wx.EXPAND | wx.ALL, 5)
 
-    # Metodi comuni per la ricerca e l'ordinamento
+
+    #@@# Sezione metodi comuni per la ricerca e l'ordinamento
+
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
+
         search_text = self.search_ctrl.GetValue().strip().lower()
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
