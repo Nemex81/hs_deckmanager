@@ -209,7 +209,9 @@ class BasicView(wx.Frame):
         suc = self.controller.on_key_down(event=event, frame=self)
         if suc == wx.WXK_ESCAPE:
             event.Skip(False)
-        #event.Skip()
+        else:
+            event.Skip()
+
 
     def Close(self):
         """Chiude la finestra."""

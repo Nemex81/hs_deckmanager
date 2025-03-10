@@ -108,8 +108,6 @@ class HearthstoneAppFrame(BasicView):
             :param event:   l'evento generato dalla pressione di un tasto
         """
         super().on_key_down(event)      # Chiamata al metodo della classe genitore
-        #event.skip(False)
-
 
 
     def on_collection_button_click(self, event):

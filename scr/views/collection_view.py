@@ -310,7 +310,6 @@ class CardCollectionFrame(ListView):
 
     def on_key_down(self, event):
         super().on_key_down(event)      # Chiamata al metodo della classe genitore
-        return True
 
 
     def on_timer(self, event):
