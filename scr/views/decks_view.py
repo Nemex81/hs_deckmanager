@@ -230,8 +230,7 @@ class DecksViewFrame(ListView):
         # Imposta il focus sul search bar
         #self.search_ctrl.SetFocus()
 
-        # Imposta il focus sul primo deck della lista delle carte
-        #self.select_and_focus_deck(self.card_list.GetItemText(0))
+        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
         self.parent.controller.decks_controller.select_and_focus_deck(self, self.card_list.GetItemText(0))
 
 
@@ -312,6 +311,13 @@ class DecksViewFrame(ListView):
 
 
         #@@# sezione metodi collegati agli eventi
+
+    def on_column_click(self, event):
+        """Gestisce il click su una colonna per ordinare la lista."""
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+        
 
     def on_item_activated(self, event):
         """Gestisce il doppio clic su una riga per visualizzare il mazzo."""
