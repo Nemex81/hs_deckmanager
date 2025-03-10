@@ -2,7 +2,7 @@
     Modulo per l'inizializzazione dell'applicazione con il nuovo framework.
 
     path:
-        ./app_initializer.py
+        ./scr/app_initializer.py
 """
 
 # Lib
@@ -34,6 +34,9 @@ class AppInitializer:
     def __init__(self):
         self.container = DependencyContainer()
         self.win_controller = None
+        self.initialize_app()
+        self.start_app()
+
 
     def initialize_app(self):
         """Inizializza l'applicazione con il nuovo framework."""
@@ -116,19 +119,8 @@ class AppInitializer:
 
     def start_app(self):
         """Avvia l'applicazione."""
-        log.info("Avvio dell'applicazione.")
-        import wx
-        app = wx.App(False)
-
-        # Crea e mostra la finestra principale
-        self.win_controller.create_main_window(parent=None, controller=self.main_controller)
-        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
-
-        # Avvia il ciclo principale dell'applicazione
-        app.MainLoop()
-
-
-
+        log.debug("Richiesta di Avvio applicazione inoltrata.")
+        self.main_controller.start_app()
 
 
 

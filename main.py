@@ -26,9 +26,7 @@
 """
 
 # lib
-from app_initializer import AppInitializer
-#from scr.hdm import AppBuilder
-from utyls import enu_glob as eg
+from scr.app_initializer import AppInitializer
 from utyls import logger as log
 
 
@@ -40,8 +38,6 @@ def start_app():
 
     log.setup_logging(log_file='./logs/hdm.log', console_output=False)
     app_initializer = AppInitializer()
-    app_initializer.initialize_app()
-    app_initializer.start_app()
 
 
 

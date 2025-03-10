@@ -9,8 +9,7 @@
 """
 
 # lib
-import wx
-import pyperclip
+import wx, pyperclip
 from sqlalchemy.exc import SQLAlchemyError
 from .models import db_session, Deck
 from utyls import enu_glob as eg
@@ -31,11 +30,26 @@ class DefaultController:
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
-        """ Vocalizza un testo. """
     def speak(self, text):
+        """ Vocalizza un testo. """
         self.vocalizer.speak(text)
 
 
+    def start_app(self):
+        """Avvia l'applicazione."""
+
+        log.info("Avvio dell'applicazione.")
+
+        app = wx.App(False)
+
+        # Crea e mostra la finestra principale
+        self.win_controller.create_main_window(parent=None)#, controller=self.main_controller)
+        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
+
+        # Avvia il ciclo principale dell'applicazione
+        app.MainLoop()
+
+        
     def on_focus(self, event, frame):
         """
         Gestisce l'evento di focus su un elemento e vocalizza la descrizione.
@@ -73,6 +87,7 @@ class DefaultController:
 
         """
 
+        # Recupero il codice del tasto premuto
         key_code = event.GetKeyCode()
 
         # Gestione dei tasti speciali (es. ESC, F, ecc.)
@@ -81,10 +96,14 @@ class DefaultController:
             event.Skip(False)  # Impedisce la propagazione al sistema operativo
             return wx.WXK_ESCAPE
 
+        elif key_code == wx.WXK_TAB:
+            event.Skip()
+            return wx.WXK_TAB
+
         elif key_code == ord("F"):
             self.read_focused_element(event=event, frame=frame)
             event.Skip(False)
-            return
+            return ord("F")
 
         # Gestione dei tasti numerici per l'ordinamento delle colonne
         if ord('1') <= key_code <= ord('9'):
@@ -92,30 +111,9 @@ class DefaultController:
             if hasattr(frame, "sort_cards") and col < frame.card_list.GetColumnCount():
                 frame.sort_cards(col)
                 event.Skip(False)
-                return
+                return key_code
 
         # Passa l'evento alla vista per la gestione di altri tasti
-        event.Skip()
-
-    def last_on_key_down(self, event, frame):
-        """
-        Gestisce l'evento di pressione di un tasto.
-        """
-
-        key_code = event.GetKeyCode()
-        if key_code == wx.WXK_ESCAPE:
-            #log.debug(f"Finestra da chiudere: {frame}")
-            self.question_quit_app(frame=frame)
-            event.Skip(False)  # Impedisce la propagazione al sistema operativo
-            return
-
-        elif key_code == ord("F"):
-            self.read_focused_element(event=event, frame=frame)
-
-        #else:
-            #nome_tasto = chr(key_code)
-            #log.warning(f"Tasto premuto non gestito: {key_code} che corrisponde al tasto: {nome_tasto}")
-
         event.Skip()
 
 
