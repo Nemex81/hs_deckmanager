@@ -22,12 +22,224 @@ cm = ColorManager()
 #@@# sezioni costanti per la configurazione predefinita degli elementi dell'interfaccia utente
 
 # Configurazione di default
-DEFAULT_BUTTON_SIZE = (200, 70)
-DEFAULT_FONT_SIZE = 18
+DEFAULT_BUTTON_SIZE = (180, 70)
+DEFAULT_FONT_SIZE = 16
 DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
 
 
 #@@# sezione classi personalizzate per la gestione degli elementi dell'interfaccia utente
+
+class CustomTextCtrl(wx.TextCtrl, wx.Accessible):
+    """
+    Casella di testo personalizzata con gestione del focus e temi.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, placeholder="", *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        #wx.Accessible.__init__(self)  # Inizializza wx.Accessible
+        self.cm = color_manager         # Gestione dei colori
+        self.fh = focus_handler         # Gestione del focus
+        self.placeholder = placeholder  # Testo placeholder (opzionale)
+
+        # Imposta lo stile predefinito
+        self.cm.apply_default_style(self)
+        self.SetHint(self.placeholder)  # Imposta il placeholder
+
+        # Collega gli eventi di focus
+        self.bind_focus_events(self)
+
+
+    def on_focus(self, event):
+        """Gestisce l'evento di focus sulla casella di testo."""
+        self.fh.apply_focus_style(self)
+        event.Skip()
+
+    def on_kill_focus(self, event):
+        """Gestisce l'evento di perdita del focus dalla casella di testo."""
+        self.fh.reset_focus_style(self)
+        event.Skip()
+
+    def bind_focus_events(self):
+        """Collega gli eventi di focus alla casella di testo."""        
+        self.Bind(wx.EVT_SET_FOCUS, self.on_focus)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
+
+
+
+    def GetName(self):
+        """Restituisce il nome accessibile."""
+        return "Casella di testo"
+
+    def GetDescription(self):
+        """Restituisce una descrizione accessibile."""
+        return f"Casella di testo per: {self.placeholder}"
+
+    def GetRole(self):
+        """Restituisce il ruolo del widget."""
+        return wx.ACC_ROLE_TEXT
+
+    def GetState(self):
+        """Restituisce lo stato corrente."""
+        state = wx.ACC_STATE_FOCUSABLE
+        if self.IsEnabled():
+            state |= wx.ACC_STATE_ENABLED
+
+        if self.HasFocus():
+            state |= wx.ACC_STATE_FOCUSED
+
+        return state
+
+    def SetFocus(self):
+        """Imposta il focus sulla casella di testo."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+    def KillFocus(self):
+        """Rimuove il focus dalla casella di testo."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
+
+class CustomCheckBox(wx.CheckBox, wx.Accessible):
+    """
+    Checkbox personalizzata con gestione del focus e temi.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, label="", *args, **kwargs):
+        super().__init__(parent, label=label, *args, **kwargs)
+        self.cm = color_manager  # Gestione dei colori
+        self.fh = focus_handler  # Gestione del focus
+
+        # Imposta lo stile predefinito
+        self.cm.apply_default_style(self)
+
+        # Collega gli eventi di focus
+        self.fh.bind_focus_events(self)
+
+    def SetFocus(self):
+        """Imposta il focus sulla checkbox."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+    def KillFocus(self):
+        """Rimuove il focus dalla checkbox."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
+
+class CustomComboBox(wx.ComboBox):
+    """
+    Combobox personalizzata con gestione del focus e temi.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, choices=None, *args, **kwargs):
+        super().__init__(parent, choices=choices or [], *args, **kwargs)
+        self.cm = color_manager  # Gestione dei colori
+        self.fh = focus_handler  # Gestione del focus
+
+        # Imposta lo stile predefinito
+        self.cm.apply_default_style(self)
+
+        # Collega gli eventi di focus
+        self.fh.bind_focus_events(self)
+
+    def SetFocus(self):
+        """Imposta il focus sulla combobox."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+    def KillFocus(self):
+        """Rimuove il focus dalla combobox."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
+
+class CustomRadioButton(wx.RadioButton):
+    """
+    Radio button personalizzato con gestione del focus e temi.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, label="", *args, **kwargs):
+        super().__init__(parent, label=label, *args, **kwargs)
+        self.cm = color_manager  # Gestione dei colori
+        self.fh = focus_handler  # Gestione del focus
+
+        # Imposta lo stile predefinito
+        self.cm.apply_default_style(self)
+
+        # Collega gli eventi di focus
+        self.fh.bind_focus_events(self)
+
+    def SetFocus(self):
+        """Imposta il focus sul radio button."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+    def KillFocus(self):
+        """Rimuove il focus dal radio button."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
+
+class CustomStaticText(wx.StaticText):
+    """
+    Etichetta di testo statico personalizzata con gestione del focus e temi.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, label="", *args, **kwargs):
+        super().__init__(parent, label=label, *args, **kwargs)
+        self.cm = color_manager  # Gestione dei colori
+        self.fh = focus_handler  # Gestione del focus
+
+        # Imposta lo stile predefinito
+        self.cm.apply_default_style(self)
+
+        # Collega gli eventi di focus
+        self.fh.bind_focus_events(self)
+
+    def SetFocus(self):
+        """Imposta il focus sull'etichetta."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+    def KillFocus(self):
+        """Rimuove il focus dall'etichetta."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
+
+class CustomSlider(wx.Slider):
+    """
+    Slider personalizzato con gestione del focus e temi.
+    """
+
+    def __init__(self, parent, color_manager, focus_handler, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.cm = color_manager  # Gestione dei colori
+        self.fh = focus_handler  # Gestione del focus
+
+        # Imposta lo stile predefinito
+        self.cm.apply_default_style(self)
+
+        # Collega gli eventi di focus
+        self.fh.bind_focus_events(self)
+
+    def SetFocus(self):
+        """Imposta il focus sullo slider."""
+        super().SetFocus()
+        self.fh.apply_focus_style(self)
+
+    def KillFocus(self):
+        """Rimuove il focus dallo slider."""
+        super().KillFocus()
+        self.fh.reset_focus_style(self)
+
+
 
 class CustomButton(wx.Button):
     """
@@ -60,8 +272,6 @@ class CustomButton(wx.Button):
 
 
 
-
-
 class CustomListCtrl(wx.ListCtrl):
     """
     ListCtrl personalizzata con gestione centralizzata del focus e dei colori.
@@ -69,11 +279,13 @@ class CustomListCtrl(wx.ListCtrl):
 
     def __init__(self, parent, color_manager, focus_handler, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.cm = color_manager  # Componente per la gestione dei colori
-        self.fh = focus_handler  # Componente per la gestione del focus
+        self.cm = color_manager                     # Componente per la gestione dei colori
+        self.fh = focus_handler                     # Componente per la gestione del focus
+        self.cm.apply_default_style(self)           # applica i colori di default per la lista
 
         # Collega gli eventi di focus
-        #self.fh.bind_focus_events(self)
+        #self.Bind(wx.EVT_SET_FOCUS, self.on_list_focus)
+        #self.Bind(wx.EVT_KILL_FOCUS, self.on_list_kill_focus)
 
         # Collega l'evento di selezione degli elementi
         self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
@@ -88,6 +300,14 @@ class CustomListCtrl(wx.ListCtrl):
         self.Refresh()
         event.Skip()
 
+    def SetFocus(self):
+        """Imposta il focus sulla ListCtrl e riapplica i colori corretti."""
+        super().SetFocus()
+        #self.reset_focus_style_for_all_items()  # Riapplica i colori dark a tutte le righe
+        #self.apply_selection_style(self.GetFocusedItem())  # Riapplica lo stile di selezione
+        #self.Refresh()
+
+
     def reset_focus_style_for_all_items(self, selected_item=None):
         """
         Resetta lo stile di tutte le righe tranne quella selezionata.
@@ -95,6 +315,7 @@ class CustomListCtrl(wx.ListCtrl):
         for i in range(self.GetItemCount()):
             if i != selected_item:
                 self.cm.apply_default_style_to_list_item(self, i)
+
         self.Refresh()
 
     def apply_selection_style(self, item_index):
@@ -304,18 +525,6 @@ def create_separator(parent, style=wx.LI_HORIZONTAL, thickness=1, color=None):
         separator.SetBackgroundColour(color)
     separator.SetMinSize((-1, thickness))  # Imposta lo spessore della linea
     return separator
-
-def question_box(parent, message, title="Conferma", style=wx.YES_NO | wx.ICON_QUESTION):
-    """
-    Crea una finestra di dialogo per messaggi di conferma.
-
-    :param parent: Il genitore della finestra di dialogo.
-    :param message: Il messaggio da visualizzare.
-    :param title: Il titolo della finestra. Default: "Conferma".
-    :param style: Lo stile della finestra. Default: wx.YES_NO | wx.ICON_QUESTION.
-    :return: Un'istanza di wx.MessageDialog.
-    """
-    return wx.MessageDialog(parent, message, title, style)
 
 
 

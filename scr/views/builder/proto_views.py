@@ -2,7 +2,7 @@
         Modulo per la gestione dei prototipi delle finestre dell'interfaccia utente.
 
         path:
-            ./scr/views/proto_views.py
+            ./scr/views/builder/proto_views.py
 
     Descrizione:
         Questo modulo contiene classi base per la creazione di finestre di dialogo e componenti dell'interfaccia utente.
@@ -16,12 +16,8 @@
 import wx
 import wx.lib.newevent
 from abc import ABC, abstractmethod
-from sqlalchemy.exc import SQLAlchemyError
-from ..db import session, Card, DeckCard, Deck
-from ..models import load_cards
-from .builder.color_system import ColorManager, AppColors, ColorTheme
-from .builder.focus_handler import FocusHandler
-import scr.views.builder.view_components as vc
+from .color_system import ColorManager, AppColors, ColorTheme
+from .focus_handler import FocusHandler
 from utyls import helper as hp
 from utyls import enu_glob as eg
 from utyls import logger as log
@@ -69,13 +65,28 @@ class BasicView(wx.Frame):
         Classe base per le finestre principali dell'interfaccia utente.
     """
     
-    def __init__(self, parent, title, size=(900, 700)):
+    def __init__(self, parent, title, size=(900, 700), container=None, **kwargs):
         super().__init__(parent=parent, title=title, size=size)
+        self.container = container  # Memorizza il container delle dipendenze
         self.parent = parent               # Finestra genitore
         self.controller = None             # Controller per l'interfaccia
         self.db_manager = None             # Gestore del database
-        self.cm = ColorManager()           # Gestore dei colori
-        self.focus_handler = FocusHandler()  # Gestore degli eventi di focus
+        self.color_manager = None           # Gestore dei colori
+        self.focus_handler = None           # Gestore degli eventi di focus
+
+        # Risolvi le dipendenze dal container
+        if self.container:
+            self.win_controller = self.container.resolve("win_controller")
+            self.controller = self.container.resolve("main_controller")
+            self.cm = self.container.resolve("color_manager")
+            self.color_manager = self.container.resolve("color_manager")
+            self.focus_handler = self.container.resolve("focus_handler")
+            self.widget_factory = self.container.resolve("widget_factory")
+
+        else:
+            self.cm = ColorManager()
+            self.color_manager = ColorManager()
+            self.focus_handler = FocusHandler()
 
         # Colori personalizzati per lo stato attivo e inattivo
         self.FOCUS_BG_COLOR = self.cm.get_color(AppColors.FOCUS_BG)
@@ -87,6 +98,10 @@ class BasicView(wx.Frame):
 
         # applica il tema dark
         self.cm.set_theme_dark()
+
+        # Cattura gli eventi da tastiera
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
 
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
@@ -113,7 +128,6 @@ class BasicView(wx.Frame):
         Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
         """
         self.reset_focus_style_for_all_buttons()
-        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
         self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
         #element.Refresh()                           # Forza il ridisegno dell'elemento
 
@@ -121,7 +135,7 @@ class BasicView(wx.Frame):
         """
         Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
         """
-        log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
+        #log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
         self.cm.apply_default_style(element)
         #element.Refresh()
 
@@ -157,27 +171,6 @@ class BasicView(wx.Frame):
             self.card_list.Refresh()
 
 
-    def on_item_focused(self, event):
-        """Gestisce l'evento di focus su una riga della lista."""
-
-        # Imposta lo stile della riga selezionata
-        selected_item = event.GetIndex()
-
-        # Resetta lo stile di tutte le righe
-        #self.reset_focus_style_for_card_list(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        self.select_element(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        self.cm.apply_default_style(self.card_list)
-
-        # Forza il ridisegno della lista
-        self.card_list.Refresh()
-
-        # forza il ridisegno della lista
-        self.Layout()
-
     def init_ui(self):
         """ Inizializza l'interfaccia utente con le impostazioni comuni a tutte le finestre. """
         self.panel = wx.Panel(self)
@@ -199,10 +192,32 @@ class BasicView(wx.Frame):
         """Inizializza gli elementi dell'interfaccia utente."""
         pass
 
+    def on_key_down(self, event):
+        """
+            Gestisce i tasti premuti .
+
+        :param event:
+            Evento di pressione di un tasto.
+
+        Descrizione:
+            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
+            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
+        """
+
+        key_code = event.GetKeyCode()
+        suc = self.controller.on_key_down(event=event, frame=self)
+        if suc == wx.WXK_ESCAPE:
+            event.Skip(False)
+        else:
+            event.Skip()
+
+
     def Close(self):
         """Chiude la finestra."""
         if self.parent:
             self.parent.Show()
+
         self.Destroy()
 
     def on_close(self, event):
@@ -302,66 +317,82 @@ class SingleCardView(BasicDialog):
         btn_sizer.Add(cancel_btn, flag=wx.ALL, border=5)
 
 
-
 class ListView(BasicView):
     """
     Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
-    Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
     """
 
-    def __init__(self, parent, title, size=(800, 600)):
-        super().__init__(parent, title, size)
-        self.mode = None                                  # Modalità di visualizzazione (es. "collection", "decks", "deck")
+    def __init__(self, parent, title, size=(800, 600), container=None, **kwargs):
+        super().__init__(parent, title, size, container, **kwargs)
+        self.mode = None  # Modalità di visualizzazione (es. "collection", "decks", "deck")
+        #self.card_list = None  # Lista di carte
+        #self.search_ctrl = None  # Barra di ricerca
 
-        # Timer per il debounce
+        # Timer per il debounce della ricerca
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
+    @abstractmethod
+    def load_items(self, filters=None):
+        """Carica gli elementi nella lista. Deve essere implementato dalle classi derivate."""
+        raise NotImplementedError("Il metodo load_items deve essere implementato nelle classi derivate.")
 
-    def set_focus_style(self, element):
-        """
-        Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
-        """
-        self.reset_focus_style_for_all_buttons()
-        log.debug(f"Elemento {element.GetLabel()} ha ricevuto il focus.")
-        self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
-        #element.Refresh()                           # Forza il ridisegno dell'elemento
-
-
-    def reset_focus_style(self, element):
-        """
-        Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
-        """
-        log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
-        self.cm.apply_default_style(element)
-        #element.Refresh()
-
+    @abstractmethod
+    def _get_list_columns(self):
+        """Restituisce le colonne della lista. Deve essere implementato dalle classi derivate."""
+        raise NotImplementedError("Il metodo _get_list_columns deve essere implementato nelle classi derivate.")
 
     def init_ui_elements(self):
-        """
-        Inizializza gli elementi dell'interfaccia utente.
-        Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
-        """
-        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
+        """Inizializza gli elementi dell'interfaccia utente."""
+        # Barra di ricerca
+        self.search_ctrl = self.widget_factory.create_search_bar(
+            parent=self.panel,
+            placeholder="Cerca...",
+            event_handler=self.on_search
+        )
+        self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
 
+        # Lista delle carte
+        self.card_list = self.widget_factory.create_list_ctrl(
+            parent=self.panel,
+            columns=self._get_list_columns()  # Metodo astratto per definire le colonne
+        )
 
-    def load_cards(self, filters=None):
-        """
-        Carica le carte nella lista.
-        Questo metodo deve essere implementato nelle classi derivate.
-        """
-        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
+        # Aggiungi la barra di ricerca e la lista al layout
+        self.sizer.Add(self.search_ctrl, 0, wx.EXPAND | wx.ALL, 5)
+        self.sizer.Add(self.card_list, 1, wx.EXPAND | wx.ALL, 5)
 
+    # Metodi comuni per la ricerca e l'ordinamento
+    def on_timer(self, event):
+        """Esegue la ricerca dopo il timeout del debounce."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        evt = SearchEvent(search_text=search_text)
+        wx.PostEvent(self, evt)
 
-    def refresh_card_list(self):
-        """Aggiorna la lista delle carte con i dati più recenti dal database."""
+    def on_search_event(self, event):
+        """Gestisce l'evento di ricerca con debounce."""
+        self.apply_search_filter(event.search_text)
 
-        log.debug("Aggiornamento della lista delle carte...")        
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
+    def on_search_text_change(self, event):
+        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        if not search_text:
+            self.load_items()  # Ricarica tutti gli elementi se la casella di ricerca è vuota
+        self.timer.Stop()
+        self.timer.Start(500, oneShot=True)
 
+    def on_search(self, event):
+        """Gestisce la ricerca testuale."""
+        search_text = self.search_ctrl.GetValue().strip().lower()
+        self.apply_search_filter(search_text)
+
+    def apply_search_filter(self, search_text):
+        """Applica un filtro di ricerca alla lista."""
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            self.load_items()  # Ricarica tutti gli elementi
+        else:
+            self.load_items(filters={"name": search_text})  # Filtra gli elementi
 
     def sort_cards(self, col):
         """Ordina le carte in base alla colonna selezionata."""
@@ -371,19 +402,33 @@ class ListView(BasicView):
             item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
             items.append(item)
 
-        self._sort_items(items, col)
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
 
         self.card_list.DeleteAllItems()
         for item in items:
             self.card_list.Append(item)
 
 
+    def on_column_click(self, event):
+        """Gestisce il clic sulle intestazioni delle colonne per ordinare la lista."""
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+
     def select_card_by_name(self, card_name):
         """Seleziona una carta nella lista in base al nome."""
-
         if not card_name:
             return
-
         for i in range(self.card_list.GetItemCount()):
             if self.card_list.GetItemText(i) == card_name:
                 self.card_list.Select(i)
@@ -392,75 +437,29 @@ class ListView(BasicView):
                 self.card_list.SetFocus()
                 break
 
-
     def select_element(self, row):
         """Seleziona l'elemento attivo e applica lo stile di focus."""
-
         if hasattr(self, "card_list"):
-            # Applica lo stile di focus alla riga selezionata
-            #self.cm.apply_focus_style(row)
-            self.cm.apply_selection_style_to_list(self.card_list, row)
-
-            # Resetta lo stile delle altre righe
+            self.color_manager.apply_selection_style_to_list(self.card_list, row)
             for i in range(self.card_list.GetItemCount()):
                 if i != row:
-                    self.cm.apply_default_style_to_list_item(self.card_list, i)
-
-            # Forza il ridisegno della lista
+                    self.color_manager.apply_default_style_to_list_item(self.card_list, i)
             self.card_list.Refresh()
 
+    def reset_focus_style_for_card_list(self, selected_item=None):
+        """Resetta lo stile di tutte le righe tranne quella selezionata."""
+        for i in range(self.card_list.GetItemCount()):
+            if i != selected_item:
+                self.color_manager.apply_default_style_to_list_item(self.card_list, i)
+        self.card_list.Refresh()
 
     def set_focus_to_list(self):
         """Imposta il focus sulla prima carta della lista carte."""
-
         if hasattr(self, "card_list"):
             self.card_list.SetFocus()
             self.card_list.Select(0)
             self.card_list.Focus(0)
             self.card_list.EnsureVisible(0)
-
-
-    def on_timer(self, event):
-        """Esegue la ricerca dopo il timeout del debounce."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        evt = SearchEvent(search_text=search_text)
-        wx.PostEvent(self, evt)
-
-
-    def on_search_text_change(self, event):
-        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        if not search_text:
-            # ricarica le carte del mazzo
-            self.load_cards()
-
-        # Avvia il timer per il debounce (es. 300 ms)
-        self.timer.Stop()  # Ferma il timer precedente
-        self.timer.Start(500, oneShot=True)
-    
-
-    def on_search_event(self, event):
-        """Gestisce l'evento di ricerca con debounce."""
-        search_text = event.search_text
-        self._apply_search_filter(search_text)
-        self.set_focus_to_list()
-
-
-    def on_search(self, event):
-        """Gestisce la ricerca testuale."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        self._apply_search_filter(search_text)
-
-
-    def on_item_focused(self, event):
-        """Gestisce l'evento di focus su una riga della lista."""
-
-        selected_item = event.GetIndex()
-        self.select_element(selected_item)  # Applica lo stile di focus alla riga selezionata
-        self.card_list.Refresh()  # Forza il ridisegno della lista
 
 
 

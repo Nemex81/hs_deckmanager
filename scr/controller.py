@@ -6,24 +6,13 @@
     Path:
         scr/controller.py
 
-    Descrizione:
-                Questo modulo rappresenta il cuore dell'applicazione, coordinando l'interazione tra le interfacce grafiche, il database e la logica di gestione.
-                La classe HearthstoneManager si occupa di inizializzare l'applicazione, creare le finestre principali e gestire le operazioni di visualizzazione e modifica dei mazzi e delle carte.
-                L'applicazione segue il pattern MVC, con la classe HearthstoneManager che funge da controller, le finestre come viste e il database come modello.
-
 """
 
 # lib
 import wx
 import pyperclip
-from enum import Enum
 from sqlalchemy.exc import SQLAlchemyError
-from .models import load_cards, db_session, Deck
-from.views.view_manager import WinController
-from .views.main_views import HearthstoneAppFrame
-from .views.collection_view import CardCollectionFrame
-from .views.deck_view import DeckViewFrame
-from .views.decks_view import DecksViewFrame
+from .models import db_session, Deck
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
@@ -31,36 +20,178 @@ from utyls import logger as log
 
 
 
-class CollectionController:
-    """Controller per la vista della collezione di carte."""
+class DefaultController:
+    """ Controller predefinito per la gestione delle finestre. """
+    
+    def __init__(self, container=None, **kwargs):
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.vocalizer = self.container.resolve("vocalizer")  # Risolve Vocalizer
+        self.win_controller = self.container.resolve("win_controller")  # Risolve WinController
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
-    def __init__(self, parent=None, db_manager=None):
-        self.parent = parent            # Riferimento al controller principale
-        self.db_manager = db_manager    # Istanza di DbManager
+
+        """ Vocalizza un testo. """
+    def speak(self, text):
+        self.vocalizer.speak(text)
 
 
-    def load_collection(self, filters=None, card_list=None):
+    def on_focus(self, event, frame):
         """
-        Carica la collezione di carte dal database, applicando eventuali filtri.
+        Gestisce l'evento di focus su un elemento e vocalizza la descrizione.
+        """
 
-        Args:
-            filters (dict, optional): Dizionario di filtri da applicare. Default è None.
+        element = event.GetEventObject()
+        name = element.GetName()
+        #description = element.GetName()
+        if name:# and description:
+            output = f"Elemento in focus: {name}."
+            self.speak(output)
+
+        event.Skip()
+
+
+    def on_kill_focus(self, event):
+        """
+        Gestisce l'evento di perdita del focus su un elemento.
+        """
+        element = event.GetEventObject()
+        event.Skip()
+
+
+    def on_key_down(self, event, frame):
+        """
+            Gestisce i tasti premuti .
+
+        :param event:
+            Evento di pressione di un tasto.
+
+        Descrizione:
+            - La funzione gestisce la pressione dei tasti inoltrando l'evento al controller.
+            - Usa `event.Skip()` per permettere ad altri gestori di gestire l'evento.
+            - Usa `event.Skip(False)` per impedire la propagazione dell'evento.
 
         """
+
+        key_code = event.GetKeyCode()
+
+        # Gestione dei tasti speciali (es. ESC, F, ecc.)
+        if key_code == wx.WXK_ESCAPE:
+            self.question_quit_app(frame=frame)
+            event.Skip(False)  # Impedisce la propagazione al sistema operativo
+            return wx.WXK_ESCAPE
+
+        elif key_code == ord("F"):
+            self.read_focused_element(event=event, frame=frame)
+            event.Skip(False)
+            return
+
+        # Gestione dei tasti numerici per l'ordinamento delle colonne
+        if ord('1') <= key_code <= ord('9'):
+            col = key_code - ord('1')
+            if hasattr(frame, "sort_cards") and col < frame.card_list.GetColumnCount():
+                frame.sort_cards(col)
+                event.Skip(False)
+                return
+
+        # Passa l'evento alla vista per la gestione di altri tasti
+        event.Skip()
+
+    def last_on_key_down(self, event, frame):
+        """
+        Gestisce l'evento di pressione di un tasto.
+        """
+
+        key_code = event.GetKeyCode()
+        if key_code == wx.WXK_ESCAPE:
+            #log.debug(f"Finestra da chiudere: {frame}")
+            self.question_quit_app(frame=frame)
+            event.Skip(False)  # Impedisce la propagazione al sistema operativo
+            return
+
+        elif key_code == ord("F"):
+            self.read_focused_element(event=event, frame=frame)
+
+        #else:
+            #nome_tasto = chr(key_code)
+            #log.warning(f"Tasto premuto non gestito: {key_code} che corrisponde al tasto: {nome_tasto}")
+
+        event.Skip()
+
+
+    def read_focused_element(self, event, frame):
+        """
+        Legge il nome dell'elemento che ha attualmente il focus.
+        """
+
+        focused_element = wx.Window.FindFocus()                                # Ottieni l'elemento con il focus
+        if focused_element:
+            description = focused_element.GetName()                            # Recupera la descrizione
+            if description:
+                description += f". Tipo: {focused_element.GetClassName()}"      # Aggiungi il tipo di elemento
+                self.speak(description)                                         # Vocalizza la descrizione
+
+            else:
+                self.speak("Nessuna descrizione disponibile per questo elemento.")
+
+        event.skip()
+
+
+    #@@# sezione per gestione deicomandi  generici disponibiliin ogni finestra
+
+    def get_deck_details(self, deck_name):
+        """ Restituisce i dettagli di un mazzo. """
+        return self.db_manager.get_deck_details(deck_name)
+
+
+    def get_deck_statistics(self, deck_name):
+        """ Restituisce le statistiche di un mazzo. """
+        return self.db_manager.get_deck_statistics(deck_name)
+
+    def set_focus_to_list(self, frame):
+        """
+        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
+        """
+        
+        if hasattr(frame, "card_list") and frame.card_list.GetItemCount() > 0:
+            frame.card_list.SetFocus()  # Imposta il focus sulla lista
+            frame.card_list.Select(0)   # Seleziona il primo elemento
+            frame.card_list.Focus(0)    # Sposta il focus sul primo elemento
+            frame.card_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
+
+    def select_list_element(self, frame=None):
+        """ colora la riga del mazzo selezionato nell'elenco. """
+
+        if not frame:
+            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
+            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
+            return
+
+        # colora la riga selezionata
+        frame.card_list.SetBackgroundColour('blue')
+        frame.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        frame.card_list.SetForegroundColour('white')
+
+
+    def get_total_cards_in_deck(self, deck_name):
+        """Calcola il numero totale di carte in un mazzo."""
 
         try:
-            # carica le carte della collezione dal db
-            cards = self.db_manager.get_cards(filters=filters)
-
-            # Aggiorna la lista delle carte nella vista
-            card_list.cards = cards
-
-            # Forza il ridisegno della lista
-            card_list.Refresh()
+            with db_session() as session:
+                deck = self.db_manager.get_deck(deck_name)
+                if deck:
+                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
+                    total_cards = sum(card["quantity"] for card in deck["cards"])
+                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
+                    return total_cards
+                else:
+                    log.error(f"Mazzo '{deck_name}' non trovato.")
+                    return 0
 
         except Exception as e:
-            log.error(f"Errore durante il caricamento della collezione: {str(e)}")
-            return []
+            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
+            return 0
+
 
     def add_card(self, card_data):
         """
@@ -140,47 +271,80 @@ class CollectionController:
             return False
 
 
+    def question_quit_app(self, frame):
+        """Gestisce la richiesta di chiusura applicazione."""
 
-class DeckController:
-    """ Controller per la view di un singoolo mazzo. """
-
-    def __init__(self, parent=None, db_manager=None):
-        self.parent= parent
-        self.db_manager = db_manager
-
-
-    def get_deck_details(self, deck_name):
-        """ Restituisce i dettagli di un mazzo. """
-        return self.db_manager.get_deck_details(deck_name)
-
-
-
-class DecksController:
-    """ Controller per la vista dei mazzi. """
-
-    def __init__(self, parent=None, db_manager=None):
-        self.parent = parent
-        self.db_manager = db_manager
-        self.deck_controller = None
+        dlg = wx.MessageDialog(
+            frame,
+            "Confermi l'uscita dall'applicazione?",
+            "Conferma Uscita",
+            wx.YES_NO | wx.ICON_QUESTION
+        )
+        if dlg.ShowModal() == wx.ID_YES:
+            dlg.Destroy()
+            frame.Close()
 
 
-    def run_deck_frame(self, parent=None, deck_name=None):
-        """Apre la finestra di un mazzo specifico."""
-        self.parent.run_deck_frame(parent, deck_name)
+    #@@# sezione collezzione di carte
 
+    def load_collection(self, filters=None, card_list=None):
+        """
+        Carica la collezione di carte dal database, applicando eventuali filtri.
+
+        Args:
+            filters (dict, optional): Dizionario di filtri da applicare. Default è None.
+
+        """
+
+        try:
+            # carica le carte della collezione dal db
+            cards = self.db_manager.get_cards(filters=filters)
+
+            # Aggiorna la lista delle carte nella vista
+            card_list.cards = cards
+
+            # Forza il ridisegno della lista
+            card_list.Refresh()
+
+        except Exception as e:
+            log.error(f"Errore durante il caricamento della collezione: {str(e)}")
+            return []
+
+
+    #@@# sezione mazzi 
 
     def load_decks(self, card_list=None):
-        """Carica i mazzi utilizzando DbManager."""
-        return self.db_manager.load_decks(card_list=card_list)
-
-    def last_load_decks(self, card_list=None):
         """ carica i mazzi dal database. """
 
-        if not self.db_manager.load_decks(deck_list=card_list):
+        if not self.db_manager.load_decks(card_list=card_list):
             log.warning("Nessun mazzo trovato.")
             return False
 
         return True
+
+
+    def apply_search_decks_filter(self, frame, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
+            frame.card_list.DeleteAllItems()
+            # mostra tutti i mazzi
+            frame.load_decks()
+            # sposta il cursore nella lista deimazzi
+            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
+        else:
+            # Filtra i mazzi in base al nome o alla classe
+            frame.card_list.DeleteAllItems()
+            with db_session() as session:
+                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
+                for deck in decks:
+                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
+                    frame.card_list.SetItem(index, 1, deck.player_class)
+                    frame.card_list.SetItem(index, 2, deck.game_format)
+
+        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
 
 
     def get_selected_deck(self, card_list=None):
@@ -195,71 +359,17 @@ class DecksController:
         if selection != wx.NOT_FOUND:
             return card_list.GetItemText(selection)
 
-
-    def apply_search_filter(self, search_text):
-        """Applica un filtro di ricerca ai mazzi."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            return self.db_manager.get_decks()
-
-        return self.db_manager.get_decks(filters={"name": search_text})
-
-    def last_apply_search_filter(self, frame, search_text):
-        """Applica il filtro di ricerca alla lista dei mazzi."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutti i mazzi
-            frame.load_decks()
         else:
-            # Filtra i mazzi in base al nome o alla classe
-            frame.card_list.DeleteAllItems()
-            with db_session() as session:
-                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
-                for deck in decks:
-                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
-                    frame.card_list.SetItem(index, 1, deck.player_class)
-                    frame.card_list.SetItem(index, 2, deck.game_format)
-
-        frame.set_focus_to_list()    # Imposta il focus sul primo mazzo della lista
-
-
-    def set_focus_to_list(self, frame):
-        """
-        Imposta il focus sulla lista dei mazzi e seleziona il primo elemento.
-        """
-        
-        if hasattr(frame, "card_list") and frame.card_list.GetItemCount() > 0:
-            frame.card_list.SetFocus()  # Imposta il focus sulla lista
-            frame.card_list.Select(0)   # Seleziona il primo elemento
-            frame.card_list.Focus(0)    # Sposta il focus sul primo elemento
-            frame.card_list.EnsureVisible(0)  # Assicurati che il primo elemento sia visibile
-
-
-    def get_total_cards_in_deck(self, deck_name):
-        """Calcola il numero totale di carte in un mazzo."""
-
-        try:
-            with db_session() as session:
-                deck = self.db_manager.get_deck(deck_name)
-                if deck:
-                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
-                    total_cards = sum(card["quantity"] for card in deck["cards"])
-                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
-                    return total_cards
-                else:
-                    log.error(f"Mazzo '{deck_name}' non trovato.")
-                    return 0
-
-        except Exception as e:
-            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
-            return 0
+            log.warning("Nessun mazzo selezionato.")
+            wx.MessageBox("Seleziona un mazzo prima di procedere.", "Errore")
+            return False
 
 
     def select_last_deck(self, frame):
         """Seleziona l'ultimo mazzo nella lista."""
 
         card_list = frame.card_list
-        self.update_card_list(card_list)
+        self.update_decks_list(card_list)
         frame.set_focus_to_list()
         end_list = card_list.GetItemCount()
         card_list.Select(end_list-1)
@@ -267,20 +377,6 @@ class DecksController:
         card_list.EnsureVisible(end_list-1)
         card_list.SetFocus()
         card_list.Refresh()
-
-
-    def select_list_element(self, frame=None):
-        """ colora la riga del mazzo selezionato nell'elenco. """
-
-        if not frame:
-            log.error("Errore durante la selezione dell ariga. Nessun frame passato.")
-            wx.MessageBox("Errore durante la selezione della riga.", "Errore")
-            return
-
-        # colora la riga selezionata
-        frame.card_list.SetBackgroundColour('blue')
-        frame.card_list.SetFont(wx.Font(13, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
-        frame.card_list.SetForegroundColour('white')
 
 
     def select_and_focus_deck(self, frame, deck_name):
@@ -357,75 +453,30 @@ class DecksController:
             return wx.ID_YES
 
 
-    def add_deck(self, deck_data):
+    def add_deck(self):#, frame):
         """Aggiunge un mazzo utilizzando DbManager."""
-        return self.db_manager.add_deck(deck_data)
 
-    def last_add_deck(self):
-        """Aggiunge un mazzo dagli appunti."""
-
-        try:
-            deck_string = pyperclip.paste()
-            if not self.db_manager.is_valid_deck(deck_string):
-                wx.MessageBox("Il mazzo copiato non è valido.", "Errore")
-                return False
-
-            # Estrae i metadati del mazzo
-            metadata = self.db_manager.parse_deck_metadata(deck_string)
-            deck_name = metadata["name"]
-
-            # Verifica se il mazzo esiste già
-            if self.db_manager.get_deck(deck_name):
-                log.error("Il mazzo è già presente nella collezione.")
-                wx.MessageBox("Il mazzo è già presente nella collezione.", "Errore")
-                return False
-
-            # Aggiunge il mazzo al database
-            success = self.db_manager.add_deck_from_clipboard(deck_string)
-            if success:
-                deck_name = metadata["name"]
-                log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
-                wx.MessageBox(f"Mazzo {deck_name} aggiunto con successo.", "Successo")
-                return True
-            else:
-                log.error(f"Errore durante l'aggiunta del mazzo '{deck_name}'.")
-                wx.MessageBox(f"Errore durante l'aggiunta del mazzo{deck_name}.", "Errore")
-                return False
-
-        except Exception as e:
-            log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {e}")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
+        if not self.db_manager.add_deck_from_clipboard():
+            log.error("Errore durante l'aggiunta del mazzo.")
             return False
 
+        log.info("Mazzo aggiunto con successo.")
+        return True
 
-    def delete_deck(self, deck_name):
+
+    def delete_deck(self, frame, deck_name):
         """Elimina un mazzo utilizzando DbManager."""
-        return self.db_manager.delete_deck(deck_name)
 
-    def last_delete_deck(self, deck_name):
-        """ Elimina un mazzo dal database. """
-
-        try:
-            with db_session() as session:  # Usa il contesto db_session
-                success = self.db_manager.delete_deck(deck_name)
-                if success:
-                    log.info(f"Mazzo '{deck_name}' eliminato con successo.")
-                    wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
-                    return True
-                else:
-                    log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
-                    wx.MessageBox(f"Errore durante l'eliminazione del mazzo '{deck_name}'.", "Errore")
-                    return False
-
-        except SQLAlchemyError as e:
-            log.error("Errore del database. Verificare le procedure.")
-            wx.MessageBox("Errore del database. Verificare le procedure.", "Errore")
+        if not  self.db_manager.delete_deck(deck_name):
+            log.error(f"Errore durante l'eliminazione del mazzo '{deck_name}'.")
+            wx.MessageBox(f"Errore durante l'eliminazione del mazzo '{deck_name}'.", "Errore")
             return False
 
-        except Exception as e:
-            log.error("Si è verificato un errore imprevisto.")
-            wx.MessageBox("Si è verificato un errore imprevisto.", "Errore")
-            return False
+        card_list = frame.card_list
+        self.update_decks_list(card_list)
+        self.select_last_deck(frame)
+        log.info(f"Mazzo '{deck_name}' eliminato con successo.")
+        wx.MessageBox(f"Mazzo '{deck_name}' eliminato con successo.", "Successo")
 
 
     def copy_deck(self, frame):
@@ -434,42 +485,15 @@ class DecksController:
         deck_name = self.get_selected_deck(frame.card_list)
         if deck_name:
             if self.db_manager.copy_deck_to_clipboard(deck_name):
+                self.select_and_focus_deck(frame, deck_name)
                 #self.update_status(f"Mazzo '{deck_name}' copiato negli appunti.")
                 wx.MessageBox(f"Mazzo '{deck_name}' copiato negli appunti.", "Successo")
-                self.select_and_focus_deck(deck_name)
 
             else:
                 wx.MessageBox("Errore: Mazzo vuoto o non trovato.", "Errore")
 
         else:
             wx.MessageBox("Seleziona un mazzo prima di copiarlo negli appunti.", "Errore")
-
-
-    def get_deck_details(self, deck_name):
-        """ Restituisce i dettagli di un mazzo. """
-        return self.db_manager.get_deck_details(deck_name)
-
-
-    def get_deck_statistics(self, deck_name):
-        """ Restituisce le statistiche di un mazzo. """
-        return self.db_manager.get_deck_statistics(deck_name)
-
-
-    def update_card_list(self, card_list =None):
-        """Aggiorna la lista dei mazzi."""
-
-        #card_list = frame.card_list
-        card_list.DeleteAllItems()  # Pulisce la lista
-        with db_session() as session:  # Usa il contesto db_session
-            decks = session.query(Deck).all()
-            for deck in decks:
-                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
-                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-                
-                # Calcola e visualizza il numero totale di carte
-                total_cards = self.get_total_cards_in_deck(deck.name)
-                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
 
     def upgrade_deck(self, deck_name):
@@ -495,70 +519,119 @@ class DecksController:
             return False
 
 
+    def update_decks_list(self, card_list =None):
+        """Aggiorna la lista dei mazzi."""
 
-class MainController:
-    def __init__(self, db_manager=None, collection_controller=None, decks_controller=None, deck_controller=None):
-        self.db_manager = db_manager
-        self.win_controller = WinController()  # Inizializza il WinController
-        self.collection_controller = collection_controller
-        self.decks_controller = decks_controller
-        self.deck_controller = deck_controller
-
-    def question_quit_app(self, frame):
-        """Gestisce la richiesta di chiusura applicazione."""
-
-        # Mostra una finestra di dialogo di conferma
-        dlg = wx.MessageDialog(
-            frame,
-            "Confermi l'uscita dall'applicazione?",
-            "Conferma Uscita",
-            wx.YES_NO | wx.ICON_QUESTION
-        )
-
-        # Se l'utente conferma, esci dall'applicazione
-        if dlg.ShowModal() == wx.ID_YES:
-            dlg.Destroy()  # Distruggi la finestra di dialogo
-            frame.Close()   # Chiudi la finestra impostazioni account
+        #card_list = frame.card_list
+        card_list.DeleteAllItems()  # Pulisce la lista
+        with db_session() as session:  # Usa il contesto db_session
+            decks = session.query(Deck).all()
+            for deck in decks:
+                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
+                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+                
+                # Calcola e visualizza il numero totale di carte
+                total_cards = self.get_total_cards_in_deck(deck.name)
+                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
 
-    def run(self):
-        """Avvia l'applicazione."""
+    #def update_card_list(self, card_list):
+        """Aggiorna la lista di carte."""
 
-        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
-        app = wx.App(False)
-        log.debug(f"Chiave finestra principale: {eg.WindowKey.MAIN}")
-        #self.win_controller.create_window(window_key=eg.WindowKey.MAIN, parent=None, controller=self)
-        self.win_controller.create_main_window(None, controller=self)
-        self.win_controller.open_window(eg.WindowKey.MAIN)
-        app.MainLoop()
-
-    def run_collection_frame(self, parent=None):
-        """Apre la finestra della collezione."""
-        self.win_controller.create_collection_window(parent=parent, controller=self.collection_controller)
-        self.win_controller.open_window(eg.WindowKey.COLLECTION)
-
-    def run_decks_frame(self, parent=None):
-        """Apre la finestra dei mazzi."""
-
-        log.debug(f"Controller DecksController: {self.decks_controller}")
-        controller = self.decks_controller
-        if not controller:
-            log.debug("Controller per finestra mazzi assente, provvedo alla creazione di un nuovo controller per i mazzi.")
-            self.decks_controller = DecksController(parent=self, db_manager=self.db_manager)
-
-        self.win_controller.create_decks_window(parent=parent, controller=self.decks_controller)
-        self.win_controller.open_window(eg.WindowKey.DECKS)
-
-    def run_deck_frame(self, parent=None, deck_name=None):
-        """Apre la finestra di un mazzo specifico."""
-        window_key = eg.WindowKey.DECK
-        if not self.deck_controller:
-            self.deck_controller = DeckController(parent=self, db_manager=self.db_manager)
-
-        self.win_controller.create_deck_window(parent, controller=self.deck_controller, deck_name=deck_name)
-        self.win_controller.open_window(window_key, parent)
+        #card_list.DeleteAllItems()
+        #self.load_collection(card_list=card_list)
 
 
+    #@@#  sezione gestione di un singolo mazzo
+
+    def add_card_to_deck(self, card_name):
+        """Aggiunge una nuova carta al mazzo."""
+
+        pass
+
+
+    def edit_card_in_deck(self, card_name):
+        """Modifica la carta selezionata."""
+
+        pass
+
+
+    def delete_card_from_deck(self, deck_content, card_name):
+        """Elimina la carta selezionata."""
+
+        pass
+
+
+    #@@# sezione gestione selezione degli elementi e cambio colore
+
+    def reset_focus_style_for_card_list(self, frame=None, selected_item=None):
+        """ Resetta lo stile di tutte le righe. """
+
+        card_list = frame.card_list
+        for i in range(card_list.GetItemCount()):
+            if i != selected_item:
+                frame.color_manager.apply_default_style_to_list_item(self.card_list, i)
+
+        # Forza il ridisegno della lista
+        card_list.Refresh()
+
+
+    def select_element(self, frame=None, row=None):
+        """ Seleziona l'elemento attivo. """
+
+        if hasattr(frame, "card_list"):
+            card_list = frame.card_list
+            card_list.SetItemBackgroundColour(row, 'blue')
+            card_list.SetItemTextColour(row, 'white')
+            card_list.Refresh()
+
+
+
+class CollectionController(DefaultController):
+    """Controller per la vista della collezione di carte."""
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+
+
+
+class DeckController(DefaultController):
+    """ Controller per la view di un singoolo mazzo. """
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+
+
+
+class DecksController(DefaultController):
+    """ Controller per la vista dei mazzi. """
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
+        self.deck_controller = None
+
+
+
+class MainController(DefaultController):
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)
+        self.container = container  # Memorizza il container
+        self.db_manager = self.container.resolve("db_manager")
+        self.collection_controller = self.container.resolve("collection_controller")
+        self.decks_controller = self.container.resolve("decks_controller")
+        self.deck_controller = self.container.resolve("deck_controller")
+        self.win_controller = self.container.resolve("win_controller")
 
 
 

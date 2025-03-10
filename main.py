@@ -26,25 +26,25 @@
 """
 
 # lib
-import wx
-from scr.hdm import AppBuilder
+from app_initializer import AppInitializer
+#from scr.hdm import AppBuilder
+from utyls import enu_glob as eg
 from utyls import logger as log
-# import pdb
 
 
 
 def start_app():
-    """Avvia l'applicazione Hearthstone Deck Manager."""
+    """
+    Avvia l'applicazione Hearthstone Deck Manager.
+    """
 
-    log.debug("Inizializzazione dell'applicazione.")
-
-    app_builder = AppBuilder()
-    app = app_builder.build_app()
-    if app:
-        log.debug("Avvio dell'applicazione.")
-        app_builder.run_app()
+    log.setup_logging(log_file='./logs/hdm.log', console_output=False)
+    app_initializer = AppInitializer()
+    app_initializer.initialize_app()
+    app_initializer.start_app()
 
 
 
 if __name__ == "__main__":
     start_app()
+

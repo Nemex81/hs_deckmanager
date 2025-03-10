@@ -15,10 +15,8 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-from ..db import session, Card, DeckCard, Deck
-from ..models import load_deck_from_db, load_cards
-from .builder.view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import BasicView, ListView
+from ..db import Card, session
+from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .builder.color_system import AppColors
 from utyls import enu_glob as eg
@@ -33,29 +31,22 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 class DeckViewFrame(ListView):
     """Finestra per gestire le carte di un mazzo."""
 
-    def __init__(self, parent, controller, deck_name):
-        """ Costruttore della classe DeckViewFrame. """
-
-        # Inizializzazione delle variabili PRIMA di chiamare super().__init__
-        title = f"Mazzo: {deck_name}"
-        self.parent = parent
-        self.controller = controller
-        #super().__init__(parent, controller, deck_name)
+    def __init__(self, parent=None, controller=None, container=None, deck_name="", **kwargs):
+        super().__init__(parent=parent, title=f"Mazzo: {deck_name}", deck_name=deck_name, container=container, **kwargs)
         self.mode = "deck"  # Modalità "deck" per gestire i mazzi
-        self.card_list = None
         self.deck_name = deck_name
-        self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+        self.deck_content = None
 
-        # Se il mazzo non esiste, solleva un'eccezione
-        #if not self.deck_content:
-            #raise ValueError(f"Mazzo non trovato: {deck_name}")
-        
-        # Chiamata al costruttore della classe base
-        #super().__init__(parent, controller, deck_name)
-        super().__init__(parent, title=title, size=(1200, 800))
+        # Se il mazzo non esiste, assembla il mazzo richeisto
+        if not self.deck_content:
+            self.deck_content = self.controller.db_manager.get_deck(deck_name)  # Carica il mazzo
+            # aggiorna la lista delle carte
+            self.load_cards()
+            self.set_focus_to_list()
+
 
         # Timer per il debounce
-        self.timer = wx.Timer(self)
+        #self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
 
@@ -70,20 +61,20 @@ class DeckViewFrame(ListView):
         self.panel.SetBackgroundColour(self.cm.get_color(AppColors.DEFAULT_BG))
 
         # Creazione degli elementi dell'interfaccia
-        search_sizer = create_sizer(wx.HORIZONTAL)
-        self.search_ctrl = create_search_bar(
+        search_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = self.widget_factory.create_search_bar(
             self.panel,
             placeholder="Cerca per nome...",
             event_handler=self.on_search
         )
         self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)
-        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.widget_factory.add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Aggiungo la barra di ricerca al layout
-        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
-        self.card_list = create_list_ctrl(
+        self.card_list = self.widget_factory.create_list_ctrl(
             parent=self.panel,
             columns=[
                 ("Nome", 250),
@@ -100,20 +91,18 @@ class DeckViewFrame(ListView):
             ]
         )
 
+        # Collega gli eventi di focus alla lista
+        self.bind_focus_events(self.card_list)
 
         # Applica lo stile predefinito alla lista
         #self.cm.apply_default_style(self.card_list)
 
-        # Collega gli eventi di focus alla lista
-        #self.bind_focus_events(self.card_list)
-
-
         # Aggiungo la lista alla finestra
-        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
-        btn_sizer = create_sizer(wx.HORIZONTAL)
+        btn_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
 
         # Creazione dei pulsanti
         buttons = [
@@ -125,19 +114,19 @@ class DeckViewFrame(ListView):
         ]
 
         for label, handler in buttons:
-            btn = create_button(btn_panel, label=label, event_handler=handler)
+            btn = self.widget_factory.create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
-            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
+            self.widget_factory.add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         # resetto i colori dei pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
 
         # Separatore tra pulsanti e fondo finestra
-        add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Carica le carte SOLO se il mazzo è stato caricato correttamente
         if hasattr(self, "deck_content") and self.deck_content:
@@ -145,7 +134,7 @@ class DeckViewFrame(ListView):
             self.refresh_card_list()
             self.set_focus_to_list()
             self.select_element(0)
-            self.cm.apply_selection_style_to_list(self.card_list, 0)  # Applica lo stile di selezione alla prima riga
+            #self.cm.apply_selection_style_to_list(self.card_list, 0)  # Applica lo stile di selezione alla prima riga
             #self.cm.apply_focus_style(self.card_list)
             #self.cm.apply_selection_style_to_list(self.card_list)
 
@@ -157,8 +146,58 @@ class DeckViewFrame(ListView):
 
         # Aggiungo eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
-        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+        #self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
 
+
+    def _get_list_columns(self):
+        """Definisce le colonne specifiche per la gestione dei mazzi."""
+        return [
+            ("Nome", 250),
+            ("Mana", 50),
+            ("Quantità", 50),
+            ("Tipo", 200),
+            ("Tipo Magia", 200),
+            ("Sottotipo", 200),
+            ("Attacco", 50),
+            ("Vita", 50),
+            ("Durabilità", 50),
+            ("Rarità", 120),
+            ("Espansione", 500)
+        ]
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata, con logica specifica per i mazzi."""
+        items = []
+        for i in range(self.card_list.GetItemCount()):
+            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
+            items.append(item)
+
+        def safe_int(value):
+            try:
+                return int(value)
+            except ValueError:
+                return float('inf') if value == "-" else value
+
+        if col == 1:  # Colonna "Mana" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        elif col == 2:  # Colonna "Quantità" (numerica)
+            items.sort(key=lambda x: safe_int(x[col]))
+        else:  # Altre colonne (testuali)
+            items.sort(key=lambda x: x[col])
+
+        self.card_list.DeleteAllItems()
+        for item in items:
+            self.card_list.Append(item)
+
+    def on_item_activated(self, event):
+        """Gestisce il doppio clic su una riga per modificare la carta."""
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            self._edit_card_in_deck(card_name)
+
+
+    #@@# sezione metodi collegati agli eventi
 
     def on_timer(self, event):
         """Esegue la ricerca dopo il timeout del debounce."""
@@ -186,16 +225,6 @@ class DeckViewFrame(ListView):
         search_text = event.search_text
         self._apply_search_filter(search_text)
         self.set_focus_to_list()
-
-
-    def set_focus_to_list(self):
-        """Imposta il focus sulla prima carta della lista carte."""
-
-        if hasattr(self, "card_list"):
-            self.card_list.SetFocus()
-            self.card_list.Select(0)
-            self.card_list.Focus(0)
-            self.card_list.EnsureVisible(0)
 
 
     def _add_card_to_list(self, card_data):
@@ -264,33 +293,6 @@ class DeckViewFrame(ListView):
         self.card_list.Refresh()
 
 
-    def very_last_load_cards(self, filters=None):
-        """vecchia versioen del metodo che Carica le carte nel mazzo, applicando eventuali filtri."""
-
-        if not hasattr(self, "deck_content") or not self.deck_content:
-            return  # Esce se il mazzo non è stato caricato correttamente
-
-        # Pulisce la lista delle carte
-        self.card_list.DeleteAllItems()
-
-        # Filtra le carte in base ai criteri specificati
-        for card_data in self.deck_content["cards"]:
-            if filters and "name" in filters:
-                if filters["name"].lower() not in card_data["name"].lower():
-                    continue  # Salta le carte che non corrispondono al filtro
-
-            # Aggiunge la carta alla lista
-            self._add_card_to_list(card_data)
-
-        # Applica lo stile predefinito a tutte le righe
-        self.cm.apply_default_style(self.card_list)
-
-        # Applica lo stile di focus alla prima riga
-        if self.card_list.GetItemCount() > 0:
-            #self.cm.apply_focus_style(self.card_list, 0)
-            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
-
-
     def refresh_card_list(self):
         """Aggiorna la lista delle carte con i dati più recenti dal database."""
 
@@ -316,6 +318,8 @@ class DeckViewFrame(ListView):
             self.load_cards(filters={"name": search_text})
 
 
+    #@@# sezione metodi collegati agli eventi
+
     def on_search(self, event):
         """Gestisce la ricerca testuale."""
 
@@ -338,6 +342,62 @@ class DeckViewFrame(ListView):
         self.card_list.Focus(0)
         self.card_list.EnsureVisible(0)
 
+
+    def on_add_card(self, event):
+        """Aggiunge una nuova carta al mazzo."""
+
+        dlg = CardEditDialog(self)
+        if dlg.ShowModal() == wx.ID_OK:
+            card_name = dlg.get_card_name()
+            if card_name:
+                self._add_card_to_deck(card_name)
+
+        dlg.Destroy()
+
+
+    def on_edit_card(self, event):
+        """Modifica la carta selezionata."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            self._edit_card_in_deck(card_name)
+
+        else:
+            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
+
+
+    def on_delete_card(self, event):
+        """Elimina la carta selezionata."""
+
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            if wx.MessageBox(f"Eliminare la carta '{card_name}'?", "Conferma", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
+                self._delete_card_from_deck(card_name)
+
+        else:
+            wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
+
+
+    def on_column_click(self, event):
+        """Ordina le carte in base alla colonna selezionata."""
+
+        col = event.GetColumn()
+        self.sort_cards(col)
+
+
+    def on_key_down(self, event):
+        super().on_key_down(event)      # Chiamata al metodo della classe genitore
+
+
+    def on_close(self, event):
+        """Chiude la finestra."""
+        self.parent.Show()
+        self.Close()
+
+
+    #@@# sezione metodi ausigliari della classe
 
     def _add_card_to_deck(self, card_name):
         """Aggiunge una nuova carta al mazzo."""
@@ -385,43 +445,6 @@ class DeckViewFrame(ListView):
         wx.MessageBox(f"Carta '{card_name}' eliminata dal mazzo.", "Successo")
 
 
-    def on_add_card(self, event):
-        """Aggiunge una nuova carta al mazzo."""
-
-        dlg = CardEditDialog(self)
-        if dlg.ShowModal() == wx.ID_OK:
-            card_name = dlg.get_card_name()
-            if card_name:
-                self._add_card_to_deck(card_name)
-
-        dlg.Destroy()
-
-
-    def on_edit_card(self, event):
-        """Modifica la carta selezionata."""
-
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            self._edit_card_in_deck(card_name)
-
-        else:
-            wx.MessageBox("Seleziona una carta da modificare.", "Errore")
-
-
-    def on_delete_card(self, event):
-        """Elimina la carta selezionata."""
-
-        selected = self.card_list.GetFirstSelected()
-        if selected != -1:
-            card_name = self.card_list.GetItemText(selected)
-            if wx.MessageBox(f"Eliminare la carta '{card_name}'?", "Conferma", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
-                self._delete_card_from_deck(card_name)
-
-        else:
-            wx.MessageBox("Seleziona una carta da eliminare.", "Errore")
-
-
     def _sort_items(self, items, col):
         """Ordina gli elementi in base alla colonna selezionata."""
 
@@ -453,45 +476,16 @@ class DeckViewFrame(ListView):
         for item in items:
             self.card_list.Append(item)
 
+        # Applica lo stile predefinito a tutte le righe
+        self.cm.apply_default_style(self.card_list)
 
-    def on_column_click(self, event):
-        """Ordina le carte in base alla colonna selezionata."""
+        # Seleziona la prima carta, se presente
+        if self.card_list.GetItemCount() > 0:
+            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
 
-        col = event.GetColumn()
-        self.sort_cards(col)
-
-
-    def select_card_by_name(self, card_name):
-        """Seleziona una carta nella lista in base al nome."""
-
-        if not card_name:
-            return
-
-        for i in range(self.card_list.GetItemCount()):
-            if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)
-                self.card_list.Focus(i)
-                self.card_list.EnsureVisible(i)
-                self.card_list.SetFocus()
-                break
+        self.card_list.Refresh()
 
 
-    def on_key_press(self, event):
-        """Gestisce i tasti premuti per ordinare la lista."""
-
-        key_code = event.GetKeyCode()
-        if ord('1') <= key_code <= ord('9'):
-            col = key_code - ord('1')
-            if col < self.card_list.GetColumnCount():
-                self.sort_cards(col)
-
-        event.Skip()
-
-
-    def on_close(self, event):
-        """Chiude la finestra."""
-        self.parent.Show()
-        self.Close()
 
 
 

@@ -3,32 +3,38 @@
 
         **Path:**
             ```
-                scr/logger.py
+            utyls/logger.py
             ```
 
     ---
 
-        **Versione:** 0.2
-        **Data:** 11 ottobre 2024  
+        **Versione:** 0.5
+        **Data:** 08 marzo 2025
         **Autore:** [Nemex]
 
     ---
             
 """
 
+# lib
+from logging.handlers import RotatingFileHandler
 import logging
 
 # Configurazione del logging
-logging.basicConfig(
-    filename='hearthstone_manager.log',  # File di log
-    level=logging.INFO,                  # Livello di log
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del log
-    datefmt='%Y-%m-%d %H:%M:%S'         # Formato della data
-)
+
+#logging.basicConfig(
+    #filename='/logs/hdm.log',                             # File di log
+    #level=logging.DEBUG,                                        # Livello di log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    #format='%(asctime)s - %(levelname)s - %(message)s',             # Formato del log
+    #datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
+#)
+
+handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
+logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
 
 
-def setup_logging(log_file='hearthstone_manager.log', console_output=False):
+def setup_logging(log_file='logs/hdm.log', console_output=False):
     """ 
         Configura il logging dell'applicazione.
 
@@ -86,4 +92,4 @@ def debug(debug):
 
 # start del moodulo
 if __name__ == '__main__':
-    print("Carico: %s" % __file__)
+    debug(f"Carico: {__name__}")

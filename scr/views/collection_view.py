@@ -21,11 +21,9 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-#from sqlalchemy.exc import SQLAlchemyError
-from ..db import session, db_session, Card, DeckCard, Deck
-from ..models import load_cards
-from .builder.view_components import create_button, create_list_ctrl, create_sizer, add_to_sizer, create_search_bar
-from .proto_views import BasicView, ListView
+from ..db import Card
+from ..models import load_cards, session
+from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
 from .builder.color_system import AppColors
@@ -39,25 +37,15 @@ SearchEvent, EVT_SEARCH_EVENT = wx.lib.newevent.NewEvent()
 
 
 
-#class CardCollectionFrame(BasicView):
 class CardCollectionFrame(ListView):
     """Finestra per gestire la collezione di carte."""
 
-    def __init__(self, parent, controller):
-        super().__init__(parent, title="Collezione")
+    def __init__(self, parent, controller, container, **kwargs):
+        super().__init__(parent=parent, title="Collezione", container=container, **kwargs)
         self.mode = "collection"
-        self.parent = parent
-        #self.controller = self.parent.controller
-        self.controller = controller
-        if not self.controller:
-            log.error("Il controller non può essere None.")
-            raise ValueError("Il controller non può essere None.")
-
-        # chiamata a super del costruttore
-        #super().__init__(parent=parent, controller=controller)
 
         # Inizializza il timer per il debounce
-        self.timer = wx.Timer(self)                                 # Timer per il debounce
+        #self.timer = wx.Timer(self)                                 # Timer per il debounce
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)          # Aggiungi un gestore per il timer
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)           # Aggiungi un gestore per l'evento di ricerca
 
@@ -72,30 +60,30 @@ class CardCollectionFrame(ListView):
         # Creazione degli elementi dell'interfaccia
 
         # Barra di ricerca e filtri
-        search_sizer = create_sizer(wx.HORIZONTAL)
-        self.search_ctrl = create_search_bar(
+        search_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
+        self.search_ctrl = self.widget_factory.create_search_bar(
             self.panel,
             placeholder="Cerca per nome...",
             event_handler=self.on_search
         )
         self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
-        add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.widget_factory.add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsante filtri avanzati
-        self.btn_filters = create_button(
+        self.btn_filters = self.widget_factory.create_button(
             self.panel,
             label="Filtri Avanzati",
             event_handler=self.on_show_filters
         )
         self.reset_focus_style(self.btn_filters)
         self.bind_focus_events(self.btn_filters)  # Collega gli eventi di focus
-        add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+        self.widget_factory.add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
 
         # Aggiungo la barra di ricerca e i filtri al layout
-        add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
-        self.card_list = create_list_ctrl(
+        self.card_list = self.widget_factory.create_list_ctrl(
             parent=self.panel,
             #color_manager=self.cm,
             columns=[
@@ -118,11 +106,11 @@ class CardCollectionFrame(ListView):
         #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
-        add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
-        btn_sizer = create_sizer(wx.HORIZONTAL)
+        btn_sizer = self.widget_factory.create_sizer(wx.HORIZONTAL)
 
         # Creazione dei pulsanti
         buttons = [
@@ -135,20 +123,20 @@ class CardCollectionFrame(ListView):
 
         # Aggiungi i pulsanti al pannello
         for label, handler in buttons:
-            btn = create_button(btn_panel, label=label, event_handler=handler)
+            btn = self.widget_factory.create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
             self.reset_focus_style(btn)
-            add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
+            self.widget_factory.add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         #resetto i colori di tutti i pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
 
         # Separatore tra pulsanti e fondo finestra
-        add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.widget_factory.add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Carica le carte
         self.load_cards()
@@ -169,51 +157,8 @@ class CardCollectionFrame(ListView):
 
         # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
-        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
-        self.Bind(wx.EVT_CLOSE, self.on_close)
-        
-
-    def reset_focus_style_for_card_list(self, selected_item=None):
-        """ Resetta lo stile di tutte le righe. """
-
-
-        for i in range(self.card_list.GetItemCount()):
-            if i != selected_item:
-                self.cm.apply_default_style_to_list_item(self.card_list, i)
-
-        # Forza il ridisegno della lista
-        self.card_list.Refresh()
-
-
-    def select_element(self, row):
-        """ Seleziona l'elemento attivo. """
-
-        if hasattr(self, "card_list"):
-            self.card_list.SetItemBackgroundColour(row, 'blue')
-            self.card_list.SetItemTextColour(row, 'white')
-            self.card_list.Refresh()
-
-
-    def on_item_focused(self, event):
-        """Gestisce l'evento di focus su una riga della lista."""
-
-        # cattura l'indice della riga selezionata
-        selected_item = event.GetIndex()
-
-        # Resetta lo stile di tutte le righe
-        #self.reset_focus_style_for_card_list(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        self.select_element(selected_item)
-
-        # Imposta lo stile della riga selezionata
-        self.cm.apply_default_style(self.card_list)
-
-        # Forza il ridisegno della lista
-        self.card_list.Refresh()
-
-        # forza il ridisegno della lista
-        self.Layout()
+        #self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+        #self.Bind(wx.EVT_CLOSE, self.on_close)
 
 
     def load_cards(self, filters=None):
@@ -241,22 +186,88 @@ class CardCollectionFrame(ListView):
         self.card_list.Refresh()
 
 
-    def reset_filters(self):
-        """Resetta i filtri e ricarica la lista delle carte."""
+    def _get_list_columns(self):
+        """Definisce le colonne specifiche per la gestione della collezione."""
+        return [
+            ("Nome", 250),
+            ("Mana", 50),
+            ("Classe", 120),
+            ("Tipo", 120),
+            ("Tipo Magia", 120),
+            ("Sottotipo", 120),
+            ("Attacco", 50),
+            ("Vita", 50),
+            ("Durabilità", 50),
+            ("Rarità", 120),
+            ("Espansione", 500)
+        ]
 
-        self.search_ctrl.SetValue("")
-        self.load_cards()  # Ricarica la lista delle carte senza filtri
+
+    def sort_cards(self, col):
+        """Ordina le carte in base alla colonna selezionata."""
+
+        # Ordina le carte in base alla colonna selezionata
+        super().sort_cards(col)
+
+        # sposta il focus sulla lista
+        self.set_focus_to_list()
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
 
 
-    def set_focus_to_list(self):
-        """Imposta il focus sulla prima carta della lista carte."""
+    def search_from_name(self, search_text , event):
+        """Gestisce la ricerca testuale."""
 
-        if hasattr(self, "card_list"):
-            self.card_list.SetFocus()
-            self.card_list.Select(0)
-            self.card_list.Focus(0)
-            self.card_list.EnsureVisible(0)
-            self.reset_focus_style_for_card_list()
+        # Se la casella di ricerca è vuota o contiene "tutti" o "all", ripristina la visualizzazione
+        if search_text is None or search_text in ["Tutti", "tutti", "all", "Qualsiasi", "qualsiasi", "-", " ", ""]:
+            self.on_reset(event)
+        else:
+            # Altrimenti, applica la ricerca
+            self.load_cards(filters={"name": search_text})
+
+
+    def _apply_search_filter(self, search_text):
+        """Applica il filtro di ricerca alla lista delle carte."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
+            self.load_cards()
+        else:
+            # Filtra le carte in base al nome
+            self.load_cards(filters={"name": search_text})
+
+
+    #@@# sezione metodi collegati agli eventi
+
+    def on_item_focused(self, event):
+        """Gestisce l'evento di focus su una riga della lista."""
+
+        # cattura l'indice della riga selezionata
+        selected_item = event.GetIndex()
+
+        # Resetta lo stile di tutte le righe
+        #self.reset_focus_style_for_card_list(selected_item)
+
+        # Imposta lo stile della riga selezionata
+        self.select_element(selected_item)
+
+        # Imposta lo stile della riga selezionata
+        self.cm.apply_default_style(self.card_list)
+
+        # Forza il ridisegno della lista
+        self.card_list.Refresh()
+
+        # forza il ridisegno della lista
+        self.Layout()
+
+
+    def on_item_activated(self, event):
+        """Gestisce il doppio clic su una riga per modificare la carta."""
+        selected = self.card_list.GetFirstSelected()
+        if selected != -1:
+            card_name = self.card_list.GetItemText(selected)
+            self.on_edit_card(event)
 
 
     def on_show_filters(self, event):
@@ -287,54 +298,9 @@ class CardCollectionFrame(ListView):
 
         # Ripristina l'ordinamento predefinito (ad esempio, per "Mana" e "Nome")
         self.sort_cards(1)  # Ordina per "Mana" (colonna 1)
-        self.set_focus_to_list()  # Sposta il focus sulla prima carta della lista carte di questa finestra
 
-
-    def sort_cards(self, col):
-        """Ordina le carte in base alla colonna selezionata."""
-
-        # Ottieni i dati dalla lista
-        items = []
-        for i in range(self.card_list.GetItemCount()):
-            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
-            items.append(item)
-
-        # Funzione lambda per gestire la conversione sicura a intero
-        def safe_int(value):
-            """ Converte il valore in intero, restituendo infinito per i valori non numerici. """
-
-            try:
-                return int(value)
-            except ValueError:
-                # Assegna un valore predefinito per valori non numerici
-                return float('inf') if value == "-" else value
-
-        # Ordina i dati in base alla colonna selezionata
-        if col == 1:  # Colonna "Mana" (numerica)
-            items.sort(key=lambda x: safe_int(x[col]))
-        else:  # Altre colonne (testuali)
-            items.sort(key=lambda x: x[col])
-
-        # Aggiorna la lista con i dati ordinati
-        self.card_list.DeleteAllItems()
-        for item in items:
-            self.card_list.Append(item)
-
-
-    def select_card_by_name(self, card_name):
-        """Seleziona la carta nella lista in base al nome e sposta il focus di sistema a quella riga."""
-
-        if not card_name:
-            return
-
-        # Trova l'indice della carta nella lista
-        for i in range(self.card_list.GetItemCount()):
-            if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)  # Seleziona la riga
-                self.card_list.Focus(i)  # Sposta il focus alla riga selezionata
-                self.card_list.EnsureVisible(i)  # Assicurati che la riga sia visibile
-                self.card_list.SetFocus()  # Imposta il focus sulla lista
-                break
+        # Sposta il focus sulla prima carta della lista carte di questa finestra
+        self.set_focus_to_list()
 
 
     def on_column_click(self, event):
@@ -343,16 +309,8 @@ class CardCollectionFrame(ListView):
         self.sort_cards(col)
 
 
-    def on_key_press(self, event):
-        """Gestisce i tasti premuti per ordinare la lista."""
-
-        key_code = event.GetKeyCode()
-        if key_code >= ord('1') and key_code <= ord('9'):
-            col = key_code - ord('1')  # Converti il tasto premuto in un indice di colonna (0-8)
-            if col < self.card_list.GetColumnCount():
-                self.sort_cards(col)
-
-        event.Skip()
+    def on_key_down(self, event):
+        super().on_key_down(event)      # Chiamata al metodo della classe genitore
 
 
     def on_timer(self, event):
@@ -362,16 +320,6 @@ class CardCollectionFrame(ListView):
         evt = SearchEvent(search_text=search_text)
         wx.PostEvent(self, evt)
 
-
-    def search_from_name(self, search_text , event):
-        """Gestisce la ricerca testuale."""
-
-        # Se la casella di ricerca è vuota o contiene "tutti" o "all", ripristina la visualizzazione
-        if search_text is None or search_text in ["Tutti", "tutti", "all", "Qualsiasi", "qualsiasi", "-", " ", ""]:
-            self.on_reset(event)
-        else:
-            # Altrimenti, applica la ricerca
-            self.load_cards(filters={"name": search_text})
 
 
     def on_search(self, event):
@@ -400,17 +348,6 @@ class CardCollectionFrame(ListView):
         search_text = event.search_text
         self._apply_search_filter(search_text)
         self.set_focus_to_list()
-
-
-    def _apply_search_filter(self, search_text):
-        """Applica il filtro di ricerca alla lista delle carte."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", mostra tutte le carte
-            self.load_cards()
-        else:
-            # Filtra le carte in base al nome
-            self.load_cards(filters={"name": search_text})
 
 
     def on_add_card(self, event):

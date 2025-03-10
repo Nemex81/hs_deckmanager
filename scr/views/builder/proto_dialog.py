@@ -3,7 +3,7 @@
     file dialog_box.py
 
         path: 
-                 ./scr/views/builder/dialog_box.py
+                 ./scr/views/builder/proto_dialog.py
 
         Modulo per la gestione delle dialog box
 
