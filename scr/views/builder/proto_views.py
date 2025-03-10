@@ -99,6 +99,9 @@ class BasicView(wx.Frame):
         # applica il tema dark
         self.cm.set_theme_dark()
 
+        # Cattura gli eventi da tastiera
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
+
         self.Maximize()               # Massimizza la finestra
         self.Centre()                 # Centra la finestra
         self.init_ui()                # Inizializza l'interfaccia utente
@@ -165,14 +168,6 @@ class BasicView(wx.Frame):
             self.card_list.SetItemBackgroundColour(row, eg.BLUE)
             self.card_list.SetItemTextColour(row, eg.WHITE)
             self.card_list.Refresh()
-
-
-    def on_key_down(self, event):
-        """Gestisce l'evento di pressione dei tasti."""
-
-        key_code = event.GetKeyCode()
-        #log.debug(f"Tasto premuto: {key_code} che corrisponde a {chr(key_code)}")
-        self.controller.on_key_down(event=event, frame=self)
 
 
     def init_ui(self):
@@ -399,19 +394,27 @@ class ListView(BasicView):
         for item in items:
             self.card_list.Append(item)
 
+
     def on_column_click(self, event):
         """Gestisce il clic sulle intestazioni delle colonne per ordinare la lista."""
         col = event.GetColumn()
         self.sort_cards(col)
 
-    def on_key_press(self, event):
+
+    def on_key_down(self, event):
         """Gestisce i tasti premuti per ordinare la lista."""
+
         key_code = event.GetKeyCode()
         if ord('1') <= key_code <= ord('9'):
             col = key_code - ord('1')
             if col < self.card_list.GetColumnCount():
                 self.sort_cards(col)
+
+        else:
+            self.controller.on_key_down(event=event, frame=self)
+
         event.Skip()
+
 
     def select_card_by_name(self, card_name):
         """Seleziona una carta nella lista in base al nome."""
@@ -448,202 +451,6 @@ class ListView(BasicView):
             self.card_list.Select(0)
             self.card_list.Focus(0)
             self.card_list.EnsureVisible(0)
-
-
-
-class LastListView(BasicView):
-    """
-    Classe base per finestre che gestiscono elenchi (carte, mazzi, ecc.).
-    Utilizzata per finestre come "Collezione Carte", "Gestione Mazzi" o "Visualizza Mazzo".
-    """
-
-    def __init__(self, parent, title, size=(800, 600), container=None, **kwargs):
-        super().__init__(parent, title, size, container)
-        self.mode = None                                  # Modalità di visualizzazione (es. "collection", "decks", "deck")
-        #self.card_list = None                              # Lista di carte
-        #self.deck_content = None                           # Contenuto del mazzo
-        self.search_ctrl = None                            # Controllo di ricerca
-
-        # Applica il tema scuro
-        self.cm.set_theme_dark()
-
-        # Timer per il debounce
-        self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-        self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
-
-
-    def set_focus_style(self, element):
-        """
-        Imposta il colore di sfondo e del font quando l'elemento riceve il focus.
-        """
-        self.reset_focus_style_for_all_buttons()
-        self.cm.apply_focus_style(element)          # Applica lo stile di focus all'elemento
-        #element.Refresh()                           # Forza il ridisegno dell'elemento
-
-
-    def reset_focus_style(self, element):
-        """
-        Ripristina il colore di sfondo e del font predefiniti quando l'elemento perde il focus.
-        """
-        #log.debug(f"Elemento {element.GetLabel()} ha perso il focus.")
-        self.cm.apply_default_style(element)
-        #element.Refresh()
-
-
-    def init_ui_elements(self):
-        """
-        Inizializza gli elementi dell'interfaccia utente.
-        Questo metodo deve essere esteso dalle classi derivate per aggiungere componenti specifici.
-        """
-        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
-
-
-    def load_cards(self, filters=None):
-        """
-        Carica le carte nella lista.
-        Questo metodo deve essere implementato nelle classi derivate.
-        """
-        log.error("Il metodo load_cards deve essere implementato nelle classi derivate.")
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
-
-
-    def refresh_card_list(self):
-        """Aggiorna la lista delle carte con i dati più recenti dal database."""
-
-        log.debug("Aggiornamento della lista delle carte...")        
-        raise NotImplementedError("Il metodo load_cards deve essere implementato nelle classi derivate.")
-
-
-    def sort_cards(self, col):
-        """ Ordina le carte in base alla colonna selezionata. """
-
-        # Ottieni i dati dalla lista
-        items = []
-        for i in range(self.card_list.GetItemCount()):
-            item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
-            items.append(item)
-
-        # Funzione lambda per gestire la conversione sicura a intero
-        def safe_int(value):
-            """ Converte il valore in intero, restituendo infinito per i valori non numerici. """
-
-            try:
-                return int(value)
-            except ValueError:
-                # Assegna un valore predefinito per valori non numerici
-                return float('inf') if value == "-" else value
-
-        # Ordina i dati in base alla colonna selezionata
-        if col == 1:  # Colonna "Mana" (numerica)
-            items.sort(key=lambda x: safe_int(x[col]))
-        else:  # Altre colonne (testuali)
-            items.sort(key=lambda x: x[col])
-
-        # Aggiorna la lista con i dati ordinati
-        self.card_list.DeleteAllItems()
-        for item in items:
-            self.card_list.Append(item)
-
-
-    def select_card_by_name(self, card_name):
-        """Seleziona una carta nella lista in base al nome."""
-
-        if not card_name:
-            return
-
-        for i in range(self.card_list.GetItemCount()):
-            if self.card_list.GetItemText(i) == card_name:
-                self.card_list.Select(i)
-                self.card_list.Focus(i)
-                self.card_list.EnsureVisible(i)
-                self.card_list.SetFocus()
-                break
-
-
-    def select_element(self, row):
-        """Seleziona l'elemento attivo e applica lo stile di focus."""
-
-        if hasattr(self, "card_list"):
-            # Applica lo stile di focus alla riga selezionata
-            #self.cm.apply_focus_style(row)
-            self.cm.apply_selection_style_to_list(self.card_list, row)
-
-            # Resetta lo stile delle altre righe
-            for i in range(self.card_list.GetItemCount()):
-                if i != row:
-                    self.cm.apply_default_style_to_list_item(self.card_list, i)
-
-            # Forza il ridisegno della lista
-            self.card_list.Refresh()
-
-
-    def reset_filters(self):
-        """Resetta i filtri e ricarica la lista delle carte."""
-
-        self.search_ctrl.SetValue("")
-        self.load_cards()  # Ricarica la lista delle carte senza filtri
-
-
-    def set_focus_to_list(self):
-        """Imposta il focus sulla prima carta della lista carte."""
-
-        if hasattr(self, "card_list"):
-            self.card_list.SetFocus()
-            self.card_list.Select(0)
-            self.card_list.Focus(0)
-            self.card_list.EnsureVisible(0)
-
-
-    def apply_search_filter(self, search_text):
-        """
-        Applica un filtro di ricerca alla lista.
-        :param search_text: Testo da cercare.
-        """
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            self.load_items()  # Ricarica tutti gli elementi
-        else:
-            self.load_items(filters={"name": search_text})  # Filtra gli elementi
-
-
-    def on_timer(self, event):
-        """Esegue la ricerca dopo il timeout del debounce."""
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        evt = SearchEvent(search_text=search_text)
-        wx.PostEvent(self, evt)
-
-
-    def on_search_event(self, event):
-        """Gestisce l'evento di ricerca con debounce."""
-        self.apply_search_filter(event.search_text)
-
-
-    def on_search_text_change(self, event):
-        """Gestisce la ricerca in tempo reale mentre l'utente digita."""
-
-        search_text = self.search_ctrl.GetValue().strip().lower()
-        if not search_text:
-            # ricarica le carte del mazzo
-            self.load_cards()
-
-        # Avvia il timer per il debounce (es. 300 ms)
-        self.timer.Stop()  # Ferma il timer precedente
-        self.timer.Start(500, oneShot=True)
-    
-
-    def on_search(self, event):
-        """Gestisce la ricerca testuale."""
-
-        pass
-
-
-    def on_item_focused(self, event):
-        """Gestisce l'evento di focus su una riga della lista."""
-
-        selected_item = event.GetIndex()
-        self.select_element(selected_item)  # Applica lo stile di focus alla riga selezionata
-        self.card_list.Refresh()  # Forza il ridisegno della lista
 
 
 

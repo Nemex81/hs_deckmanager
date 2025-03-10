@@ -41,6 +41,7 @@ class DecksViewFrame(ListView):
         #self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
         self.Bind(EVT_SEARCH_EVENT, self.on_search_event)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
 
 
     #@@# metodi ausigliari della classe
@@ -129,6 +130,8 @@ class DecksViewFrame(ListView):
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
         self.color_manager.apply_theme_to_window(self.card_list)  # Applica il tema alla lista
+        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)  # Ordina la lista per colonna
+        self.card_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)  # Doppio clic su un mazzo
 
         # Carichiamo i mazzi
         self.load_decks()
@@ -230,8 +233,8 @@ class DecksViewFrame(ListView):
         # Imposta il focus sul search bar
         #self.search_ctrl.SetFocus()
 
-        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
-        self.parent.controller.decks_controller.select_and_focus_deck(self, self.card_list.GetItemText(0))
+        #self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
+        self.controller.select_and_focus_deck(self, self.card_list.GetItemText(0))
 
 
         #aggiorna la lista
@@ -271,6 +274,8 @@ class DecksViewFrame(ListView):
 
     def sort_cards(self, col):
         """Ordina i mazzi in base alla colonna selezionata, con logica specifica."""
+        log.debug(f"Ordinamento per colonna: {col}")
+
         items = []
         for i in range(self.card_list.GetItemCount()):
             item = [self.card_list.GetItemText(i, c) for c in range(self.card_list.GetColumnCount())]
@@ -292,6 +297,16 @@ class DecksViewFrame(ListView):
         for item in items:
             self.card_list.Append(item)
 
+        # Applica lo stile predefinito a tutte le righe
+        self.cm.apply_default_style(self.card_list)
+
+        # Seleziona la prima riga, se presente
+        if self.card_list.GetItemCount() > 0:
+            self.cm.apply_selection_style_to_list_item(self.card_list, 0)
+
+        # Aggiorna la visualizzazione della lista
+        self.card_list.Refresh()
+
 
     def apply_search_filter(self, search_text):
         """Applica un filtro di ricerca alla lista dei mazzi."""
@@ -312,12 +327,27 @@ class DecksViewFrame(ListView):
 
         #@@# sezione metodi collegati agli eventi
 
+    def on_key_down(self, event):
+        """Gestisce i tasti premuti per ordinare la lista."""
+
+        key_code = event.GetKeyCode()
+        max_col = self.card_list.GetColumnCount() - 1
+        if ord('1') <= key_code <= ord('1') + max_col:
+            col = key_code - ord('1')
+            if col < self.card_list.GetColumnCount():
+                self.sort_cards(col)
+
+        else:
+            self.controller.on_key_down(event=event, frame=self)
+
+        event.Skip()
+
+
     def on_column_click(self, event):
         """Gestisce il click su una colonna per ordinare la lista."""
         col = event.GetColumn()
         self.sort_cards(col)
 
-        
 
     def on_item_activated(self, event):
         """Gestisce il doppio clic su una riga per visualizzare il mazzo."""

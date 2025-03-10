@@ -156,7 +156,7 @@ class CardCollectionFrame(ListView):
 
         # Aggiungi eventi
         self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)
-        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down)
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
 
@@ -308,7 +308,7 @@ class CardCollectionFrame(ListView):
         self.sort_cards(col)
 
 
-    def on_key_press(self, event):
+    def on_key_down(self, event):
         """Gestisce i tasti premuti per ordinare la lista."""
 
         key_code = event.GetKeyCode()
@@ -316,6 +316,9 @@ class CardCollectionFrame(ListView):
             col = key_code - ord('1')  # Converti il tasto premuto in un indice di colonna (0-8)
             if col < self.card_list.GetColumnCount():
                 self.sort_cards(col)
+
+        else:
+            self.controller.on_key_down(event=event, frame=self)
 
         event.Skip()
 
