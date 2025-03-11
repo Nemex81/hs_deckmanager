@@ -198,22 +198,7 @@ class DefaultController:
 
     def get_total_cards_in_deck(self, deck_name):
         """Calcola il numero totale di carte in un mazzo."""
-
-        try:
-            with db_session() as session:
-                deck = self.db_manager.get_deck(deck_name)
-                if deck:
-                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
-                    total_cards = sum(card["quantity"] for card in deck["cards"])
-                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
-                    return total_cards
-                else:
-                    log.error(f"Mazzo '{deck_name}' non trovato.")
-                    return 0
-
-        except Exception as e:
-            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
-            return 0
+        return self.db_manager.get_total_cards_in_deck(deck_name)
 
 
     def add_card(self, card_data):
@@ -239,6 +224,7 @@ class DefaultController:
         except Exception as e:
             log.error(f"Errore durante l'aggiunta della carta: {str(e)}")
             return False
+
 
     def edit_card(self, card_name, new_data):
         """
@@ -266,6 +252,7 @@ class DefaultController:
         except Exception as e:
             log.error(f"Errore durante la modifica della carta: {str(e)}")
             return False
+
 
     def delete_card(self, card_name):
         """
@@ -348,26 +335,7 @@ class DefaultController:
 
     def apply_search_decks_filter(self, frame, search_text):
         """Applica il filtro di ricerca alla lista dei mazzi."""
-
-        if not search_text or search_text in ["tutti", "tutto", "all"]:
-            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
-            frame.card_list.DeleteAllItems()
-            # mostra tutti i mazzi
-            frame.load_decks()
-            # sposta il cursore nella lista deimazzi
-            self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
-
-        else:
-            # Filtra i mazzi in base al nome o alla classe
-            frame.card_list.DeleteAllItems()
-            with db_session() as session:
-                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
-                for deck in decks:
-                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
-                    frame.card_list.SetItem(index, 1, deck.player_class)
-                    frame.card_list.SetItem(index, 2, deck.game_format)
-
-        self.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+        self.db_manager.apply_search_decks_filter(frame=frame, search_text=search_text)
 
 
     def get_selected_deck(self, card_list=None):
@@ -544,26 +512,7 @@ class DefaultController:
 
     def update_decks_list(self, card_list =None):
         """Aggiorna la lista dei mazzi."""
-
-        #card_list = frame.card_list
-        card_list.DeleteAllItems()  # Pulisce la lista
-        with db_session() as session:  # Usa il contesto db_session
-            decks = session.query(Deck).all()
-            for deck in decks:
-                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
-                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
-                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
-                
-                # Calcola e visualizza il numero totale di carte
-                total_cards = self.get_total_cards_in_deck(deck.name)
-                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
-
-
-    #def update_card_list(self, card_list):
-        """Aggiorna la lista di carte."""
-
-        #card_list.DeleteAllItems()
-        #self.load_collection(card_list=card_list)
+        self.db_manager.update_decks_list(card_list=card_list)
 
 
     #@@#  sezione gestione di un singolo mazzo

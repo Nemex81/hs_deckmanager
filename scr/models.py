@@ -612,6 +612,48 @@ class DbManager:
             return None
 
 
+    def get_total_cards_in_deck(self, deck_name):
+        """Calcola il numero totale di carte in un mazzo."""
+
+        try:
+            with db_session() as session:
+                deck = self.db_manager.get_deck(deck_name)
+                if deck:
+                    #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
+                    total_cards = sum(card["quantity"] for card in deck["cards"])
+                    log.info(f"Mazzo '{deck_name}' contiene {total_cards} carte.")
+                    return total_cards
+                else:
+                    log.error(f"Mazzo '{deck_name}' non trovato.")
+                    return 0
+
+        except Exception as e:
+            log.error(f"Errore durante il calcolo delle carte totali per il mazzo {deck_name}: {e}")
+            return 0
+
+
+    def apply_search_decks_filter(self, frame, search_text):
+        """Applica il filtro di ricerca alla lista dei mazzi."""
+
+        if not search_text or search_text in ["tutti", "tutto", "all"]:
+            # Se il campo di ricerca è vuoto o contiene "tutti", ripulisci la list aprima di ricaricare i mazzi
+            frame.card_list.DeleteAllItems()
+            # mostra tutti i mazzi
+            frame.load_decks()
+            # sposta il cursore nella lista deimazzi
+            frame.controller.set_focus_to_list(frame)    # Imposta il focus sul primo mazzo della lista
+
+        else:
+            # Filtra i mazzi in base al nome o alla classe
+            frame.card_list.DeleteAllItems()
+            with db_session() as session:
+                decks = session.query(Deck).filter(Deck.name.ilike(f"%{search_text}%") | Deck.player_class.ilike(f"%{search_text}%")).all()
+                for deck in decks:
+                    index = frame.card_list.InsertItem(frame.card_list.GetItemCount(), deck.name)
+                    frame.card_list.SetItem(index, 1, deck.player_class)
+                    frame.card_list.SetItem(index, 2, deck.game_format)
+
+
     def load_collection(filters=None, card_list=None):
         """Carica le carte nella lista."""
         load_cards(filters=filters, card_list=card_list)
@@ -736,6 +778,23 @@ class DbManager:
         except Exception as e:
             log.error(f"Errore durante l'aggiornamento del mazzo: {e}")
             return False
+
+
+    def update_decks_list(self, card_list =None):
+        """Aggiorna la lista dei mazzi."""
+
+        #card_list = frame.card_list
+        card_list.DeleteAllItems()  # Pulisce la lista
+        with db_session() as session:  # Usa il contesto db_session
+            decks = session.query(Deck).all()
+            for deck in decks:
+                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)  # Prima colonna
+                card_list.SetItem(index, 1, deck.player_class)  # Seconda colonna
+                card_list.SetItem(index, 2, deck.game_format)  # Terza colonna
+                
+                # Calcola e visualizza il numero totale di carte
+                total_cards = self.get_total_cards_in_deck(deck.name)
+                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
 
 
 
