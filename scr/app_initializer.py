@@ -2,7 +2,7 @@
     Modulo per l'inizializzazione dell'applicazione con il nuovo framework.
 
     path:
-        ./app_initializer.py
+        ./scr/app_initializer.py
 """
 
 # Lib

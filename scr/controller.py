@@ -564,9 +564,7 @@ class MainController(DefaultController):
 
     def __init__(self, container=None, **kwargs):
         super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.win_controller = self.container.resolve("win_controller")
+
 
 
 
