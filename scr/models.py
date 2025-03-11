@@ -411,6 +411,21 @@ class DbManager:
             log.error(f"Errore durante il parsing delle carte: {str(e)}")
             raise
 
+
+    def parse_deck_from_clipboard(self):
+        """ Estrae un mazzo copiato dagli appunti. """
+
+        try:
+            deck_string = pyperclip.paste()
+            if self.is_valid_deck(deck_string):
+                return deck_string
+            return None
+
+        except pyperclip.PyperclipException as e:
+            log.error(f"Errore negli appunti: {str(e)}")
+            return None
+
+
     def is_card_in_database(self, card_name):
         """Verifica se una carta esiste nel database."""
         with db_session():
