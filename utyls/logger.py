@@ -18,7 +18,7 @@
 
 # lib
 from logging.handlers import RotatingFileHandler
-import logging
+import logging, os, sys
 
 # Configurazione del logging
 
@@ -29,6 +29,9 @@ import logging
     #datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
 #)
 
+
+
+# Configurazione del logging
 handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
 logging.basicConfig(handlers=[handler], level=logging.INFO)
 
@@ -87,6 +90,12 @@ def info(info):
 
 def debug(debug):
     logging.debug(f'Debug: {debug}')
+
+
+
+# se il file 'logs/hdm.log' non esiste, lo creo
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
 
 
