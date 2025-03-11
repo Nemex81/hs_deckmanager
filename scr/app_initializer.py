@@ -92,9 +92,8 @@ class AppInitializer:
             log.error("ScreenReader non registrato correttamente.")
 
         # Registra i controller
-        #self.container.register("collection_controller", lambda: CollectionController(container=self.container))
-        #self.container.register("decks_controller", lambda: DecksController(container=self.container))
-        #self.container.register("deck_controller", lambda: DeckController(container=self.container))
+
+        # Registra mainController
         self.container.register("main_controller", lambda: MainController(container=self.container))
 
         #Registra WinController
