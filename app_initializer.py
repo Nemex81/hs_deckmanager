@@ -34,31 +34,35 @@ class AppInitializer:
     def __init__(self):
         self.container = DependencyContainer()
         self.win_controller = None
-        self.initialize_app()
-        self.start_app()
-
 
     def initialize_app(self):
         """Inizializza l'applicazione con il nuovo framework."""
-
-        log.info("Inizializzazione dell'applicazione avviata...")
+        log.info("Inizializzazione dell'applicazione.")
 
         # Registra le dipendenze
         self._register_dependencies()
-        self._initialize_controllers()
-        log.info("Inizializzazione completata.")
 
+        # Inizializza il WinController
+        self.win_controller = self.container.resolve("win_controller")
+        self._initialize_controllers()
+
+        log.info("Inizializzazione completata.")
 
     def _register_dependencies(self):
         """
         Registra le dipendenze nel container.
         """
-
         log.info("Registrazione delle dipendenze nel container.")
 
         # Registra ColorManager e FocusHandler
         self.container.register("color_manager", lambda: ColorManager(theme=ColorTheme.DARK))
         self.container.register("focus_handler", lambda: FocusHandler())
+
+        # Registra WidgetFactory
+        self.container.register("widget_factory", lambda: WidgetFactory(
+            color_manager=self.container.resolve("color_manager"),
+            focus_handler=self.container.resolve("focus_handler"),
+        ))
 
         # verifica che ColorManager sia registrato
         if not self.container.has("color_manager"):
@@ -67,12 +71,6 @@ class AppInitializer:
         # Verifica che FocusHandler sia registrato
         if not self.container.has("focus_handler"):
             log.error("FocusHandler non registrato correttamente.")
-
-        # Registra WidgetFactory
-        self.container.register("widget_factory", lambda: WidgetFactory(
-            color_manager=self.container.resolve("color_manager"),
-            focus_handler=self.container.resolve("focus_handler"),
-        ))
 
         # Verifica che WidgetFactory sia registrata
         if not self.container.has("widget_factory"):
@@ -92,12 +90,12 @@ class AppInitializer:
             log.error("ScreenReader non registrato correttamente.")
 
         # Registra i controller
-        #self.container.register("collection_controller", lambda: CollectionController(container=self.container))
-        #self.container.register("decks_controller", lambda: DecksController(container=self.container))
-        #self.container.register("deck_controller", lambda: DeckController(container=self.container))
+        self.container.register("collection_controller", lambda: CollectionController(container=self.container))
+        self.container.register("decks_controller", lambda: DecksController(container=self.container))
+        self.container.register("deck_controller", lambda: DeckController(container=self.container))
         self.container.register("main_controller", lambda: MainController(container=self.container))
 
-        #Registra WinController
+        # Registra WinController
         self.container.register("win_controller", lambda: WinController(container=self.container))
 
         # Registra il dizionario delle finestre
@@ -110,21 +108,27 @@ class AppInitializer:
 
         log.info("Registrazione delle dipendenze completata.")
 
-
     def _initialize_controllers(self):
         """Inizializza i controller tramite DependencyContainer."""
-
         log.info("Inizializzazione dei controller tramite DependencyContainer.")
         self.main_controller = self.container.resolve("main_controller")
-        self.win_controller = self.container.resolve("win_controller")
         log.info("Inizializzazione dei controller completata.")
-
 
     def start_app(self):
         """Avvia l'applicazione."""
         log.info("Avvio dell'applicazione.")
-        self.main_controller = self.container.resolve("main_controller")
-        self.main_controller.start_app()
+        import wx
+        app = wx.App(False)
+
+        # Crea e mostra la finestra principale
+        self.win_controller.create_main_window(parent=None, controller=self.main_controller)
+        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
+
+        # Avvia il ciclo principale dell'applicazione
+        app.MainLoop()
+
+
+
 
 
 

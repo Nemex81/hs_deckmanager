@@ -111,7 +111,7 @@ class WinController:
             raise ValueError("'deck_name' è obbligatorio per DeckViewFrame")
 
         log.debug(f"chiamata alla factory per la creazione della finestra con chiave: {eg.WindowKey.DECK}")
-        resolved_controller = controller or self.container.resolve("deck_controller")
+        resolved_controller = controller or self.container.resolve("main_controller")
         self.create_window(
             parent=parent,
             #controller=controller,

@@ -634,9 +634,9 @@ class MainController(DefaultController):
         super().__init__(container, **kwargs)
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
-        self.collection_controller = self.container.resolve("collection_controller")
-        self.decks_controller = self.container.resolve("decks_controller")
-        self.deck_controller = self.container.resolve("deck_controller")
+        #self.collection_controller = self.container.resolve("collection_controller")
+        #self.decks_controller = self.container.resolve("decks_controller")
+        #self.deck_controller = self.container.resolve("deck_controller")
         self.win_controller = self.container.resolve("win_controller")
 
 

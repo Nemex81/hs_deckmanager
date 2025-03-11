@@ -248,13 +248,13 @@ class DecksViewFrame(ListView):
         """ Carica i mazzi dal database. """
 
         # carichiamo i mazzi dal database usando db_session
-        controller = self.parent.controller.decks_controller
-        if not controller.load_decks(self.card_list):
+        #controller = self.parent.controller.decks_controller
+        if not self.controller.load_decks(self.card_list):
             wx.MessageBox("Errore durante il caricamento dei mazzi.", "Errore")
             return
 
         # colora il mazzo selezionato nella lista
-        self.parent.controller.decks_controller.select_list_element(self)
+        self.controller.select_list_element(self)
 
 
     def update_status(self, message):
