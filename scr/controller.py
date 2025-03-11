@@ -27,7 +27,6 @@ class DefaultController:
         self.db_manager = self.container.resolve("db_manager")
         self.vocalizer = self.container.resolve("vocalizer")  # Risolve Vocalizer
         self.win_controller = self.container.resolve("win_controller")  # Risolve WinController
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
     @property
@@ -53,20 +52,10 @@ class DefaultController:
 
 
     def start_app(self):
-        """Avvia l'applicazione."""
+        log.debug("Il metodo start_app deve essere implementato.")
+        raise NotImplementedError("Il metodo start_app deve essere implementato.")
 
-        log.info("Avvio dell'applicazione.")
 
-        app = wx.App(False)
-
-        # Crea e mostra la finestra principale
-        self.win_controller.create_main_window(parent=None)#, controller=self.main_controller)
-        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
-
-        # Avvia il ciclo principale dell'applicazione
-        app.MainLoop()
-
-        
     def on_focus(self, event, frame):
         """
         Gestisce l'evento di focus su un elemento e vocalizza la descrizione.
@@ -565,6 +554,19 @@ class MainController(DefaultController):
     def __init__(self, container=None, **kwargs):
         super().__init__(container, **kwargs)
 
+    def start_app(self):
+        """Avvia l'applicazione."""
+
+        log.info("Avvio dell'applicazione.")
+
+        app = wx.App(False)
+
+        # Crea e mostra la finestra principale
+        self.win_controller.create_main_window(parent=None)#, controller=self.main_controller)
+        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
+
+        # Avvia il ciclo principale dell'applicazione
+        app.MainLoop()
 
 
 
