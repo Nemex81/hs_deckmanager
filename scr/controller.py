@@ -30,6 +30,23 @@ class DefaultController:
         self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
 
 
+    @property
+    def current_window(self):
+        """ Restituisce la finestra corrente. """
+
+        if not self.win_controller.get_current_window():
+            log.error("Nessuna finestra corrente rilevata.")
+            return None
+
+        return self.win_controller.get_current_window()
+
+
+    @current_window.setter
+    def current_window(self, window):
+        """ Imposta la finestra corrente. """
+        self.win_controller.current_window = window
+
+
     def speak(self, text):
         """ Vocalizza un testo. """
         self.vocalizer.speak(text)
@@ -594,49 +611,12 @@ class DefaultController:
 
 
 
-class CollectionController(DefaultController):
-    """Controller per la vista della collezione di carte."""
-
-    def __init__(self, container=None, **kwargs):
-        super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
-
-
-
-class DeckController(DefaultController):
-    """ Controller per la view di un singoolo mazzo. """
-
-    def __init__(self, container=None, **kwargs):
-        super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
-
-
-
-class DecksController(DefaultController):
-    """ Controller per la vista dei mazzi. """
-
-    def __init__(self, container=None, **kwargs):
-        super().__init__(container, **kwargs)
-        self.container = container  # Memorizza il container
-        self.db_manager = self.container.resolve("db_manager")
-        self.widget_factory = self.container.resolve("widget_factory")  # Risolve WidgetFactory
-        self.deck_controller = None
-
-
-
 class MainController(DefaultController):
 
     def __init__(self, container=None, **kwargs):
         super().__init__(container, **kwargs)
         self.container = container  # Memorizza il container
         self.db_manager = self.container.resolve("db_manager")
-        #self.collection_controller = self.container.resolve("collection_controller")
-        #self.decks_controller = self.container.resolve("decks_controller")
-        #self.deck_controller = self.container.resolve("deck_controller")
         self.win_controller = self.container.resolve("win_controller")
 
 

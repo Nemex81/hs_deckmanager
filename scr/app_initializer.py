@@ -16,7 +16,7 @@ from scr.views.decks_view import DecksViewFrame
 from scr.views.deck_view import DeckViewFrame
 
 from scr.views.view_manager import WinController
-from scr.controller import MainController, CollectionController, DecksController, DeckController
+from scr.controller import MainController
 from scr.models import DbManager
 from scr.views.main_views import HearthstoneAppFrame
 from scr.views.builder.color_system import ColorTheme
