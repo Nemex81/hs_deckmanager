@@ -5,7 +5,7 @@
     Autore: Nemex81
     E-mail: nemex1981@gmail.com
     nome del progetto: Hearthstone Deck Manager
-    Versione: 0.9.2
+    Versione: 0.9.3
 
     path:
         ./main.py
