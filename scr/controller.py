@@ -56,6 +56,13 @@ class DefaultController:
         raise NotImplementedError("Il metodo start_app deve essere implementato.")
 
 
+
+class LogycBisness(DefaultController):
+    """ Controller per la logica di business dell'applicazione. """
+
+    def __init__(self, container=None, **kwargs):
+        super().__init__(container, **kwargs)   
+
     def on_focus(self, event, frame):
         """
         Gestisce l'evento di focus su un elemento e vocalizza la descrizione.
@@ -549,7 +556,7 @@ class DefaultController:
 
 
 
-class MainController(DefaultController):
+class MainController(LogycBisness):
 
     def __init__(self, container=None, **kwargs):
         super().__init__(container, **kwargs)
