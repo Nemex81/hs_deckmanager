@@ -10,42 +10,15 @@
 """
 
 # lib
+import wx, os, sys
+from enum import Enum
+from pathlib import Path
 from utyls import enu_glob as eg
 from utyls import logger as log
-#import pdb
-
-
-
-# Configurazioni generali
-PROJECT_NAME = "Hearthstone Deck Manager"
-VERSION = "0.93"
-AUTHOR = "Nemex81"
-EMAIL = "nemex1981@gmail.com"
-
-
-# configurazioni di sistema
-SOUNDS_PATH = "./sounds"
-IMG_PATH = "./img"
-
-# configurazioni del database
-DATABASE_PATH = "./hearthstone_decks_storage.db"
-
-
-
-
-
-
-
-# settings.py
-import wx
-import os, sys
-from pathlib import Path
-from enum import Enum
 
 
 
 # === PERCORSI ===
-
 BASE_DIR = Path(__file__).parent
 LOGS_DIR = BASE_DIR / "logs"
 IMG_DIR = BASE_DIR / "img"
