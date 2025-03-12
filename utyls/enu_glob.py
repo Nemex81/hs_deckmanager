@@ -24,7 +24,7 @@ BLACK = 'black'
 RED = 'red'
 GREEN = 'green'
 YELLOW = 'yellow'
-GREY = 'grey'
+GRAY = 'grey'
 ORANGE = 'orange'
 BLUE = 'blue'
 
@@ -36,7 +36,7 @@ class EnuColors(Enum):
     GREEN = GREEN
     BLUE = BLUE
     RED = RED    
-    GREY = GREY
+    GRAY = GRAY
     ORANGE = ORANGE
 
 

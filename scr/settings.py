@@ -10,6 +10,7 @@
 """
 
 # lib
+from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
 
@@ -91,14 +92,14 @@ LOGGING_CONFIG = {
 
 # colori
 class AppColors(Enum):
-    DEFAULT_BG = "#2C2F33"              # Grigio scuro
-    DEFAULT_TEXT = "#FFFFFF"            # Bianco
-    FOCUS_BG = "#FF5733"                # Arancione
-    FOCUS_TEXT = "#000000"              # Nero
-    ERROR_BG = "#FF5733"                # Arancione
-    ERROR_TEXT = "#FFFFFF"              # Bianco
-    BUTTON_BG = "#FF5733"               # Arancione
-    BUTTON_TEXT = "#FFFFFF"             # Bianco
+    DEFAULT_BG = eg.BLACK
+    DEFAULT_TEXT = eg.WHITE
+    FOCUS_BG = eg.BLUE
+    FOCUS_TEXT = eg.WHITE
+    ERROR_BG = eg.RED
+    ERROR_TEXT = eg.WHITE
+    WARNING_BG = eg.ORANGE
+    WARNING_text = eg.WHITE
 
 # === CONFIGURAZIONI DEI WIDGET ===
 DEFAULT_BUTTON_SIZE = (180, 70)
