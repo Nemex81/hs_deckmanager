@@ -41,18 +41,25 @@ import os, sys
 from pathlib import Path
 from enum import Enum
 
+
+
 # === PERCORSI ===
+
 BASE_DIR = Path(__file__).parent
 LOGS_DIR = BASE_DIR / "logs"
-DB_PATH = BASE_DIR / "data" / "hearthstone_decks_storage.db"
+IMG_DIR = BASE_DIR / "img"
+SOUNDS_DIR = BASE_DIR / "sounds"
 
 # === CONFIGURAZIONI GLOBALI ===
 APP_NAME = "Hearthstone Deck Manager"
+APP_AUTHOR = "Nemex81"
+APP_EMAIL = "nemex1981@gmail.com"
 APP_VERSION = "0.9.3"
 DEBUG_MODE = False
 DEFAULT_THEME = "DARK"
 
 # === CONFIGURAZIONI DEL DATABASE ===
+DB_PATH = BASE_DIR / "data" / "hearthstone_decks_storage.db"
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 SQLALCHEMY_ECHO = DEBUG_MODE  # Abilita il logging SQL solo in modalità debug
 
@@ -81,12 +88,19 @@ LOGGING_CONFIG = {
 }
 
 # === INTERFACCIA UTENTE ===
-class AppColors(Enum):
-    DEFAULT_BG = "#2C2F33"
-    DEFAULT_TEXT = "#FFFFFF"
-    FOCUS_BG = "#FF5733"
-    FOCUS_TEXT = "#000000"
 
+# colori
+class AppColors(Enum):
+    DEFAULT_BG = "#2C2F33"              # Grigio scuro
+    DEFAULT_TEXT = "#FFFFFF"            # Bianco
+    FOCUS_BG = "#FF5733"                # Arancione
+    FOCUS_TEXT = "#000000"              # Nero
+    ERROR_BG = "#FF5733"                # Arancione
+    ERROR_TEXT = "#FFFFFF"              # Bianco
+    BUTTON_BG = "#FF5733"               # Arancione
+    BUTTON_TEXT = "#FFFFFF"             # Bianco
+
+# === CONFIGURAZIONI DEI WIDGET ===
 DEFAULT_BUTTON_SIZE = (180, 70)
 DEFAULT_FONT_SIZE = 16
 DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
@@ -94,7 +108,7 @@ DEFAULT_LIST_STYLE = wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
 # === FILTRI E RICERCHE ===
 DEFAULT_FILTERS = ["tutti", "qualsiasi", "all"]
 DEFAULT_DECK_FORMAT = "Standard"
-DEFAULT_PLAYER_CLASS = "Neutrale"
+DEFAULT_PLAYER_CLASS = "guerriero"
 
 # === COSTANTI GLOBALI ===
 MAX_MANA_COST = 20
