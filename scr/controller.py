@@ -34,7 +34,7 @@ class DefaultController:
         """ Restituisce la finestra corrente. """
 
         if not self.win_controller.get_current_window():
-            log.error("Nessuna finestra corrente rilevata.")
+            log.warning("Nessuna finestra corrente rilevata.")
             return None
 
         return self.win_controller.get_current_window()
