@@ -38,7 +38,8 @@ def start_app():
 
     log.setup_logging(log_file='./logs/hdm.log', console_output=False)
     app_initializer = AppInitializer()
-
+    app_initializer.initialize_app()
+    app_initializer.start_app()
 
 
 if __name__ == "__main__":

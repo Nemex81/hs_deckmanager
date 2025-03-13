@@ -561,6 +561,8 @@ class MainController(LogycBisness):
     def __init__(self, container=None, **kwargs):
         super().__init__(container, **kwargs)
 
+
+
     def start_app(self):
         """Avvia l'applicazione."""
 
@@ -569,11 +571,48 @@ class MainController(LogycBisness):
         app = wx.App(False)
 
         # Crea e mostra la finestra principale
-        self.win_controller.create_main_window(parent=None)#, controller=self.main_controller)
-        self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
+        #self.win_controller.create_main_window(parent=None)#, controller=self.main_controller)
+        #self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
+        self.open_window(eg.WindowKey.MAIN)     # Apre la finestra principale
 
         # Avvia il ciclo principale dell'applicazione
         app.MainLoop()
+
+
+    def open_window(self, window_key, parent=None, **kwargs):
+        """
+        Apre una finestra specifica.
+        Args:
+            window_key: Chiave della finestra da aprire.
+            parent: Finestra genitore (opzionale).
+            **kwargs: Parametri aggiuntivi per la finestra.
+        """
+        log.info(f"Apertura finestra: {window_key}")
+        if self.win_controller.get_current_window():
+            log.info("Nascondo la finestra corrente prima di aprirne una nuova.")
+            self.win_controller.get_current_window().Hide()
+
+        # Usa il WinController per creare/aprire la finestra
+        self.win_controller.create_window(parent=parent, key=window_key, **kwargs)
+        self.win_controller.open_window(window_key, parent=parent)
+
+    def close_current_window(self):
+        """
+        Chiude la finestra corrente e ripristina la finestra genitore.
+        """
+        current_window = self.win_controller.get_current_window()
+        if current_window:
+            log.info(f"Chiudo la finestra corrente: {current_window}")
+            self.win_controller.close_current_window()
+            if self.win_controller.parent_stack:
+                parent_window = self.win_controller.parent_stack.pop()
+                parent_window.Show()
+                self.win_controller.current_window = parent_window
+            else:
+                log.warning("Nessuna finestra genitore trovata.")
+                self.win_controller.current_window = None
+        else:
+            log.warning("Nessuna finestra corrente da chiudere.")
 
 
 

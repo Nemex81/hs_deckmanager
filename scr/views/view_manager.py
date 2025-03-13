@@ -28,10 +28,11 @@ class WinController:
             log.error("Container non fornito al WinController.")
             raise ValueError("Container non fornito al WinController.")
 
-        self.factory = self._select_factory()           # Seleziona la factory in base al flag
-        self.windows = {}                               # Dizionario per memorizzare le finestre
-        self.current_window = None                      # Finestra corrente
-        self.parent_stack = []                          # Stack per tenere traccia delle finestre genitore
+        # Inizializza le altre proprietà
+        self.factory = self._select_factory()                               # Seleziona la factory in base al flag
+        self.windows = {}                                                   # Dizionario per memorizzare le finestre
+        self.current_window = None                                          # Finestra corrente
+        self.parent_stack = []                                              # Stack per tenere traccia delle finestre genitore
 
 
     def _select_factory(self):
@@ -45,7 +46,25 @@ class WinController:
         """ Restituisce la finestra corrente. """
         return self.current_window
 
-    def create_window(self, parent=None, controller=None, key=None, **kwargs):
+    def create_window(self, parent=None, key=None, **kwargs):
+        """
+        Crea una finestra senza renderla visibile.
+        Args:
+            key: Chiave della finestra da creare.
+            parent: Finestra genitore.
+            **kwargs: Parametri aggiuntivi specifici per la finestra.
+        """
+        log.info(f"Creazione finestra: {key}")
+        view = self.factory.create_window(key=key, parent=parent, **kwargs)
+        if view:
+            view.Bind(wx.EVT_CLOSE, lambda e: self.close_current_window())
+            self.windows[key] = view
+            log.info(f"Finestra '{key}' creata con genitore: {parent}")
+        else:
+            log.error(f"Finestra '{key}' non creata.")
+            raise ValueError(f"Finestra '{key}' non creata.")
+
+    def last_create_window(self, parent=None, controller=None, key=None, **kwargs):
         """
         Crea una finestra senza renderla visibile utilizzando la factory.
         
@@ -123,7 +142,25 @@ class WinController:
         self.open_window(eg.WindowKey.DECK, parent)
 
 
-    def open_window(self, window_key, parent=None, **kwargs):
+    def open_window(self, window_key, parent=None):
+        """
+        Mostra una finestra esistente.
+        Args:
+            window_key: Chiave della finestra da mostrare.
+            parent: Finestra genitore.
+        """
+        if window_key not in self.windows:
+            log.error(f"Finestra '{window_key}' non trovata.")
+            raise ValueError(f"Finestra '{window_key}' non trovata.")
+
+        if self.current_window:
+            self.current_window.Hide()
+            self.parent_stack.append(self.current_window)
+
+        self.current_window = self.windows[window_key]
+        self.current_window.Show()
+
+    def last_open_window(self, window_key, parent=None, **kwargs):
         if window_key not in self.windows:
             log.error(f"Finestra '{window_key}' non creata.")
             raise ValueError(f"Finestra '{window_key}' non creata.")
@@ -150,6 +187,14 @@ class WinController:
 
 
     def close_current_window(self):
+        """
+        Chiude la finestra corrente.
+        """
+        if self.current_window:
+            self.current_window.Hide()
+            self.current_window = None
+
+    def last_close_current_window(self):
         """
         Chiude la finestra corrente e ripristina il genitore.
         """

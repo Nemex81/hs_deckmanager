@@ -34,8 +34,8 @@ class AppInitializer:
     def __init__(self):
         self.container = DependencyContainer()
         self.win_controller = None
-        self.initialize_app()
-        self.start_app()
+        #self.initialize_app()
+        #self.start_app()
 
 
     def initialize_app(self):
