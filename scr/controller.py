@@ -588,9 +588,9 @@ class MainController(LogycBisness):
             **kwargs: Parametri aggiuntivi per la finestra.
         """
         log.info(f"Apertura finestra: {window_key}")
-        if self.win_controller.get_current_window():
+        if self.current_window:
             log.info("Nascondo la finestra corrente prima di aprirne una nuova.")
-            self.win_controller.get_current_window().Hide()
+            self.current_window().Hide()
 
         # Usa il WinController per creare/aprire la finestra
         self.win_controller.create_window(parent=parent, key=window_key, **kwargs)
@@ -600,17 +600,17 @@ class MainController(LogycBisness):
         """
         Chiude la finestra corrente e ripristina la finestra genitore.
         """
-        current_window = self.win_controller.get_current_window()
+        current_window = self.current_window()
         if current_window:
             log.info(f"Chiudo la finestra corrente: {current_window}")
             self.win_controller.close_current_window()
             if self.win_controller.parent_stack:
                 parent_window = self.win_controller.parent_stack.pop()
                 parent_window.Show()
-                self.win_controller.current_window = parent_window
+                self.current_window = parent_window
             else:
                 log.warning("Nessuna finestra genitore trovata.")
-                self.win_controller.current_window = None
+                self.current_window = None
         else:
             log.warning("Nessuna finestra corrente da chiudere.")
 
