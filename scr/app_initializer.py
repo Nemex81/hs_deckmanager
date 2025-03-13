@@ -78,26 +78,36 @@ class AppInitializer:
         if not self.container.has("widget_factory"):
             log.error("WidgetFactory non registrata correttamente.")
         else:
-            log.info("WidgetFactory registrata correttamente.")
+            log.debug("ColorManager, FocusHandler e WidgetFactory registrati correttamente.")
 
         # Gestione del database
         db_manager = DbManager()
         self.container.register("db_manager", lambda: db_manager)
         if not self.container.has("db_manager"):
             log.error("DbManager non registrato correttamente.")
+        else:
+            log.debug("DbManager registrato correttamente.")
 
         # Registra ScreenReader
         self.container.register("vocalizer", lambda: ScreenReader())
         if not self.container.has("vocalizer"):
             log.error("ScreenReader non registrato correttamente.")
-
-        # Registra i controller
+        else:
+            log.debug("ScreenReader registrato correttamente.")
 
         # Registra mainController
         self.container.register("main_controller", lambda: MainController(container=self.container))
+        if not self.container.has("main_controller"):
+            log.error("MainController non registrato correttamente.")
+        else:
+            log.debug("MainController registrato correttamente.")
 
         #Registra WinController
         self.container.register("win_controller", lambda: WinController(container=self.container))
+        if not self.container.has("win_controller"):
+            log.error("WinController non registrato correttamente.")
+        else:
+            log.debug("WinController registrato correttamente.")
 
         # Registra il dizionario delle finestre
         self.container.register("all_win", lambda: {
@@ -107,6 +117,12 @@ class AppInitializer:
             eg.WindowKey.DECK: DeckViewFrame,
         })
 
+        # Verifica che il dizionario delle finestre sia registrato
+        if not self.container.has("all_win"):
+            log.error("Dizionario delle finestre non registrato correttamente.")
+        else:
+            log.debug("Dizionario delle finestre registrato correttamente.")
+
         log.info("Registrazione delle dipendenze completata.")
 
 
@@ -114,15 +130,25 @@ class AppInitializer:
         """Inizializza i controller tramite DependencyContainer."""
 
         log.info("Inizializzazione dei controller tramite DependencyContainer.")
+
         self.main_controller = self.container.resolve("main_controller")
+        if not self.main_controller:
+            log.error("MainController non inizializzato correttamente.")
+        else:
+            log.debug("MainController inizializzato correttamente.")
+
         self.win_controller = self.container.resolve("win_controller")
+        if not self.win_controller:
+            log.error("WinController non inizializzato correttamente.")
+        else:
+            log.debug("WinController inizializzato correttamente.")
+
         log.info("Inizializzazione dei controller completata.")
 
 
     def start_app(self):
         """Avvia l'applicazione."""
         log.info("Avvio dell'applicazione.")
-        self.main_controller = self.container.resolve("main_controller")
         self.main_controller.start_app()
 
 
