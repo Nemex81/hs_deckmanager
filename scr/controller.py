@@ -566,14 +566,12 @@ class MainController(LogycBisness):
     def start_app(self):
         """Avvia l'applicazione."""
 
-        log.info("Avvio dell'applicazione.")
+        log.info("Preparazione dell'avvio applicazione.")
 
         app = wx.App(False)
 
         # Crea e mostra la finestra principale
-        #self.win_controller.create_main_window(parent=None)#, controller=self.main_controller)
-        #self.win_controller.open_window(window_key=eg.WindowKey.MAIN)
-        self.open_window(eg.WindowKey.MAIN)     # Apre la finestra principale
+        self.open_window(eg.WindowKey.MAIN)
 
         # Avvia il ciclo principale dell'applicazione
         app.MainLoop()
@@ -608,6 +606,7 @@ class MainController(LogycBisness):
                 parent_window = self.win_controller.parent_stack.pop()
                 parent_window.Show()
                 self.current_window = parent_window
+
             else:
                 log.warning("Nessuna finestra genitore trovata.")
                 self.current_window = None
