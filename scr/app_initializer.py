@@ -148,7 +148,7 @@ class AppInitializer:
 
     def start_app(self):
         """Avvia l'applicazione."""
-        log.info("Avvio dell'applicazione.")
+        log.info("Avvio istanziazione dei controller dell'applicazione.")
         self.main_controller.start_app()
 
 

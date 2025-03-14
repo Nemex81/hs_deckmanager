@@ -37,7 +37,7 @@ class DefaultController:
             log.warning("Nessuna finestra corrente rilevata.")
             return None
 
-        return self.win_controller.get_current_window()
+        return self.current_window()
 
 
     @current_window.setter
