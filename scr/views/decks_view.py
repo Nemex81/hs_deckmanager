@@ -388,7 +388,7 @@ class DecksViewFrame(ListView):
             self.controller.select_last_deck(self)
             wx.MessageBox("Mazzo aggiunto con successo.", "Successo")
         else:
-            wx.messageBox("Errore durante l'aggiunta del mazzo.", "Errore")
+            wx.MessageBox("Errore durante l'aggiunta del mazzo.", "Errore")
 
 
     def on_copy_deck(self, event):

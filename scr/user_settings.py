@@ -13,6 +13,7 @@
 import wx, os, sys
 from enum import Enum
 from pathlib import Path
+from scr.views.builder.default_settings import *
 from utyls import enu_glob as eg
 from utyls import logger as log
 
