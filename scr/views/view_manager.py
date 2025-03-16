@@ -68,21 +68,21 @@ class WinController:
     def create_main_window(self, parent=None, controller=None):
         """Crea la finestra principale."""
         log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.MAIN}")
-        self.create_window(parent=parent, controller=controller, key=eg.WindowKey.MAIN)
+        self.create_window(parent=parent, key=eg.WindowKey.MAIN)
         self.open_window(eg.WindowKey.MAIN, parent)
 
 
     def create_collection_window(self, parent=None, controller=None):
         """Crea la finestra della collezione."""
         log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.COLLECTION}")
-        self.create_window(parent=parent, controller=controller, key=eg.WindowKey.COLLECTION)
+        self.create_window(parent=parent, key=eg.WindowKey.COLLECTION)
         self.open_window(eg.WindowKey.COLLECTION, parent)
 
 
     def create_decks_window(self, parent=None, controller=None):
         """Crea la finestra dei mazzi."""
         log.info(f"Tentativo di creazione finestra con chiave: {eg.WindowKey.DECKS}")
-        self.create_window(parent=parent, controller=controller, key=eg.WindowKey.DECKS)
+        self.create_window(parent=parent, key=eg.WindowKey.DECKS)
         self.open_window(eg.WindowKey.DECKS, parent)
 
 
@@ -95,11 +95,8 @@ class WinController:
             raise ValueError("'deck_name' è obbligatorio per DeckViewFrame")
 
         log.debug(f"chiamata alla factory per la creazione della finestra con chiave: {eg.WindowKey.DECK}")
-        resolved_controller = controller or self.container.resolve("main_controller")
         self.create_window(
             parent=parent,
-            #controller=controller,
-            controller=resolved_controller,
             key=eg.WindowKey.DECK,
             deck_name=deck_name
         )
@@ -118,10 +115,7 @@ class WinController:
             log.error(f"Finestra '{window_key}' non trovata.")
             raise ValueError(f"Finestra '{window_key}' non trovata.")
 
-        if self.current_window:
-            self.current_window.Hide()
-            self.parent_stack.append(self.current_window)
-
+        self.close_current_window()
         self.current_window = self.windows[window_key]
         self.current_window.Show()
 
@@ -132,10 +126,11 @@ class WinController:
         """
         if self.current_window:
             self.current_window.Hide()
+            self.parent_stack.append(self.current_window)
             self.current_window = None
 
 
-    def close_current_window(self):
+    def last_close_current_window(self):
         """
         Chiude la finestra corrente e ripristina il genitore.
         """
