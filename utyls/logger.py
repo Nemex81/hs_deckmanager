@@ -33,7 +33,7 @@ import logging, os, sys
 
 # Configurazione del logging
 handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
-logging.basicConfig(handlers=[handler], level=logging.INFO)
+logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
 
 

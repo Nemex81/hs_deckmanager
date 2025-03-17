@@ -342,6 +342,21 @@ class DbManager:
 
 
     def sync_cards_with_database(self, deck_string):
+        """Sincronizza le carte del mazzo con il database."""
+        log.info("Inizio sincronizzazione delle carte con il database.")
+        try:
+            cards = self.parse_cards_from_deck(deck_string)
+            with db_session() as session:
+                for card_data in cards:
+                    card = session.query(Card).filter_by(name=card_data["name"]).first()
+                    if not card:
+                        card = Card(name=card_data["name"], mana_cost=card_data["mana_cost"], card_type="Unknown")
+                        session.add(card)
+                        session.commit()
+        except Exception as e:
+            log.error(f"Errore durante la sincronizzazione delle carte: {str(e)}")
+
+    def last_sync_cards_with_database(self, deck_string):
         """ Sincronizza le carte del mazzo con il database. """
         log.info("Inizio sincronizzazione delle carte con il database.")
         try:
@@ -632,7 +647,7 @@ class DbManager:
 
         try:
             with db_session() as session:
-                deck = self.db_manager.get_deck(deck_name)
+                deck = self.get_deck(deck_name)
                 if deck:
                     #total_cards = session.query(DeckCard).filter_by(deck_id=deck.id).count()
                     total_cards = sum(card["quantity"] for card in deck["cards"])
