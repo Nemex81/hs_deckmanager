@@ -343,63 +343,33 @@ class DbManager:
 
     def sync_cards_with_database(self, deck_string):
         """Sincronizza le carte del mazzo con il database."""
+
         log.info("Inizio sincronizzazione delle carte con il database.")
         try:
             cards = self.parse_cards_from_deck(deck_string)
+            if not cards:
+                log.error("Nessuna carta trovata nel mazzo.")
+                return
+
             with db_session() as session:
                 for card_data in cards:
                     card = session.query(Card).filter_by(name=card_data["name"]).first()
                     if not card:
+                        log.debug(f"Carta '{card_data['name']}' non trovata nel database. Aggiunta in corso...")
                         card = Card(name=card_data["name"], mana_cost=card_data["mana_cost"], card_type="Unknown")
                         session.add(card)
                         session.commit()
+
+        except SQLAlchemyError as e:
+            log.error(f"Errore del database durante la sincronizzazione delle carte: {str(e)}")
+            raise
+
         except Exception as e:
             log.error(f"Errore durante la sincronizzazione delle carte: {str(e)}")
 
-    def last_sync_cards_with_database(self, deck_string):
-        """ Sincronizza le carte del mazzo con il database. """
-        log.info("Inizio sincronizzazione delle carte con il database.")
-        try:
-            cards = self.parse_cards_from_deck(deck_string)
-            card_names = [card["name"] for card in cards]
 
-            with db_session():
-                # Recupera tutte le carte esistenti in una singola query
-                existing_cards = session.query(Card.name).filter(Card.name.in_(card_names)).all()
-                existing_card_names = {card.name for card in existing_cards}
+        log.debug("Sincronizzazione delle carte completata.")
 
-                # Filtra le nuove carte
-                new_cards_data = [card for card in cards if card["name"] not in existing_card_names]
-
-                # Crea una lista di oggetti Card per le nuove carte
-                new_cards = [
-                    Card(
-                        id=card_data["id"],
-                        name=card_data["name"],
-                        class_name="Unknown",
-                        mana_cost=card_data["mana_cost"],
-                        card_type="Unknown",
-                        spell_type="Unknown",
-                        card_subtype="Unknown",
-                        rarity="Unknown",
-                        expansion="Unknown"
-                    )
-                    for card_data in new_cards_data
-                ]
-
-                # Inserisci tutte le nuove carte in una sola operazione
-                session.bulk_save_objects(new_cards)
-                session.commit()
-
-            log.info("Sincronizzazione delle carte completata con successo.")
-            return True
-
-        except SQLAlchemyError as e:
-            log.error(f"Errore del database durante la sincronizzazione: {str(e)}")
-            raise
-        except Exception as e:
-            log.error(f"Errore imprevisto durante la sincronizzazione: {str(e)}")
-            raise
 
     def parse_card_line(self, line):
         """ Estrae le informazioni da una riga di testo rappresentante una carta. """
