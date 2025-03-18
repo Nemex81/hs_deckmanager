@@ -34,7 +34,7 @@ from utyls import logger as log
 
 # Configurazione del database
 DATABASE_PATH = "hearthstone_decks_storage.db"                      # Percorso del database SQLite
-engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=False)     # Connessione al database SQLite
+engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=False, connect_args={"timeout": 30})     # Connessione al database SQLite
 Session = sessionmaker(bind=engine)                                 # Sessione del database per l'interazione con il database
 session = Session()                                                 # Sessione del database per l'interazione con il database
 Base = declarative_base()                                           # Base per i modelli SQLAlchemy
