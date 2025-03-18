@@ -79,46 +79,6 @@ def load_cards_from_db(filters=None):
         cards = query.order_by(Card.mana_cost, Card.name).all()
         return [serialize_card(card) for card in cards]
 
-def last_load_cards_from_db(filters=None):
-    """Carica le carte dal database e le restituisce come dizionari."""
-
-    with db_session() as session:
-        query = session.query(Card)
-        if filters:
-            # Applica i filtri in modo combinato
-            if filters.get("name"):
-                query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
-            if filters.get("mana_cost") and filters["mana_cost"] not in filters_options:
-                query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-            
-            if filters.get("card_type") and filters["card_type"] not in filters_options:
-                query = query.filter(Card.card_type == filters["card_type"])
-
-            if filters.get("spell_type") and filters["spell_type"] not in filters_options:
-                query = query.filter(Card.spell_type == filters["spell_type"])
-
-            if filters.get("card_subtype") and filters["card_subtype"] not in filters_options:
-                query = query.filter(Card.card_subtype == filters["card_subtype"])
-
-            if filters.get("attack") and filters["attack"] not in filters_options:
-                query = query.filter(Card.attack == int(filters["attack"]))
-
-            if filters.get("health") and filters["health"] not in filters_options:
-                query = query.filter(Card.health == int(filters["health"]))
-
-            if filters.get("durability") and filters["durability"] not in filters_options:
-                query = query.filter(Card.durability == int(filters["durability"]))
-
-            if filters.get("rarity") and filters["rarity"] not in filters_options:
-                query = query.filter(Card.rarity == filters["rarity"])
-
-            if filters.get("expansion") and filters["expansion"] not in filters_options:
-                query = query.filter(Card.expansion == filters["expansion"])
-
-        log.info(f"Carte trovate: {query.count()}")
-        cards = query.order_by(Card.mana_cost, Card.name).all()
-        return [serialize_card(card) for card in cards]  # Restituisci una lista di dizionari
-
 
 def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
     """Carica le carte di un mazzo dal database e le aggiunge alla lista."""
@@ -328,98 +288,6 @@ class DbManager:
             log.error(f"Errore durante l'aggiunta del mazzo: {str(e)}")
             return False
 
-    def last_add_deck_from_clipboard(self, deck_string=None):
-        """ Aggiunge un mazzo copiato dagli appunti al database. """
-        try:
-            # Se non viene passato un deck_string, prova a leggerlo dagli appunti
-            if not deck_string:
-                deck_string = pyperclip.paste()
-
-            # Verifica se il mazzo è valido
-            if not self.is_valid_deck(deck_string):
-                log.error("Il mazzo copiato non è valido.")
-                return False
-
-            # Estrae i metadati del mazzo
-            metadata = self.parse_deck_metadata(deck_string)
-            deck_name = metadata["name"]
-
-            # Verifica se il mazzo esiste già nel database
-            if self.get_deck(deck_name):
-                log.warning(f"Il mazzo '{deck_name}' è già presente nel database.")
-                return False
-
-            # Estrae le carte dal mazzo
-            cards = self.parse_cards_from_deck(deck_string)
-            if not cards:
-                log.error("Nessuna carta trovata nel mazzo.")
-                return False
-
-            with db_session() as session:
-                # Crea il nuovo mazzo
-                new_deck = Deck(
-                    name=deck_name,
-                    player_class=metadata["player_class"],
-                    game_format=metadata["game_format"]
-                )
-                session.add(new_deck)
-                session.flush()  # Ottieni l'ID del nuovo mazzo
-
-                # Sincronizza le carte con il database
-                self.sync_cards_with_database(deck_string)
-
-                # Aggiunge le relazioni tra mazzo e carte
-                deck_cards = []
-                for card_data in cards:
-                    card = session.query(Card).filter_by(name=card_data["name"]).first()
-                    if not card:
-                        # Se la carta non esiste, la crea
-                        card = Card(
-                            name=card_data["name"],
-                            class_name="Unknown",
-                            mana_cost=card_data["mana_cost"],
-                            card_type="Unknown",
-                            spell_type="Unknown",
-                            card_subtype="Unknown",
-                            rarity="Unknown",
-                            expansion="Unknown"
-                        )
-                        session.add(card)
-                        session.flush()  # Ottieni l'ID della nuova carta
-
-                    # Aggiunge la relazione tra mazzo e carta
-                    deck_cards.append(DeckCard(
-                        deck_id=new_deck.id,
-                        card_id=card.id,
-                        quantity=card_data["quantity"]
-                    ))
-
-                # Aggiunge tutte le relazioni in una sola operazione
-                session.bulk_save_objects(deck_cards)
-                session.commit()
-
-            log.info(f"Mazzo '{deck_name}' aggiunto con successo.")
-            return True
-
-
-        except pyperclip.PyperclipException as e:
-            log.error(f"Errore negli appunti: {str(e)}")
-            return False
-
-        except ValueError as e:
-            log.error(f"Errore di validazione: {str(e)}")
-            return False
-
-        except SQLAlchemyError as e:
-            log.error(f"Errore del database: {str(e)}")
-            session.rollback()  # Annulla le modifiche in caso di errore
-            return False
-
-        except Exception as e:
-            log.error(f"Errore imprevisto durante l'aggiunta del mazzo: {str(e)}")
-            session.rollback()  # Annulla le modifiche in caso di errore
-            return False
-
 
     def sync_cards_with_database(self, deck_string):
         """Sincronizza le carte del mazzo con il database."""
@@ -455,35 +323,6 @@ class DbManager:
         except Exception as e:
             log.error(f"Errore durante la sincronizzazione delle carte: {str(e)}")
             raise
-
-        log.debug("Sincronizzazione delle carte completata.")
-
-    def last_sync_cards_with_database(self, deck_string):
-        """Sincronizza le carte del mazzo con il database."""
-
-        log.info("Inizio sincronizzazione delle carte con il database.")
-        try:
-            cards = self.parse_cards_from_deck(deck_string)
-            if not cards:
-                log.error("Nessuna carta trovata nel mazzo.")
-                return
-
-            with db_session() as session:
-                for card_data in cards:
-                    card = session.query(Card).filter_by(name=card_data["name"]).first()
-                    if not card:
-                        log.debug(f"Carta '{card_data['name']}' non trovata nel database. Aggiunta in corso...")
-                        card = Card(name=card_data["name"], mana_cost=card_data["mana_cost"], card_type="Unknown")
-                        session.add(card)
-                        session.commit()
-
-        except SQLAlchemyError as e:
-            log.error(f"Errore del database durante la sincronizzazione delle carte: {str(e)}")
-            raise
-
-        except Exception as e:
-            log.error(f"Errore durante la sincronizzazione delle carte: {str(e)}")
-
 
         log.debug("Sincronizzazione delle carte completata.")
 
@@ -589,41 +428,6 @@ class DbManager:
                 }
         return None
 
-    def last_get_deck(self, deck_name):
-        """Restituisce il contenuto di un mazzo dal database."""
-
-        with db_session():
-            deck = session.query(Deck).filter_by(name=deck_name).first()
-            if deck:
-                deck_cards = session.query(DeckCard).filter_by(deck_id=deck.id).all()
-                cards = []
-                for deck_card in deck_cards:
-                    card = session.query(Card).filter_by(id=deck_card.card_id).first()
-                    if card:
-                        cards.append({
-                            "id": card.id,
-                            "name": card.name,
-                            "mana_cost": card.mana_cost,
-                            "quantity": deck_card.quantity,
-                            "class_name": card.class_name,
-                            "card_type": card.card_type,
-                            "spell_type": card.spell_type,
-                            "card_subtype": card.card_subtype,
-                            "attack": card.attack,
-                            "health": card.health,
-                            "durability": card.durability,
-                            "rarity": card.rarity,
-                            "expansion": card.expansion
-                        })
-
-                return {
-                    "id": deck.id,
-                    "name": deck.name,
-                    "player_class": deck.player_class,
-                    "game_format": deck.game_format,
-                    "cards": cards
-                }
-
 
     def delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """
@@ -665,21 +469,6 @@ class DbManager:
                 }
         return None
 
-    def last_get_deck_by_name(self, deck_name):
-        """Restituisce i dettagli di un mazzo specifico."""
-
-        with db_session() as session:
-            deck = session.query(Deck).filter_by(name=deck_name).first()
-            if deck:
-                return {
-                    "id": deck.id,
-                    "name": deck.name,
-                    "player_class": deck.player_class,
-                    "game_format": deck.game_format,
-                    "cards": self.get_deck_cards(deck.id)
-                }
-            return None
-
 
     def get_card_by_name(self, card_name):
         """Restituisce una carta dal database in base al nome."""
@@ -689,13 +478,6 @@ class DbManager:
                 return serialize_card(card)
         return None
 
-    def last_get_card_by_name(self, card_name):
-        """Restituisce una carta dal database in base al nome."""
-        with db_session():
-            card = session.query(Card).filter_by(name=card_name).first()
-            if card:
-                return serialize_card(card)
-            return None
 
     def get_cards(self, filters=None):
         """Restituisce le carte dal database per la finestra collezzione generale in base ai filtri."""
@@ -758,21 +540,6 @@ class DbManager:
                     query = query.filter(Deck.player_class.ilike(f"%{filters['player_class']}%"))
                 if filters.get("game_format"):
                     query = query.filter(Deck.game_format.ilike(f"%{filters['game_format']}%"))
-            return query.all()
-
-    def last_get_decks(self, filters=None):
-        """Restituisce tutti i mazzi con opzioni di filtro."""
-
-        with db_session() as session:
-            query = session.query(Deck)
-            if filters:
-                if filters.get("name"):
-                    query = query.filter(Deck.name.ilike(f"%{filters['name']}%"))
-                if filters.get("player_class"):
-                    query = query.filter(Deck.player_class.ilike(f"%{filters['player_class']}%"))
-                if filters.get("game_format"):
-                    query = query.filter(Deck.game_format.ilike(f"%{filters['game_format']}%"))
-
             return query.all()
 
 
@@ -898,44 +665,6 @@ class DbManager:
                 total_cards = stats.get("Numero Carte", 0)
                 log.info(f"Totale carte per {deck.name}: {total_cards}")
                 card_list.SetItem(index, 3, str(total_cards))
-        return True
-
-    def last_load_decks(self, card_list=None):
-        """ carica i mazzi dal database. """
-
-        if not card_list:
-            log.error("Errore durante il caricamento dei mazzi. Nessuna lista passata.")
-            raise ValueError("Errore durante il caricamento dei mazzi. Nessuna lista passata.")
-
-        # carichiamo i mazzi dal database usando db_session
-        with db_session() as session:
-            decks = session.query(Deck).all()
-            if not decks:
-                log.warning("Nessun mazzo trovato.")
-                return False
-
-            for deck in decks:
-                log.info(f"Caricamento deck: {deck.name}")
-                index = card_list.InsertItem(card_list.GetItemCount(), deck.name)
-                card_list.SetItem(index, 1, deck.player_class)
-                card_list.SetItem(index, 2, deck.game_format)
-    
-                # Calcola e visualizza il numero totale di carte
-                deck_name = deck.name
-                stats = self.get_deck_statistics(deck_name)
-                if not stats:
-                    log.warning(f"Statistiche non disponibili per {deck_name}.")
-                    return False
-
-                #total_cards = stats["Numero Carte"]
-                total_cards = stats.get("Numero Carte", 0)
-                if not total_cards:
-                    log.warning(f"Numero carte non disponibile per {deck_name}.")
-                    return False
-
-                log.info(f"Totale carte per {deck.name}: {total_cards}")
-                card_list.SetItem(index, 3, str(total_cards))  # Aggiunge il numero totale di carte nella nuova colonna
-
         return True
 
 
