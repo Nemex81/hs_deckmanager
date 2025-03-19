@@ -17,7 +17,6 @@ import wx
 import wx.lib.newevent
 from abc import ABC, abstractmethod
 from .color_system import ColorManager, AppColors, ColorTheme
-from .focus_handler import FocusHandler
 from utyls import helper as hp
 from utyls import enu_glob as eg
 from utyls import logger as log

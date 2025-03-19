@@ -162,6 +162,15 @@ class ColorManager:
         list_ctrl.Refresh()
 
 
+    def reset_focus_style(self, element):
+        """
+        Resetta lo stile di focus di un elemento.
+        :param element: L'elemento a cui resettare lo stile.
+        """
+        self.apply_default_style(element)
+        self.focus_style_applied = False
+
+
     def reset_all_styles(self, container):
         """
         Resetta lo stile di tutti gli elementi figli di un contenitore.

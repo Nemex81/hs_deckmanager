@@ -10,7 +10,6 @@
 
 # Lib
 import wx
-from .focus_handler import FocusHandler
 from .color_system import ColorManager
 from utyls import enu_glob as eg
 from utyls import helper as hp
