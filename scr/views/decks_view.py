@@ -129,9 +129,9 @@ class DecksViewFrame(ListView):
             parent=self.panel,
             columns=[("Mazzo", 600), ("Classe", 500), ("Formato", 300), ("Carte Totali", 300)]  # 
         )
-        self.color_manager.apply_theme_to_window(self.card_list)  # Applica il tema alla lista
-        self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)  # Ordina la lista per colonna
-        self.card_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)  # Doppio clic su un mazzo
+
+        #self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)  # Ordina la lista per colonna
+        #self.card_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)  # Doppio clic su un mazzo
 
         # Carichiamo i mazzi
         self.load_decks()

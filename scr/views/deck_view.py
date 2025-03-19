@@ -91,8 +91,11 @@ class DeckViewFrame(ListView):
             ]
         )
 
+        #self.card_list.Bind(wx.EVT_LIST_COL_CLICK, self.on_column_click)            # Ordina la lista per colonna
+        #self.card_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_item_activated)     # Doppio clic su un mazzo
+
         # Collega gli eventi di focus alla lista
-        self.bind_focus_events(self.card_list)
+        #self.bind_focus_events(self.card_list)
 
         # Applica lo stile predefinito alla lista
         #self.cm.apply_default_style(self.card_list)
