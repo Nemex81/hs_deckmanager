@@ -130,6 +130,19 @@ class ColorManager:
         list_ctrl.SetItemTextColour(item_index, self.get_color(AppColors.DEFAULT_TEXT))
 
 
+    def apply_selection_style(self, element, item_index=None):
+        if isinstance(element, wx.ListCtrl):
+            if item_index is not None:
+                element.SetItemBackgroundColour(item_index, self.get_color(AppColors.FOCUS_BG))
+                element.SetItemTextColour(item_index, self.get_color(AppColors.FOCUS_TEXT))
+            else:
+                for i in range(element.GetItemCount()):
+                    element.SetItemBackgroundColour(i, self.get_color(AppColors.DEFAULT_BG))
+                    element.SetItemTextColour(i, self.get_color(AppColors.DEFAULT_TEXT))
+        else:
+            self.apply_focus_style(element)
+
+
     def apply_selection_style_to_list_item(self, list_ctrl, item_index):
         """
         Applica lo stile di selezione a un elemento di una ListCtrl.
@@ -206,6 +219,13 @@ class ColorManager:
         return self.theme
 
 
+    def update_all_styles(self, window):
+        self.apply_theme_to_window(window)
+        for child in window.GetChildren():
+            if isinstance(child, wx.Panel):
+                self.update_all_styles(child)  # Ricorsione per i pannelli annidati
+
+
     def apply_theme_to_window(self, window):
         """Applica lo stile corrente a una finestra e ai suoi figli."""
 
@@ -228,6 +248,15 @@ class ColorManager:
             elif isinstance(child, wx.SearchCtrl):
                 self.apply_default_style(child)
 
+            elif isinstance(child, wx.Choice):
+                self.apply_default_style(child)
+
+            elif isinstance(child, wx.ComboBox):
+                self.apply_default_style(child)
+
+            elif isinstance(child, wx.ListBox):
+                self.apply_default_style(child)
+
             else:
                 log.warning(f"Elemento non gestito: {child}")
                 raise ValueError(f"Elemento non gestito: {child}")
@@ -245,6 +274,12 @@ class ColorManager:
         event.Skip()
 
     def on_kill_focus(self, event):
+        if self.selected_item:
+            self.reset_focus_style(self.selected_item)
+        self.selected_item = None
+        event.Skip()
+
+    def last_on_kill_focus(self, event):
         self.reset_focus_style(self.selected_item)
         self.selected_item = None
         event.Skip()

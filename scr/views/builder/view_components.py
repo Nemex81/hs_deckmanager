@@ -288,7 +288,13 @@ class CustomListCtrl(wx.ListCtrl):
         # Collega l'evento di selezione degli elementi
         self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
+    # In CustomListCtrl
     def on_item_focused(self, event):
+        selected_item = event.GetIndex()
+        self.cm.apply_selection_style_to_list(self, selected_item)
+        self.Refresh()
+
+    def last_on_item_focused(self, event):
         """
         Gestisce l'evento di focus su una riga della lista.
         """
