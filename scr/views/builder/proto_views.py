@@ -72,7 +72,7 @@ class BasicView(wx.Frame):
         self.controller = None             # Controller per l'interfaccia
         self.db_manager = None             # Gestore del database
         self.color_manager = None           # Gestore dei colori
-        self.focus_handler = None           # Gestore degli eventi di focus
+        #self.focus_handler = None           # Gestore degli eventi di focus
 
         # Risolvi le dipendenze dal container
         if self.container:
@@ -80,13 +80,13 @@ class BasicView(wx.Frame):
             self.controller = self.container.resolve("main_controller")
             self.cm = self.container.resolve("color_manager")
             self.color_manager = self.container.resolve("color_manager")
-            self.focus_handler = self.container.resolve("focus_handler")
+            #self.focus_handler = self.container.resolve("focus_handler")
             self.widget_factory = self.container.resolve("widget_factory")
 
         else:
             self.cm = ColorManager()
             self.color_manager = ColorManager()
-            self.focus_handler = FocusHandler()
+            #self.focus_handler = FocusHandler()
 
         # Colori personalizzati per lo stato attivo e inattivo
         self.FOCUS_BG_COLOR = self.cm.get_color(AppColors.FOCUS_BG)
@@ -152,7 +152,6 @@ class BasicView(wx.Frame):
 
     def reset_focus_style_for_card_list(self, selected_item=None):
         """ Resetta lo stile di tutte le righe. """
-
 
         for i in range(self.card_list.GetItemCount()):
             if i != selected_item:

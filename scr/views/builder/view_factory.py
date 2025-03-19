@@ -33,7 +33,7 @@ class WidgetFactory:
     Utilizza il DependencyContainer per risolvere le dipendenze necessarie.
     """
 
-    def __init__(self, color_manager, focus_handler, **kwargs):
+    def __init__(self, color_manager, **kwargs):
         """
         Inizializza la factory con un container di dipendenze.
         Se non viene fornito un container, ne crea uno nuovo.
@@ -52,14 +52,6 @@ class WidgetFactory:
             raise ValueError("ColorManager non fornito al WidgetFactory.")
         else:
             log.info("ColorManager risolto correttamente in ViewFactory.")
-
-        self.focus_handler = focus_handler
-        if not self.focus_handler:
-            log.error("FocusHandler non fornito al WidgetFactory.")
-            raise ValueError("FocusHandler non fornito al WidgetFactory.")
-            
-        else:
-            log.info("FocusHandler risolto correttamente in ViewFactory.")
 
 
     def create_button(self, parent, label, size=(180, 70), font_size=16, event_handler=None):
@@ -81,7 +73,7 @@ class WidgetFactory:
 
         # Applica lo stile predefinito e collega gli eventi di focus
         self.color_manager.apply_default_style(button)
-        self.focus_handler.bind_focus_events(button)
+        self.color_manager.bind_focus_events(button)
 
         log.debug(f"Creato pulsante: {label}")
         return button
@@ -98,11 +90,9 @@ class WidgetFactory:
         """
 
         color_manager = self.color_manager
-        focus_handler = self.focus_handler
         list_ctrl = vc.CustomListCtrl(
             parent,
             color_manager=color_manager,
-            focus_handler=focus_handler,
             style=style
         )
 
@@ -134,7 +124,7 @@ class WidgetFactory:
 
         # Applica lo stile predefinito e collega gli eventi di focus
         self.color_manager.apply_default_style(search_ctrl)
-        self.focus_handler.bind_focus_events(search_ctrl)
+        self.color_manager.bind_focus_events(search_ctrl)
 
         log.debug(f"Creata barra di ricerca con placeholder: {placeholder}")
         return search_ctrl

@@ -44,6 +44,8 @@ class ColorManager:
     """
 
     def __init__(self, theme=ColorTheme.DARK):
+        self.selected_item = None                   # Memorizza l'elemento selezionato
+        self.focus_style_applied = False            # Flag per lo stile di focus
         self.theme = theme
         self.colors = {
             ColorTheme.DARK: {
@@ -104,6 +106,7 @@ class ColorManager:
             self.get_color(AppColors.FOCUS_BG),
             self.get_color(AppColors.FOCUS_TEXT)
         )
+        self.focus_style_applied = True
 
     def apply_error_style(self, element):
         """
@@ -159,6 +162,41 @@ class ColorManager:
         list_ctrl.Refresh()
 
 
+    def reset_all_styles(self, container):
+        """
+        Resetta lo stile di tutti gli elementi figli di un contenitore.
+        :param container: Il contenitore i cui figli devono essere resettati.
+        """
+        for child in container.GetChildren():
+            if isinstance(child, (wx.Button, wx.ListCtrl)):
+                self.apply_default_style(child)
+
+
+    #@# sezione metodi per la gestione dei temi
+
+    def set_theme(self, theme):
+        """
+        Imposta il tema corrente.
+        :param theme: Un valore dell'enum ColorTheme.
+        """
+        self.theme = theme
+
+
+    def set_theme_dark(self):
+        """Imposta il tema scuro."""
+        self.set_theme(ColorTheme.DARK)
+
+
+    def set_theme_light(self):
+        """Imposta il tema chiaro."""
+        self.set_theme(ColorTheme.LIGHT)
+
+
+    def get_theme(self):
+        """Restituisce il tema corrente."""
+        return self.theme
+
+
     def apply_theme_to_window(self, window):
         """Applica lo stile corrente a una finestra e ai suoi figli."""
 
@@ -186,38 +224,21 @@ class ColorManager:
                 raise ValueError(f"Elemento non gestito: {child}")
 
 
-    def reset_all_styles(self, container):
-        """
-        Resetta lo stile di tutti gli elementi figli di un contenitore.
-        :param container: Il contenitore i cui figli devono essere resettati.
-        """
-        for child in container.GetChildren():
-            if isinstance(child, (wx.Button, wx.ListCtrl)):
-                self.apply_default_style(child)
+    #@@# sezione metodi per la gestione degli eventi di focus
 
-    def set_theme(self, theme):
-        """
-        Imposta il tema corrente.
-        :param theme: Un valore dell'enum ColorTheme.
-        """
-        self.theme = theme
+    def bind_focus_events(self, element):
+        element.Bind(wx.EVT_SET_FOCUS, self.on_focus)
+        element.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
 
+    def on_focus(self, event):
+        self.selected_item = event.GetEventObject()
+        self.apply_focus_style(self.selected_item)
+        event.Skip()
 
-    def set_theme_dark(self):
-        """Imposta il tema scuro."""
-        self.set_theme(ColorTheme.DARK)
-
-
-    def set_theme_light(self):
-        """Imposta il tema chiaro."""
-        self.set_theme(ColorTheme.LIGHT)
-
-
-    def get_theme(self):
-        """Restituisce il tema corrente."""
-        return self.theme
-
-
+    def on_kill_focus(self, event):
+        self.reset_focus_style(self.selected_item)
+        self.selected_item = None
+        event.Skip()
 
 
 
