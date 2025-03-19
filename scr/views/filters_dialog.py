@@ -16,6 +16,7 @@
 import wx
 from .builder.view_components import create_check_list_box, create_common_controls
 from .builder.proto_views import BasicDialog, SingleCardView
+from ..models import load_cards
 from utyls.enu_glob import EnuCardType, EnuSpellType , EnuSpellSubType, EnuPetSubType, EnuHero, EnuRarity, EnuExpansion
 from utyls import enu_glob as eg
 from utyls import helper as hp
@@ -30,7 +31,6 @@ class FilterDialog(SingleCardView):
     def __init__(self, parent):
         super().__init__(parent, title="Filtri di Ricerca", size=(420, 600))
         self.parent = parent
-        #elf.init_specific_ui_elements()
 
     def init_ui_elements(self):
         """Inizializza i componenti specifici per CardEditDialog."""
@@ -187,6 +187,7 @@ class FilterDialog(SingleCardView):
 
         :param btn_sizer: Il sizer a cui aggiungere i pulsanti.
         """
+
         # Pulsante "Applica"
         apply_btn = wx.Button(self.panel, label="Applica")
         apply_btn.Bind(wx.EVT_BUTTON, self.on_apply_filters)
@@ -201,23 +202,27 @@ class FilterDialog(SingleCardView):
     def on_apply_filters(self, event):
         """Gestisce l'applicazione dei filtri."""
 
+        log.debug("Applicazione dei filtri...")
+
         filters = {
             "name": self.controls["nome"].GetValue(),
-            "mana_cost": self.controls["costo_mana"].GetValue(),
+            "mana_cost": self.controls["costo_mana"].GetValue() if self.controls["costo_mana"].GetValue() != "Qualsiasi" else "",
             "card_type": self.controls["tipo"].GetValue(),
             "spell_type": self.controls["tipo_magia"].GetValue(),
             "card_subtype": self.controls["sottotipo"].GetValue(),
             "attack": self.controls["attacco"].GetValue(),
             "health": self.controls["vita"].GetValue(),
             "rarity": self.controls["rarita"].GetValue(),
-            "expansion": self.controls["espansione"].GetValue()
+            "expansion": self.controls["espansione"].GetValue(),
+            #"classi": [self.classes_listbox.GetString(i) for i in range(self.classes_listbox.GetCount()) if self.classes_listbox.IsChecked(i)]
         }
 
         # Chiude la finestra di dialogo e carica le carte filtrate
         if filters:
-            self.parent.load_cards(filters)
+            log.debug(f"Filtri applicati: {filters}")
+            self.parent.load_cards(filters=filters)
         else:
-            # Resetta i filtri
+            log.debug("Nessun filtro applicato.")
             self.reset_filters()
 
         self.EndModal(wx.ID_OK)

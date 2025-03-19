@@ -66,8 +66,7 @@ def serialize_card(card):
 
 
 def load_cards_from_db(filters=None):
-    """Carica le carte dal database e le restituisce come dizionari."""
-    with db_session() as session:  # Aggiungi il contesto
+    with db_session() as session:
         query = session.query(Card)
         if filters:
             # Applica i filtri in modo combinato
@@ -75,9 +74,34 @@ def load_cards_from_db(filters=None):
                 query = query.filter(Card.name.ilike(f"%{filters['name']}%"))
             if filters.get("mana_cost") and filters["mana_cost"] not in filters_options:
                 query = query.filter(Card.mana_cost == int(filters["mana_cost"]))
-            # ... (altri filtri)
+            
+            if filters.get("card_type") and filters["card_type"] not in filters_options:
+                query = query.filter(Card.card_type == filters["card_type"])
+
+            if filters.get("spell_type") and filters["spell_type"] not in filters_options:
+                query = query.filter(Card.spell_type == filters["spell_type"])
+
+            if filters.get("card_subtype") and filters["card_subtype"] not in filters_options:
+                query = query.filter(Card.card_subtype == filters["card_subtype"])
+
+            if filters.get("attack") and filters["attack"] not in filters_options:
+                query = query.filter(Card.attack == int(filters["attack"]))
+
+            if filters.get("health") and filters["health"] not in filters_options:
+                query = query.filter(Card.health == int(filters["health"]))
+
+            if filters.get("durability") and filters["durability"] not in filters_options:
+                query = query.filter(Card.durability == int(filters["durability"]))
+
+            if filters.get("rarity") and filters["rarity"] not in filters_options:
+                query = query.filter(Card.rarity == filters["rarity"])
+
+            if filters.get("expansion") and filters["expansion"] not in filters_options:
+                query = query.filter(Card.expansion == filters["expansion"])
+
+        log.info(f"Carte trovate: {query.count()}")
         cards = query.order_by(Card.mana_cost, Card.name).all()
-        return [serialize_card(card) for card in cards]
+        return [serialize_card(card) for card in cards]  # Restituisci una lista di dizionari
 
 
 def load_deck_from_db(deck_name=None, deck_content=None, filters=None, card_list=None):
@@ -481,7 +505,7 @@ class DbManager:
 
     def get_cards(self, filters=None):
         """Restituisce le carte dal database per la finestra collezzione generale in base ai filtri."""
-        return load_cards_from_db(filters)
+        return load_cards_from_db(filters=filters)
 
     def get_deck_statistics(self, deck_name):
         """Calcola statistiche dettagliate per un mazzo."""

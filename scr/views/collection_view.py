@@ -67,7 +67,7 @@ class CardCollectionFrame(ListView):
             event_handler=self.on_search
         )
         self.search_ctrl.Bind(wx.EVT_TEXT, self.on_search_text_change)  # Aggiunto per la ricerca dinamica
-        self.widget_factory.add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.add_to_sizer(search_sizer, self.search_ctrl, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Pulsante filtri avanzati
         self.btn_filters = self.widget_factory.create_button(
@@ -77,10 +77,10 @@ class CardCollectionFrame(ListView):
         )
         self.reset_focus_style(self.btn_filters)
         self.bind_focus_events(self.btn_filters)  # Collega gli eventi di focus
-        self.widget_factory.add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
+        self.add_to_sizer(search_sizer, self.btn_filters, flag=wx.LEFT | wx.RIGHT, border=5)
 
         # Aggiungo la barra di ricerca e i filtri al layout
-        self.widget_factory.add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.add_to_sizer(self.sizer, search_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Lista delle carte
         self.card_list = self.widget_factory.create_list_ctrl(
@@ -106,7 +106,7 @@ class CardCollectionFrame(ListView):
         #self.card_list.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.on_item_focused)
 
         # Aggiungo la lista alla finestra
-        self.widget_factory.add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.add_to_sizer(self.sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Pulsanti azione
         btn_panel = wx.Panel(self.panel)
@@ -126,17 +126,17 @@ class CardCollectionFrame(ListView):
             btn = self.widget_factory.create_button(btn_panel, label=label, event_handler=handler)
             self.bind_focus_events(btn)  # Collega gli eventi di focus
             self.reset_focus_style(btn)
-            self.widget_factory.add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
+            self.add_to_sizer(btn_sizer, btn, flag=wx.CENTER | wx.ALL, border=10)
 
         #resetto i colori di tutti i pulsanti
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungo i pulsanti al pannello
         btn_panel.SetSizer(btn_sizer)
-        self.widget_factory.add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
+        self.add_to_sizer(self.sizer, btn_panel, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
 
         # Separatore tra pulsanti e fondo finestra
-        self.widget_factory.add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.add_to_sizer(self.sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Carica le carte
         self.load_cards()
@@ -168,8 +168,13 @@ class CardCollectionFrame(ListView):
             log.error("La lista delle carte non è stata inizializzata.")
             raise ValueError("La lista delle carte non è stata inizializzata.")
 
+        if not filters:
+            filters = {}
+
+        log.debug(f"Caricamento delle carte con filtri: {filters}")
         load_cards(filters=filters, card_list=self.card_list)
-        #self.parent.controller.collection_controller.load_collection(filters=filters, card_list=self.card_list)
+        #self.controller.load_collection(filters=filters, card_list=self.card_list)
+        #self.controller.load_collection(filters=filters, card_list=self.card_list)
 
         # Imposta il colore di sfondo predefinito per tutte le righe
         #self.reset_focus_style_for_card_list()
@@ -273,7 +278,7 @@ class CardCollectionFrame(ListView):
     def on_show_filters(self, event):
         """Mostra la finestra dei filtri avanzati."""
 
-        dlg = FilterDialog(self)
+        dlg = FilterDialog(parent=self)
         if dlg.ShowModal() != wx.ID_OK:
             dlg.reset_filters()
             self.load_cards(filters=None)

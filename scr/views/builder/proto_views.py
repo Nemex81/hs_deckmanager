@@ -107,6 +107,19 @@ class BasicView(wx.Frame):
         self.init_ui()                # Inizializza l'interfaccia utente
         self.Show()
 
+
+    def add_to_sizer(self, sizer, element, proportion=0, flag=wx.ALL, border=10):
+        """
+        Aggiunge un elemento a un sizer con parametri predefiniti.
+
+        :param sizer: Il sizer a cui aggiungere l'elemento.
+        :param element: L'elemento da aggiungere (es. un pulsante o una lista).
+        :param proportion: Proporzione dell'elemento nel sizer. Default: 0.
+        :param flag: Flag di allineamento. Default: wx.ALL.
+        :param border: Spazio intorno all'elemento. Default: 10.
+        """
+        sizer.Add(element, proportion=proportion, flag=flag, border=border)
+
     def set_controller(self, controller=None):
         """ Imposta il controller per l'interfaccia. """
         self.controller = controller

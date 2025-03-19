@@ -196,17 +196,17 @@ class DecksViewFrame(ListView):
 
         # Layout principale
         main_sizer = self.widget_factory.create_sizer(wx.VERTICAL)
-        self.widget_factory.add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
-        self.widget_factory.add_to_sizer(main_sizer, self.search_ctrl, flag=wx.EXPAND | wx.ALL, border=5)
+        self.add_to_sizer(main_sizer, lbl_title, flag=wx.CENTER | wx.TOP, border=10)
+        self.add_to_sizer(main_sizer, self.search_ctrl, flag=wx.EXPAND | wx.ALL, border=5)
 
         # Separatore tra barra di ricerca e lista dei mazzi
-        self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Aggiungi la lista dei mazzi al sizer
-        self.widget_factory.add_to_sizer(main_sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+        self.add_to_sizer(main_sizer, self.card_list, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra lista dei mazzi e pulsanti
-        self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Layout pulsanti
         btn_sizer = wx.GridSizer(rows=4, cols=2, hgap=10, vgap=10)
@@ -218,10 +218,10 @@ class DecksViewFrame(ListView):
         self.reset_focus_style_for_all_buttons(btn_sizer)
 
         # Aggiungi i pulsanti al sizer principale
-        self.widget_factory.add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
+        self.add_to_sizer(main_sizer, btn_sizer, flag=wx.EXPAND | wx.ALL, border=10)
 
         # Separatore tra pulsanti e barra di stato
-        self.widget_factory.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
+        self.add_to_sizer(main_sizer, wx.StaticLine(self.panel), flag=wx.EXPAND | wx.TOP | wx.BOTTOM, border=10)
 
         # Imposta il sizer principale
         self.panel.SetSizer(main_sizer)
