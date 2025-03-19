@@ -8,7 +8,6 @@
 # Lib
 from scr.views.builder.dependency_container import DependencyContainer
 from scr.views.builder.color_system import ColorManager
-from scr.views.builder.focus_handler import FocusHandler
 from scr.views.builder.view_factory import WidgetFactory
 
 from scr.views.collection_view import CardCollectionFrame
@@ -56,29 +55,23 @@ class AppInitializer:
 
         log.info("Registrazione delle dipendenze nel container.")
 
-        # Registra ColorManager e FocusHandler
+        # Registra ColorManager
         self.container.register("color_manager", lambda: ColorManager(theme=ColorTheme.DARK))
-        self.container.register("focus_handler", lambda: FocusHandler())
 
         # verifica che ColorManager sia registrato
         if not self.container.has("color_manager"):
             log.error("ColorManager non registrato correttamente.")
 
-        # Verifica che FocusHandler sia registrato
-        if not self.container.has("focus_handler"):
-            log.error("FocusHandler non registrato correttamente.")
-
         # Registra WidgetFactory
         self.container.register("widget_factory", lambda: WidgetFactory(
             color_manager=self.container.resolve("color_manager"),
-            focus_handler=self.container.resolve("focus_handler"),
         ))
 
         # Verifica che WidgetFactory sia registrata
         if not self.container.has("widget_factory"):
             log.error("WidgetFactory non registrata correttamente.")
         else:
-            log.debug("ColorManager, FocusHandler e WidgetFactory registrati correttamente.")
+            log.debug("ColorManager e WidgetFactory registrati correttamente.")
 
         # Gestione del database
         db_manager = DbManager()
