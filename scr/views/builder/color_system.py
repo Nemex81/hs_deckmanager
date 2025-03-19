@@ -227,6 +227,13 @@ class ColorManager:
 
 
     def apply_theme_to_window(self, window):
+        for child in window.GetChildren():
+            if isinstance(child, (wx.Button, wx.ListCtrl, wx.Panel, wx.StaticText, wx.TextCtrl, wx.SearchCtrl, wx.ComboBox, wx.RadioButton, wx.CheckBox)):
+                self.apply_default_style(child)
+            elif isinstance(child, wx.Panel):
+                self.apply_theme_to_window(child)  # Ricorsione per i pannelli annidati
+
+    def last_apply_theme_to_window(self, window):
         """Applica lo stile corrente a una finestra e ai suoi figli."""
 
         for child in window.GetChildren():
