@@ -42,8 +42,80 @@ class CardEditDialog(SingleCardView):
     def init_ui_elements(self):
         """Inizializza i componenti specifici per CardEditDialog."""
 
+        # Imposta il colore di sfondo del pannello a blu e il font a bianco
+        self.panel.SetBackgroundColour(wx.Colour(0, 0, 255))  # Sfondo blu
+        self.panel.SetForegroundColour(wx.Colour(255, 255, 255))  # Font bianco
+
+        # Sizer per i campi
+        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
+
+        # Definizione dei campi comuni
+        common_controls = create_common_controls()
+
+        # Creazione dei controlli UI e aggiunta al sizer dei campi
+        for key, label_text, control_type, *args in common_controls:
+            label = wx.StaticText(self.panel, label=label_text)
+            if args:
+                control = control_type(self.panel, **args[0])
+            else:
+                control = control_type(self.panel)
+
+            # Aggiungi il controllo al dizionario per accedervi facilmente
+            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
+            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+            self.controls[key] = control
+
+        # Collega l'evento di selezione del tipo di carta
+        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
+
+        # Aggiungi il sizer dei campi al sizer principale
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Selezione multipla delle classi
+        classes_label, self.classes_listbox = create_check_list_box(
+            self.panel,
+            choices=[h.value for h in EnuHero],
+            label="Classi:"
+        )
+
+        # Aggiungi il sizer delle classi al sizer principale
+        main_sizer.Add(classes_label, flag=wx.LEFT | wx.RIGHT, border=10)
+        main_sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Sizer per i pulsanti
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.add_buttons(btn_sizer, [("Salva", self.on_save), ("Annulla", self.on_close)])
+
+        # Centra i pulsanti rispetto al contenitore
+        btn_container = wx.BoxSizer(wx.VERTICAL)
+        btn_container.AddStretchSpacer()
+        btn_container.Add(btn_sizer, 0, wx.ALIGN_CENTER)
+        btn_container.AddStretchSpacer()
+
+        # Aggiungi il sizer dei pulsanti al sizer principale
+        main_sizer.Add(btn_container, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
+
+        # Imposta il sizer principale per il pannello
+        self.panel.SetSizer(main_sizer)
+        main_sizer.Fit(self.panel)
+
+        # Se è una modifica, pre-carica i dati della carta
+        if self.card:
+            self.load_card_data()
+
+        # Aggiorna i sottotipi della carta
+        self.update_subtypes()
+        self.apply_type_change()
+
+        # Importa il layout
+        self.Layout()
+
+    def last_init_ui_elements(self):
+        """Inizializza i componenti specifici per CardEditDialog."""
+
         # coloro di verde il bg del pannello
-        self.panel.SetBackgroundColour('green')
+        self.panel.SetBackgroundColour('blue')
 
         # Sizer per i campi
         fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
@@ -104,58 +176,6 @@ class CardEditDialog(SingleCardView):
         # importo il layout
         self.Layout()
 
-    def last_init_ui_elements(self):
-        """vecchia versioen del metodo che Inizializza i componenti specifici per CardEditDialog."""
-
-        # Sizer per i campi
-        fields_sizer = wx.FlexGridSizer(rows=0, cols=2, hgap=10, vgap=10)
-
-        # Definizione dei campi comuni
-        common_controls = create_common_controls()
-
-        # Creazione dei controlli UI e aggiunta al sizer dei campi
-        for key, label_text, control_type, *args in common_controls:
-            label = wx.StaticText(self.panel, label=label_text)
-            if args:
-                control = control_type(self.panel, **args[0])
-            else:
-                control = control_type(self.panel)
-
-            fields_sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL | wx.ALL, border=5)
-            fields_sizer.Add(control, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-            self.controls[key] = control
-
-        # Collega l'evento di selezione del tipo di carta
-        self.controls["tipo"].Bind(wx.EVT_COMBOBOX, self.on_type_change)
-
-        # Aggiungi il sizer dei campi al sizer principale
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-        main_sizer.Add(fields_sizer, proportion=0, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Selezione multipla delle classi
-        classes_label, self.classes_listbox = create_check_list_box(
-            self.panel,
-            choices=[h.value for h in EnuHero],
-            label="Classi:"
-        )
-
-        main_sizer.Add(classes_label, flag=wx.LEFT | wx.RIGHT, border=10)
-        main_sizer.Add(self.classes_listbox, proportion=1, flag=wx.EXPAND | wx.ALL, border=10)
-
-        # Sizer per i pulsanti
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.add_buttons(btn_sizer, [("Salva", self.on_save), ("Chiudi", self.on_close)])
-
-        # Aggiungi il sizer dei pulsanti al sizer principale
-        main_sizer.Add(btn_sizer, proportion=0, flag=wx.ALIGN_RIGHT | wx.ALL, border=10)
-
-        # Imposta il sizer principale per il pannello
-        self.panel.SetSizer(main_sizer)
-        main_sizer.Fit(self.panel)
-
-        # Se è una modifica, pre-carica i dati della carta
-        if self.card:
-            self.load_card_data()
 
     def load_card_data(self):
         """Carica i dati della carta nei controlli UI."""
@@ -257,11 +277,32 @@ class CardEditDialog(SingleCardView):
         """
         for label, handler in buttons:
             btn = create_button(self.panel, label=label, event_handler=handler)
+            
+            # Imposta lo stile dei pulsanti
+            if label == "Salva":
+                btn.SetBackgroundColour(wx.Colour('green')) 
+                btn.SetForegroundColour(wx.Colour('black')) 
+            elif label == "Annulla":
+                btn.SetBackgroundColour(wx.Colour('red'))  # Sfondo rosso
+                btn.SetForegroundColour(wx.Colour('black'))  # Font bianco
+
+            btn_sizer.Add(btn, flag=wx.RIGHT, border=10)
+
+    def last_add_buttons(self, btn_sizer, buttons):
+        """
+        Aggiunge pulsanti alla finestra di dialogo.
+
+        :param btn_sizer: Il sizer a cui aggiungere i pulsanti.
+        :param buttons: Lista di tuple (label, handler) per i pulsanti.
+        """
+        for label, handler in buttons:
+            btn = create_button(self.panel, label=label, event_handler=handler)
             btn_sizer.Add(btn, flag=wx.RIGHT, border=10)
 
 
     def on_save(self, event):
         """Salva la carta nel database."""
+
         try:
             card_data = {
                 "name": self.controls["nome"].GetValue(),
