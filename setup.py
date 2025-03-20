@@ -14,9 +14,9 @@ from cx_Freeze import setup, Executable
 # "packages": ["os"] is used as example only
 build_exe_options = {
     "optimize": 1,
-    "packages": ["os"],
+    "packages": ["os", "sqlalchemy"],
     "excludes": ["archivio"],
-    "include_files": ["img", "README.md"],
+    "include_files": ["img", "logs", "README.md"],
 }
 
 base="Win32GUI"
