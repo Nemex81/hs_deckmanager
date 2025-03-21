@@ -38,10 +38,9 @@ def start_app():
 
     log.setup_logging()
     app_initializer = AppInitializer()
-    #app_initializer.initialize_app()
     app_initializer.start_app()
+
 
 
 if __name__ == "__main__":
     start_app()
-
