@@ -547,7 +547,7 @@ template animation_culture_refresh = {
 # WINDOW CULTURE - DUAL MODE (OCR + VANILLA)
 ###############################################
 # Repository: Nemex81/ocr-support-patch
-# File: ocr-support/compatibility-patch/gui/window_culture.gui
+# File: ocr-support/compatibility-pach/gui/window_culture.gui
 # Last Modified: 2025-12-21
 
 ### === WINDOW PRINCIPALE === ###
