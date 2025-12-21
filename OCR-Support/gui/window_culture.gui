@@ -100,7 +100,6 @@ window = {
 
 		blockoverride "ocr_content" {
 			vbox = {
-				visible = "[Not(GetVariableSystem.Exists('ocr'))]"
 				layoutpolicy_horizontal = expanding
 				layoutpolicy_vertical = expanding
 
