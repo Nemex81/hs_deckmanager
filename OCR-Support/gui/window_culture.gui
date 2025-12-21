@@ -41,7 +41,7 @@ window = {
 		on_start = "[GetVariableSystem.Clear( 'hide_bottom_left_HUD' )]"
 	}
 	window_ocr = {
-		visible = "[Not(GetVariableSystem.Exists('ocr'))]"
+		visible = "[GetVariableSystem.Exists('ocr')]"
 		blockoverride "ocr_header" {
 			header_pattern = {
 				layoutpolicy_horizontal = expanding
@@ -54,7 +54,6 @@ window = {
 				blockoverride "button_close"
 				{
 					onclick = "[CultureWindow.Close]"
-					# shortcut = "innovations_window"
 				}
 
 				blockoverride "button_back"
@@ -705,7 +704,6 @@ window = {
 								blockoverride "sclick" {
 									using = char_click
 								}
-								# shortcuts_list = {
 								# }
 								# blockoverride "num" {}
 								datacontext = "[Scope.GetCharacter]"
@@ -725,7 +723,7 @@ window = {
 									flowcontainer = {
 										ignoreinvisible = yes
 										spacing = 3
-										visible = no#"[GetPlayer.MakeScope.Var('culture_followers_sort').IsSet]"
+										visible = "[GetPlayer.MakeScope.Var('culture_followers_sort').IsSet]"
 
 										text_single = {
 											visible = "[EqualTo_string(GetPlayer.MakeScope.Var('culture_followers_sort').GetFlagName, 'piety')]"
@@ -803,7 +801,6 @@ window = {
 									onclick = "[OpenGameViewData( 'culture_window', Culture.GetID )]"
 									onclick = "[Set('culture_view_tabs', 'overview')]"
 								}
-								# shortcuts_list = {}
 								# blockoverride "num" {}
 								blockoverride "text" {
 									raw_text = "[Culture.GetNameNoTooltip],"
@@ -843,7 +840,6 @@ window = {
 						item = {
 							button_county_ocr = {
 								# blockoverride "num" {}
-								# shortcuts_list = {}
 								blockoverride "culture" {}
 								blockoverride "sclick" {
 									using = prov_click
@@ -1577,7 +1573,7 @@ window = {
 	}
 
 	marginwidget = {
-		visible = "[GetVariableSystem.Exists('ocr')]"
+		visible = "[Not(GetVariableSystem.Exists('ocr'))]"
 		using = Window_Margins_Sidebar
 
 		header_pattern = {
