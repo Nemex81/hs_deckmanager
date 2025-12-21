@@ -1,5 +1,5 @@
 # ocr-support-patch
-patch di compatibilità pe rocr support, mod dedicata a crusader king 3
+patch di compatibilità per ocr support, mod dedicata a crusader king 3
 
 ---
 ## Obiettivo
@@ -547,7 +547,7 @@ template animation_culture_refresh = {
 # WINDOW CULTURE - DUAL MODE (OCR + VANILLA)
 ###############################################
 # Repository: Nemex81/ocr-support-patch
-# File: ocr-support/compatibility-pach/gui/window_culture.gui
+# File: ocr-support/compatibility-patch/gui/window_culture.gui
 # Last Modified: 2025-12-21
 
 ### === WINDOW PRINCIPALE === ###
