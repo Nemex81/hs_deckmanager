@@ -1702,9 +1702,9 @@ window = {
 			button_tab = {
 				shortcut = speed_3
 				layoutpolicy_horizontal = expanding
-				onclick = "[GetVariableSystem.Set( 'culture_view_tabs', 'all_cultures' )]"
+				onclick = "[GetVariableSystem.Set( 'culture_view_tabs', 'other cultures' )]"
 				onclick = "[CultureWindow.HideReformationMode]"
-				down = "[GetVariableSystem.HasValue( 'culture_view_tabs', 'all_cultures' )]"
+				down = "[GetVariableSystem.HasValue( 'culture_view_tabs', 'other cultures' )]"
 
 				text_single = {
 					parentanchor = center
@@ -2183,7 +2183,7 @@ window = {
 
 		vbox = {
 			name = "all_cultures_tab"
-			visible = "[GetVariableSystem.HasValue( 'culture_view_tabs', 'all_cultures' )]"
+			visible = "[GetVariableSystem.HasValue( 'culture_view_tabs', 'other cultures' )]"
 			layoutpolicy_horizontal = expanding
 			layoutpolicy_vertical = expanding
 			using = Animation_Tab_Switch
@@ -2195,39 +2195,32 @@ window = {
 			}
 
 			dynamicgridbox = {
-				datamodel = "[culture_list]"
+				datamodel = "[GetPlayer.MakeScope.GetList('cultures')]"
 				datamodel_wrap = 2
 				layoutpolicy_horizontal = expanding
 				layoutpolicy_vertical = expanding
 
 				item = {
-					widget = {
+					button_text = {
 						layoutpolicy_horizontal = expanding
-						layoutpolicy_vertical = expanding
-						margin = { 4 4 }
+						datacontext = "[Scope.Culture]"
+						onclick = "[OpenGameViewData( 'culture_window', Culture.GetID )]"
+						onclick = "[Set('culture_view_tabs', 'overview')]"
 
-						background = {
-							using = Background_Area
-							margin = { 4 4 }
+						blockoverride "text" {
+							raw_text = "[Culture.GetNameNoTooltip]"
 						}
 
-						text_single = {
-							text = "[CultureListItem.GetName]"
-							using = Font_Size_Medium
-							default_format = "#high"
-						}
+						blockoverride "extra" {
+							text_single = {
+								raw_text = "[Culture.GetHeritage.GetNameNoTooltip]"
+							}
 
-						text_single = {
-							text = "[CultureListItem.GetHeritageName]"
-							default_format = "#low"
-						}
-
-						progressbar_standard = {
-							min = 0
-							max = 100
-							value = "[CultureListItem.GetAcceptance]"
-							layoutpolicy_horizontal = expanding
-							minimumsize = { 0 12 }
+							text_single = {
+								visible = "[Not( ObjectsEqual( Culture.Self, GetPlayer.GetCulture ) )]"
+								raw_text = "[Culture.GetAcceptance( GetPlayer.GetCulture )|%/0]"
+								tooltip = "CULTURE_ACCEPTANCE_TOOLTIP"
+							}
 						}
 					}
 				}
@@ -2248,40 +2241,14 @@ window = {
 			}
 
 			dynamicgridbox = {
-				datamodel = "[culture_counties_list]"
+				datamodel = "[GetPlayer.MakeScope.GetList('culture_counties')]"
 				datamodel_wrap = 2
 				layoutpolicy_horizontal = expanding
 				layoutpolicy_vertical = expanding
 
 				item = {
-					widget = {
+					button_county_ocr = {
 						layoutpolicy_horizontal = expanding
-						layoutpolicy_vertical = expanding
-						margin = { 4 4 }
-
-						background = {
-							using = Background_Area
-							margin = { 4 4 }
-						}
-
-						text_single = {
-							text = "[CultureCountyItem.GetName]"
-							using = Font_Size_Medium
-							default_format = "#high"
-						}
-
-						text_single = {
-							text = "[CultureCountyItem.GetHolderName]"
-							default_format = "#low"
-						}
-
-						progressbar_standard = {
-							min = 0
-							max = 100
-							value = "[CultureCountyItem.GetConversionProgress]"
-							layoutpolicy_horizontal = expanding
-							minimumsize = { 0 12 }
-						}
 					}
 				}
 			}
@@ -2301,53 +2268,24 @@ window = {
 			}
 
 			dynamicgridbox = {
-				datamodel = "[culture_characters_list]"
+				datamodel = "[Culture.MakeScope.GetList('culture_characters')]"
 				datamodel_wrap = 1
 				layoutpolicy_horizontal = expanding
 				layoutpolicy_vertical = expanding
 
 				item = {
-					widget = {
+					button_text = {
 						layoutpolicy_horizontal = expanding
-						layoutpolicy_vertical = expanding
-						margin = { 4 4 }
+						datacontext = "[Scope.Character]"
+						onclick = "[DefaultOnCharacterClick( Character.GetID )]"
 
-						background = {
-							using = Background_Area
-							margin = { 4 4 }
+						blockoverride "text" {
+							raw_text = "[Character.GetUINameNoTooltip]"
 						}
 
-						hbox = {
-							layoutpolicy_horizontal = expanding
-							spacing = 10
-
-							portrait_body = {
-								datacontext = "[CultureCharacterItem.GetCharacter]"
-								size = { 96 176 }
-							}
-
-							vbox = {
-								layoutpolicy_horizontal = expanding
-								spacing = 4
-
-								text_single = {
-									text = "[CultureCharacterItem.GetName]"
-									using = Font_Size_Medium
-									default_format = "#high"
-								}
-
-								text_single = {
-									text = "[CultureCharacterItem.GetPrimaryTitle]"
-									default_format = "#low"
-								}
-
-								progressbar_standard = {
-									min = 0
-									max = 100
-									value = "[CultureCharacterItem.GetPrestigePercent]"
-									layoutpolicy_horizontal = expanding
-									minimumsize = { 0 12 }
-								}
+						blockoverride "extra" {
+							text_single = {
+								raw_text = "[Character.GetPrimaryTitle.GetNameNoTooltip]"
 							}
 						}
 					}
