@@ -171,3 +171,8 @@ Il progetto è rilasciato sotto licenza MIT. Per ulteriori dettagli, consulta il
     - Per segnalare problemi o suggerire miglioramenti, apri una issue su GitHub.
 
 ---
+
+## **Development Notes**
+    - For implementation details and change tracking, see [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md)
+
+---
