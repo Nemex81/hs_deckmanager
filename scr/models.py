@@ -36,7 +36,7 @@ import re, pyperclip
 from contextlib import contextmanager
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from .db import session, db_session, Deck, DeckCard, Card
+from .db import db_session, Deck, DeckCard, Card
 from utyls import enu_glob as eg
 from utyls import logger as log
 #import pdb
@@ -456,17 +456,17 @@ class DbManager:
     def delete_deck(self, deck_name):
         """ Elimina un mazzo dal database. """
         try:
-            with db_session():
-                deck = session.query(Deck).filter_by(name=deck_name).first()
+            with db_session() as sess:
+                deck = sess.query(Deck).filter_by(name=deck_name).first()
                 if not deck:
                     log.warning(f"Tentativo di eliminazione del mazzo '{deck_name}' non trovato.")
                     return False
 
                 # Elimina le carte associate al mazzo
-                session.query(DeckCard).filter_by(deck_id=deck.id).delete()
+                sess.query(DeckCard).filter_by(deck_id=deck.id).delete()
                 # Elimina il mazzo
-                session.delete(deck)
-                session.commit()
+                sess.delete(deck)
+                sess.commit()
 
             log.info(f"Mazzo '{deck_name}' eliminato con successo.")
             return True
@@ -698,12 +698,12 @@ class DbManager:
         try:
             deck_string = pyperclip.paste()
             if self.is_valid_deck(deck_string):
-                with db_session() as session:  # Usa il contesto db_session
-                    deck = session.query(Deck).filter_by(name=deck_name).first()
+                with db_session() as sess:  # Usa il contesto db_session
+                    deck = sess.query(Deck).filter_by(name=deck_name).first()
                     if deck:
                         # Elimina le carte associate al mazzo
-                        session.query(DeckCard).filter_by(deck_id=deck.id).delete()
-                        session.commit()
+                        sess.query(DeckCard).filter_by(deck_id=deck.id).delete()
+                        sess.commit()
 
                         # Sincronizza le carte con il database
                         self.sync_cards_with_database(deck_string)
@@ -711,7 +711,7 @@ class DbManager:
                         # Aggiungi le nuove carte al mazzo
                         cards = self.parse_cards_from_deck(deck_string)
                         for card_data in cards:
-                            card = session.query(Card).filter_by(name=card_data["name"]).first()
+                            card = sess.query(Card).filter_by(name=card_data["name"]).first()
                             if not card:
                                 card = Card(
                                     name=card_data["name"],
@@ -723,12 +723,12 @@ class DbManager:
                                     rarity="Unknown",
                                     expansion="Unknown"
                                 )
-                                session.add(card)
-                                session.commit()
+                                sess.add(card)
+                                sess.commit()
 
                             deck_card = DeckCard(deck_id=deck.id, card_id=card.id, quantity=card_data["quantity"])
-                            session.add(deck_card)
-                            session.commit()
+                            sess.add(deck_card)
+                            sess.commit()
 
                         return True
 

@@ -163,3 +163,10 @@ settings.json
 .db3
 .db
 .json
+
+# Database files
+hearthstone_decks_storage.db
+data/
+*.db-journal
+*.db-wal
+*.db-shm
