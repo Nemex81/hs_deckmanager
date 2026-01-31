@@ -21,8 +21,8 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-from ..db import Card
-from ..models import load_cards, session
+from ..db import Card, db_session
+from ..models import load_cards
 from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .filters_dialog import FilterDialog
@@ -364,12 +364,13 @@ class CardCollectionFrame(ListView):
             if card_name:
                 if self.mode == "collection":
                     # Aggiungi la carta alla collezione (se non esiste già)
-                    card = session.query(Card).filter_by(name=card_name).first()
-                    if not card:
-                        wx.MessageBox("La carta non esiste nel database.", "Errore")
-                    else:
-                        self.load_cards()
-                        wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
+                    with db_session() as session:
+                        card = session.query(Card).filter_by(name=card_name).first()
+                        if not card:
+                            wx.MessageBox("La carta non esiste nel database.", "Errore")
+                        else:
+                            self.load_cards()
+                            wx.MessageBox(f"Carta '{card_name}' aggiunta alla collezione.", "Successo")
         dlg.Destroy()
 
 
@@ -379,18 +380,19 @@ class CardCollectionFrame(ListView):
         selected = self.card_list.GetFirstSelected()
         if selected != -1:
             card_name = self.card_list.GetItemText(selected)
-            card = session.query(Card).filter_by(name=card_name).first()
-            if card:
-                dlg = CardEditDialog(self, card)
-                if dlg.ShowModal() == wx.ID_OK:
-                    self.load_cards()  # Ricarica la lista delle carte
-                    wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
-                    self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
+            with db_session() as session:
+                card = session.query(Card).filter_by(name=card_name).first()
+                if card:
+                    dlg = CardEditDialog(self, card)
+                    if dlg.ShowModal() == wx.ID_OK:
+                        self.load_cards()  # Ricarica la lista delle carte
+                        wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
+                        self.select_card_by_name(card_name)  # Seleziona e mette a fuoco la carta modificata
 
-                dlg.Destroy()
+                    dlg.Destroy()
 
-            else:
-                wx.MessageBox("Carta non trovata nel database.", "Errore")
+                else:
+                    wx.MessageBox("Carta non trovata nel database.", "Errore")
 
         else:
             wx.MessageBox("Seleziona una carta da modificare.", "Errore")
@@ -406,14 +408,15 @@ class CardCollectionFrame(ListView):
                 try:
                     if self.mode == "collection":
                         # Elimina la carta dalla collezione
-                        card = session.query(Card).filter_by(name=card_name).first()
-                        if card:
-                            session.delete(card)
-                            session.commit()
-                            self.load_cards()
-                            wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
-                        else:
-                            wx.MessageBox("Carta non trovata nel database.", "Errore", wx.OK | wx.ICON_ERROR)
+                        with db_session() as session:
+                            card = session.query(Card).filter_by(name=card_name).first()
+                            if card:
+                                session.delete(card)
+                                session.commit()
+                                self.load_cards()
+                                wx.MessageBox(f"Carta '{card_name}' eliminata dalla collezione.", "Successo", wx.OK | wx.ICON_INFORMATION)
+                            else:
+                                wx.MessageBox("Carta non trovata nel database.", "Errore", wx.OK | wx.ICON_ERROR)
 
                 except Exception as e:
                     log.error(f"Errore durante l'eliminazione della carta: {str(e)}")

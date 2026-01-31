@@ -17,7 +17,7 @@
 #lib
 import wx
 from sqlalchemy.exc import SQLAlchemyError
-from ..db import session, Card
+from ..db import db_session, Card
 from ..models import load_cards
 from .builder.view_components import create_button, create_check_list_box, create_separator, create_common_controls
 from .builder.proto_views import SingleCardView
@@ -321,16 +321,17 @@ class CardEditDialog(SingleCardView):
             selected_classes = [self.classes_listbox.GetString(i) for i in self.classes_listbox.GetCheckedItems()]
             card_data["class_name"] = ", ".join(selected_classes)  # Salva come stringa separata da virgole
 
-            if self.card:
-                # Modifica la carta esistente
-                for key, value in card_data.items():
-                    setattr(self.card, key, value)
-            else:
-                # Aggiungi una nuova carta
-                new_card = Card(**card_data)
-                session.add(new_card)
+            with db_session() as session:
+                if self.card:
+                    # Modifica la carta esistente
+                    for key, value in card_data.items():
+                        setattr(self.card, key, value)
+                else:
+                    # Aggiungi una nuova carta
+                    new_card = Card(**card_data)
+                    session.add(new_card)
 
-            session.commit()            # Salva le modifiche nel database
+                session.commit()            # Salva le modifiche nel database
             self.EndModal(wx.ID_OK)     # Chiude la finestra
 
         except Exception as e:

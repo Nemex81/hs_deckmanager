@@ -22,6 +22,7 @@
 
 # lib
 import os
+from pathlib import Path
 from contextlib import contextmanager
 from sqlalchemy import create_engine, Column, Integer, String, Index
 from sqlalchemy.ext.declarative import declarative_base
@@ -32,12 +33,13 @@ from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 
-# Configurazione del database
-DATABASE_PATH = "hearthstone_decks_storage.db"                      # Percorso del database SQLite
-engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=False, connect_args={"timeout": 30})     # Connessione al database SQLite
-Session = sessionmaker(bind=engine)                                 # Sessione del database per l'interazione con il database
-session = Session()                                                 # Sessione del database per l'interazione con il database
-Base = declarative_base()                                           # Base per i modelli SQLAlchemy
+# Import centralized DB configuration
+from .user_settings import DB_PATH, DATABASE_URL, SQLALCHEMY_ECHO
+
+# Configurazione del database usando settings centralizzati
+engine = create_engine(DATABASE_URL, echo=SQLALCHEMY_ECHO, connect_args={"timeout": 30})
+Session = sessionmaker(bind=engine)
+Base = declarative_base()
 
 
 
@@ -134,12 +136,18 @@ class DeckCard(Base):
 
 def setup_database():
     """Crea il database e le tabelle se non esistono già."""
+    
+    # Assicurati che la directory del database esista
+    db_dir = DB_PATH.parent
+    if not db_dir.exists():
+        db_dir.mkdir(parents=True, exist_ok=True)
+        log.info(f"Directory database creata: {db_dir}")
 
-    if not os.path.exists(DATABASE_PATH):
+    if not DB_PATH.exists():
         Base.metadata.create_all(engine)
-        log.info(f"Database creato: {DATABASE_PATH}")
+        log.info(f"Database creato: {DB_PATH}")
     else:
-        log.info(f"Database esistente trovato: {DATABASE_PATH}")
+        log.info(f"Database esistente trovato: {DB_PATH}")
 
 
 

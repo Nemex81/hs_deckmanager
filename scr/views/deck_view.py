@@ -15,7 +15,7 @@
 # lib
 import wx#, pyperclip
 import wx.lib.newevent
-from ..db import Card, session
+from ..db import Card, db_session
 from .builder.proto_views import BasicView, ListView
 from .card_edit_dialog import CardEditDialog
 from .builder.color_system import AppColors
@@ -405,35 +405,37 @@ class DeckViewFrame(ListView):
     def _add_card_to_deck(self, card_name):
         """Aggiunge una nuova carta al mazzo."""
 
-        card = session.query(Card).filter_by(name=card_name).first()
-        if card:
-            self.deck_content["cards"].append({
-                "name": card.name,
-                "mana_cost": card.mana_cost,
-                "quantity": 1
-            })
-            self.load_cards()
-            wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
-        else:
-            wx.MessageBox("Carta non trovata nel database.", "Errore")
+        with db_session() as session:
+            card = session.query(Card).filter_by(name=card_name).first()
+            if card:
+                self.deck_content["cards"].append({
+                    "name": card.name,
+                    "mana_cost": card.mana_cost,
+                    "quantity": 1
+                })
+                self.load_cards()
+                wx.MessageBox(f"Carta '{card_name}' aggiunta al mazzo.", "Successo")
+            else:
+                wx.MessageBox("Carta non trovata nel database.", "Errore")
 
 
     def _edit_card_in_deck(self, card_name):
         """Modifica la carta selezionata."""
 
-        card = session.query(Card).filter_by(name=card_name).first()
-        if card:
-            dlg = CardEditDialog(self, card)
-            if dlg.ShowModal() == wx.ID_OK:
-                self.load_cards()
-                self.refresh_card_list()
-                wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
+        with db_session() as session:
+            card = session.query(Card).filter_by(name=card_name).first()
+            if card:
+                dlg = CardEditDialog(self, card)
+                if dlg.ShowModal() == wx.ID_OK:
+                    self.load_cards()
+                    self.refresh_card_list()
+                    wx.MessageBox(f"Carta '{card_name}' modificata con successo.", "Successo")
                 self.select_card_by_name(card_name)
 
-            dlg.Destroy()
+                dlg.Destroy()
 
-        else:
-            wx.MessageBox("Carta non trovata nel database.", "Errore")
+            else:
+                wx.MessageBox("Carta non trovata nel database.", "Errore")
 
 
     def _delete_card_from_deck(self, card_name):
