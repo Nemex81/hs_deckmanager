@@ -57,9 +57,39 @@ This document tracks the implementation of robustness fixes and cleanup for the 
     - Instructions for database reset
 - **Impact**: Database files are now properly excluded from version control. Users have clear documentation about where data is stored and how to manage it.
 
-## Pending Tasks
+### Commit 5: Add pytest tests ✅
+- **Date**: 2026-01-31
+- **Changes**:
+  - Created `pytests/test_db_operations.py` with 11 tests covering:
+    - Card CRUD operations (create, read, update, delete)
+    - Deck CRUD operations (create, read, update, delete)
+    - DeckCard relationship operations (add, update quantity, remove)
+    - Database session management
+  - Created `pytests/test_parsing.py` with 21 tests covering:
+    - Deck metadata parsing (name, class, format)
+    - Deck string validation
+    - Card line parsing (quantity, mana cost, card name)
+    - Filter options logic (Italian and English)
+  - Updated `README.md` with comprehensive testing documentation:
+    - Commands to run tests
+    - Test coverage summary
+    - Note about temporary database usage
+  - All tests use temporary databases to avoid interfering with production data
+  - Tests avoid wx dependency by defining models directly in test files
+- **Impact**: Core database operations and parsing logic are now tested, providing confidence in refactoring and future changes. 32 tests total, all passing.
 
-### Commit 5: Add pytest tests
+## Summary
+
+All commits completed successfully! The project now has:
+1. ✅ Fixed critical recursion bug in current_window property
+2. ✅ Centralized database configuration in user_settings.py
+3. ✅ Removed global SQLAlchemy session; all code uses db_session() context manager
+4. ✅ Consolidated logging configuration with single initialization
+5. ✅ Updated .gitignore to exclude database files and data directory
+6. ✅ Comprehensive documentation in README.md and IMPLEMENTATION_NOTES.md
+7. ✅ 32 passing pytest tests for database operations and parsing logic
+
+The codebase is now more robust, maintainable, and well-documented.
 - Centralize DB path/config in `scr/user_settings.py`
 - Update `scr/db.py` to use centralized DB path/URL
 - Remove hardcoded `DATABASE_PATH` from `db.py`

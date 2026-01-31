@@ -149,6 +149,33 @@ Il progetto è organizzato in diversi moduli:
 
 ---
 
+## **Testing**
+
+### **Running Tests**
+Il progetto include test automatizzati per le operazioni del database e la logica di parsing. Per eseguire i test:
+
+```bash
+# Installa pytest se non è già installato
+pip install pytest
+
+# Esegui tutti i test
+python -m pytest pytests/ -v
+
+# Esegui solo i test del database
+python -m pytest pytests/test_db_operations.py -v
+
+# Esegui solo i test di parsing
+python -m pytest pytests/test_parsing.py -v
+```
+
+### **Test Coverage**
+- **test_db_operations.py**: 11 test per operazioni CRUD su Card, Deck e DeckCard
+- **test_parsing.py**: 21 test per parsing di mazzi, carte e validazione
+
+Tutti i test utilizzano database temporanei per evitare interferenze con i dati di produzione.
+
+---
+
 ## **Dipendenze**
     - **wxPython**: Per l'interfaccia grafica.
     - **SQLAlchemy**: Per la gestione del database.
