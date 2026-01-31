@@ -8,8 +8,8 @@
 
     ---
 
-        **Versione:** 0.5
-        **Data:** 08 marzo 2025
+        **Versione:** 0.6
+        **Data:** 31 gennaio 2026
         **Autore:** [Nemex]
 
     ---
@@ -18,47 +18,72 @@
 
 # lib
 from logging.handlers import RotatingFileHandler
-import logging, os, sys
+import logging
+import os
+from pathlib import Path
 
-# Configurazione del logging
+# Import centralized configuration
+try:
+    from scr.user_settings import LOGS_DIR, DEBUG_MODE
+except ImportError:
+    # Fallback if user_settings is not available
+    LOGS_DIR = Path(__file__).parent.parent / "logs"
+    DEBUG_MODE = False
 
-#logging.basicConfig(
-    #filename='/logs/hdm.log',                             # File di log
-    #level=logging.DEBUG,                                        # Livello di log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    #format='%(asctime)s - %(levelname)s - %(message)s',             # Formato del log
-    #datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
-#)
+# Ensure logs directory exists
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-
-# Configurazione del logging
-handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
-logging.basicConfig(handlers=[handler], level=logging.DEBUG)
-
+# Flag to prevent multiple initializations
+_logging_initialized = False
 
 
-def setup_logging(log_file='logs/hdm.log', console_output=False):
+def setup_logging(log_file=None, console_output=False):
     """ 
         Configura il logging dell'applicazione.
 
         Argomenti:
-                    log_file (str): Percorso del file di log.
+                    log_file (str|Path): Percorso del file di log. Se None, usa LOGS_DIR/hdm.log.
                     console_output (bool): Specifica se abilitare l'output su console.
 
             Note:
                     - Questa funzione deve essere chiamata all'inizio del programma per configurare il logging.
+                    - Può essere chiamata solo una volta; chiamate successive saranno ignorate.
     """
-
-    handlers = [logging.FileHandler(log_file)]
+    global _logging_initialized
+    
+    if _logging_initialized:
+        logging.debug("Logging già inizializzato, ignoro la chiamata a setup_logging.")
+        return
+    
+    if log_file is None:
+        log_file = LOGS_DIR / "hdm.log"
+    else:
+        log_file = Path(log_file)
+    
+    # Ensure parent directory exists
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    handlers = [
+        RotatingFileHandler(
+            log_file, 
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=10, 
+            encoding='utf-8'
+        )
+    ]
+    
     if console_output:
         handlers.append(logging.StreamHandler())
-
+    
     logging.basicConfig(
         handlers=handlers,
-        level=logging.INFO,
+        level=logging.DEBUG if DEBUG_MODE else logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+    
+    _logging_initialized = True
+    logging.info("Sistema di logging inizializzato.")
 
 
 
@@ -92,13 +117,11 @@ def debug(debug):
     logging.debug(f'Debug: {debug}')
 
 
-
-# se il file 'logs/hdm.log' non esiste, lo creo
-if not os.path.exists('logs'):
-    os.makedirs('logs')
-
+# Initialize logging when module is imported (only if not already initialized)
+if not _logging_initialized:
+    setup_logging()
 
 
-# start del moodulo
+# start del modulo
 if __name__ == '__main__':
     debug(f"Carico: {__name__}")

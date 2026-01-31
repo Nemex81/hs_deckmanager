@@ -20,7 +20,8 @@ from utyls import logger as log
 
 
 # === PERCORSI ===
-BASE_DIR = Path(__file__).parent
+# Project root is one level up from scr/
+BASE_DIR = Path(__file__).parent.parent
 LOGS_DIR = BASE_DIR / "logs"
 IMG_DIR = BASE_DIR / "img"
 SOUNDS_DIR = BASE_DIR / "sounds"

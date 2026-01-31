@@ -29,9 +29,23 @@ This document tracks the implementation of robustness fixes and cleanup for the 
     - `_edit_card_in_deck()` method
 - **Impact**: All database operations now use the context manager pattern for proper session management, preventing session leaks and ensuring consistent database state. DB path is now centralized in `user_settings.py`.
 
+### Commit 3: Consolidate logging configuration ✅
+- **Date**: 2026-01-31
+- **Changes**:
+  - Fixed `BASE_DIR` in `scr/user_settings.py` to point to project root (one level up from scr/)
+  - Updated `utyls/logger.py` to:
+    - Import `LOGS_DIR` and `DEBUG_MODE` from centralized `user_settings.py`
+    - Remove multiple `basicConfig` calls (previously on lines 36 and 56)
+    - Add `_logging_initialized` flag to prevent duplicate initialization
+    - Update `setup_logging()` to create log directory if it doesn't exist
+    - Auto-initialize logging when module is imported
+    - Use `RotatingFileHandler` with centralized paths
+  - Updated `main.py` to use auto-initialized logging (removed redundant setup_logging call)
+- **Impact**: Logging is now consistently configured from a single location using centralized paths from `user_settings.py`. Multiple basicConfig calls eliminated, preventing configuration conflicts.
+
 ## Pending Tasks
 
-### Commit 3: Consolidate logging configuration
+### Commit 4: Update .gitignore and DB documentation
 - Centralize DB path/config in `scr/user_settings.py`
 - Update `scr/db.py` to use centralized DB path/URL
 - Remove hardcoded `DATABASE_PATH` from `db.py`

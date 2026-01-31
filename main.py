@@ -35,8 +35,11 @@ def start_app():
     """
     Avvia l'applicazione Hearthstone Deck Manager.
     """
-
-    log.setup_logging(log_file='./logs/hdm.log', console_output=False)
+    
+    # Logging is auto-initialized by the logger module
+    # Optionally call setup_logging() again to enable console output or use custom path
+    # log.setup_logging(console_output=False)
+    
     app_initializer = AppInitializer()
     app_initializer.initialize_app()
     app_initializer.start_app()
