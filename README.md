@@ -83,16 +83,28 @@ Il progetto è organizzato in diversi moduli:
 ## **Installazione**
     1. Clona il repository del progetto:
     ```bash
-    git clone https://github.com/tuo-repository/hearthstone-deck-manager.git
+    git clone https://github.com/Nemex81/hs_deckmanager.git
+    cd hs_deckmanager
     ```
     2. Installa le dipendenze necessarie:
     ```bash
-    pip install wxPython sqlalchemy pyperclip
+    pip install -r requirements.txt
     ```
     3. Avvia l'applicazione:
     ```bash
     python main.py
     ```
+
+### **Database e Configurazione**
+    - **Database Location**: Il database SQLite è memorizzato in `data/hearthstone_decks_storage.db` (relativo alla directory del progetto)
+    - **Inizializzazione Automatica**: Il database viene creato automaticamente al primo avvio dell'applicazione
+    - **Directory dei Log**: I log sono salvati in `logs/hdm.log` con rotazione automatica (max 10 file da 10MB ciascuno)
+    - **Configurazione Centralizzata**: Tutte le configurazioni (percorsi, database, logging) sono definite in `scr/user_settings.py`
+
+    Note:
+    - La directory `data/` viene creata automaticamente se non esiste
+    - Il database non è tracciato da Git (vedi `.gitignore`)
+    - Per ripristinare il database, elimina semplicemente il file `data/hearthstone_decks_storage.db` e riavvia l'applicazione
 
 ---
 

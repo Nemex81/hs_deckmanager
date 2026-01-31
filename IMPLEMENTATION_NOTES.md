@@ -43,9 +43,23 @@ This document tracks the implementation of robustness fixes and cleanup for the 
   - Updated `main.py` to use auto-initialized logging (removed redundant setup_logging call)
 - **Impact**: Logging is now consistently configured from a single location using centralized paths from `user_settings.py`. Multiple basicConfig calls eliminated, preventing configuration conflicts.
 
+### Commit 4: Update .gitignore and DB documentation ✅
+- **Date**: 2026-01-31
+- **Changes**:
+  - Updated `.gitignore` to explicitly ignore:
+    - `hearthstone_decks_storage.db` (the main database file)
+    - `data/` directory (where the database is stored)
+  - Updated `README.md` with new "Database e Configurazione" section documenting:
+    - Database location: `data/hearthstone_decks_storage.db`
+    - Automatic initialization on first run
+    - Log file location and rotation policy
+    - Centralized configuration in `scr/user_settings.py`
+    - Instructions for database reset
+- **Impact**: Database files are now properly excluded from version control. Users have clear documentation about where data is stored and how to manage it.
+
 ## Pending Tasks
 
-### Commit 4: Update .gitignore and DB documentation
+### Commit 5: Add pytest tests
 - Centralize DB path/config in `scr/user_settings.py`
 - Update `scr/db.py` to use centralized DB path/URL
 - Remove hardcoded `DATABASE_PATH` from `db.py`
