@@ -19,6 +19,42 @@ L'applicazione è sviluppata in Python e utilizza le seguenti librerie:
 
 ---
 
+## **Configurazione e Dati**
+
+### **Database**
+Il database dell'applicazione è memorizzato in:
+- **Percorso**: `scr/data/hearthstone_decks_storage.db`
+- Il database viene creato automaticamente al primo avvio
+- Tutte le tabelle necessarie (`cards`, `decks`, `deck_cards`) vengono inizializzate automaticamente
+
+### **Log**
+I log dell'applicazione sono memorizzati in:
+- **Percorso**: `scr/logs/hdm.log`
+- I file di log ruotano automaticamente quando raggiungono 10MB
+- Vengono mantenuti fino a 10 file di backup
+
+### **Migrazione da Versioni Precedenti**
+Se hai un database esistente nella directory principale:
+```bash
+mkdir -p scr/data
+mv hearthstone_decks_storage.db scr/data/
+```
+
+---
+
+## **Robustness Improvements**
+
+Recenti miglioramenti alla robustezza dell'applicazione:
+- ✅ Correzione di bug critici di ricorsione infinita
+- ✅ Configurazione database unificata
+- ✅ Gestione sessioni database migliorata
+- ✅ Configurazione logging consolidata
+- ✅ Test suite completa (16 tests)
+
+Per dettagli completi, consultare [docs/ROBUSTNESS_CHECKLIST.md](docs/ROBUSTNESS_CHECKLIST.md).
+
+---
+
 ## **Funzionalità Principali**
 
     ### **Gestione dei Mazzi**
@@ -141,6 +177,32 @@ Il progetto è organizzato in diversi moduli:
     - **wxPython**: Per l'interfaccia grafica.
     - **SQLAlchemy**: Per la gestione del database.
     - **pyperclip**: Per interagire con gli appunti di sistema.
+
+---
+
+## **Testing**
+
+L'applicazione include una suite di test completa per garantire la stabilità e correttezza del codice.
+
+### **Esecuzione dei Test**
+```bash
+# Installa le dipendenze di test
+pip install pytest sqlalchemy pyperclip
+
+# Esegui tutti i test
+python -m pytest pytests/ -v
+
+# Esegui test specifici
+python -m pytest pytests/test_controller.py -v
+python -m pytest pytests/test_db.py -v
+python -m pytest pytests/test_config.py -v
+```
+
+### **Copertura Test**
+- 16 test totali
+- Test per controller (proprietà current_window)
+- Test per gestione sessioni database
+- Test per caricamento configurazione
 
 ---
 
