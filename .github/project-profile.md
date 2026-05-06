@@ -1,5 +1,5 @@
 ---
-initialized: false
+initialized: true
 scf_protected: true
 scf_file_role: "config"
 scf_merge_priority: 10
@@ -11,20 +11,33 @@ scf_owner: "spark-base"
 spark: true
 framework_version: ""
 
+project_name: "Hearthstone Deck Manager"
+description: "Applicazione desktop Python per creare, salvare e gestire mazzi di Hearthstone. Usa SQLite/SQLAlchemy, interfaccia wxPython e mira all'accessibilità per screen reader."
+primary_language: "Python"
+secondary_languages: []
+ui_framework: "wxPython"
+test_runner: "pytest"
+build_system: "cx_Freeze (setup.py)"
+author:
+	name: "Luca Profita (Nemex81)"
+	email: "nemex1981@gmail.com"
+version: "0.9.6"
+
 ---
 
-# Project Profile Template
+# Project Profile — Generated
 
-Questo file e la source of truth del framework installato nel workspace.
+Questa versione di `project-profile.md` è stata generata automaticamente da Agent-Welcome a partire dalla documentazione del repository (`README.md`) e dalla configurazione di build (`setup.py`).
 
-Compilazione iniziale prevista:
+Campi principali inseriti:
 
-- Agent-Welcome raccoglie nome progetto, stack, workflow e vincoli.
-- I plugin installati aggiornano `active_plugins` senza sovrascrivere il resto.
-- `framework_version` viene valorizzato quando il layer master e installato nel workspace target.
+- `project_name`: nome del progetto ricavato da `README.md`.
+- `description`: descrizione sintetica estratta da `README.md`.
+- `primary_language`: rilevato come `Python` (presenza di `main.py`, package `scr/` e `setup.py`).
+- `ui_framework`: `wxPython` (indicazione esplicita in `README.md` e dipendenza in `requirements`).
+- `test_runner`: `pytest` (cartella `pytests/` presente nel repository).
+- `build_system`: `cx_Freeze` (definito in `setup.py`).
 
-Quando `initialized: false`, gli agenti devono:
+Se desideri modificare uno di questi campi, rispondi con "modifica <campo>" (es. `modifica description`).
 
-- mostrare un avviso non bloccante;
-- evitare assunzioni su linguaggio o stack;
-- proporre `#project-setup` o Agent-Welcome per il bootstrap.
+Agent-Welcome: file generato — procedere al commit richiesto dall'utente.
