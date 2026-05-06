@@ -1,0 +1,110 @@
+{
+  "schema_version": "3.0",
+  "entries": [
+    {
+      "file": "copilot-instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "1a8845f15ad66d34fc966e50128f6ca6856d0be5dba14341df57a909a27eedd5",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/framework-guard.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "0b304bc325341e0ecc7d77733d56ffd8ddc570aecb85c5e6ee8fc4c44837487c",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/git-policy.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "e22f7d3f85b100203c9acde2610765aa71e9117feea731fee5636b57449e25a6",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/model-policy.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "e75143da8b7f12d26342abef2dbd1b1a426c84f0a3d258c32b3a10786eddc5e9",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/personality.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "b4a5be9a7d187c78aa2fbcfa22b3f752f3007862af1a474f4d5a2f89b872a7be",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/project-reset.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "3ba911e0f7c46fa92e35202104ad0d43bd2ece93869c436ec8bc11807d01b89b",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/spark-assistant-guide.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "fff097ea54045d376142d3611d326f39a365015b4d080652c08cd76d4994ba8e",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/verbosity.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "93e38055b81558686f24058345f9cc36755e7d68c47a56be58787ab31a0b3b9a",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "instructions/workflow-standard.instructions.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "49c0de53b23c32f756d2e6ca6fd185a5dbccb778247f266123a42a277a08bf73",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "project-profile.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "798e0a61f30abd626e4492488186e2a31be0f3c5293ff2015b584b551c2f3eeb",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "AGENTS.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "88eeefd527dcd38f7671093bd731d6644e641a026edf3fdb42037a15571ad59e",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "agents/spark-guide.agent.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "5fafaa39897740d75f7ade038cf658e21ff9fe407b882c7a1e1173aa8abb5910",
+      "scf_merge_strategy": "replace"
+    },
+    {
+      "file": "agents/spark-assistant.agent.md",
+      "package": "scf-engine-bootstrap",
+      "package_version": "3.2.0",
+      "installed_at": "2026-05-06T14:50:24Z",
+      "sha256": "c8e442454fa5772cd597e1fb581fc43cf051fbba3d0ccd930848e39ded24dfd5",
+      "scf_merge_strategy": "replace"
+    }
+  ],
+  "overrides": []
+}
