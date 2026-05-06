@@ -28,15 +28,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import ForeignKey
+from scr.user_settings import DB_PATH, SQLALCHEMY_ECHO
 from utyls import helper as hp
 from utyls import logger as log
 #import pdb
 
 # Configurazione del database
-DATABASE_PATH = "hearthstone_decks_storage.db"                      # Percorso del database SQLite
-engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=False, connect_args={"timeout": 30})     # Connessione al database SQLite
+# Ensure the data directory exists
+os.makedirs(DB_PATH.parent, exist_ok=True)
+engine = create_engine(f'sqlite:///{DB_PATH}', echo=SQLALCHEMY_ECHO, connect_args={"timeout": 30})
 Session = sessionmaker(bind=engine)                                 # Sessione del database per l'interazione con il database
-session = Session()                                                 # Sessione del database per l'interazione con il database
 Base = declarative_base()                                           # Base per i modelli SQLAlchemy
 
 
@@ -135,11 +136,11 @@ class DeckCard(Base):
 def setup_database():
     """Crea il database e le tabelle se non esistono già."""
 
-    if not os.path.exists(DATABASE_PATH):
+    if not os.path.exists(DB_PATH):
         Base.metadata.create_all(engine)
-        log.info(f"Database creato: {DATABASE_PATH}")
+        log.info(f"Database creato: {DB_PATH}")
     else:
-        log.info(f"Database esistente trovato: {DATABASE_PATH}")
+        log.info(f"Database esistente trovato: {DB_PATH}")
 
 
 

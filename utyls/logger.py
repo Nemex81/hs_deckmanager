@@ -19,46 +19,63 @@
 # lib
 from logging.handlers import RotatingFileHandler
 import logging, os, sys
+from pathlib import Path
 
-# Configurazione del logging
+# Import base directory from user_settings if available, otherwise use fallback
+try:
+    from scr.user_settings import BASE_DIR, LOGS_DIR
+except ImportError:
+    # Fallback if user_settings isn't available yet
+    BASE_DIR = Path(__file__).parent.parent
+    LOGS_DIR = BASE_DIR / "logs"
 
-#logging.basicConfig(
-    #filename='/logs/hdm.log',                             # File di log
-    #level=logging.DEBUG,                                        # Livello di log (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    #format='%(asctime)s - %(levelname)s - %(message)s',             # Formato del log
-    #datefmt='%Y-%m-%d %H:%M:%S'                                     # Formato della data
-#)
+# Ensure logs directory exists
+os.makedirs(LOGS_DIR, exist_ok=True)
 
+# Configurazione del logging - single setup
+LOG_FILE = LOGS_DIR / "hdm.log"
+_logging_configured = False
 
-
-# Configurazione del logging
-handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
-logging.basicConfig(handlers=[handler], level=logging.DEBUG)
-
-
-
-def setup_logging(log_file='logs/hdm.log', console_output=False):
+def setup_logging(log_file=None, console_output=False):
     """ 
         Configura il logging dell'applicazione.
 
         Argomenti:
-                    log_file (str): Percorso del file di log.
+                    log_file (str): Percorso del file di log. Default usa LOGS_DIR/hdm.log
                     console_output (bool): Specifica se abilitare l'output su console.
 
             Note:
                     - Questa funzione deve essere chiamata all'inizio del programma per configurare il logging.
     """
-
-    handlers = [logging.FileHandler(log_file)]
+    global _logging_configured
+    
+    if _logging_configured:
+        return  # Already configured, skip
+    
+    if log_file is None:
+        log_file = LOG_FILE
+    
+    # Ensure parent directory exists
+    log_path = Path(log_file)
+    os.makedirs(log_path.parent, exist_ok=True)
+    
+    handlers = [RotatingFileHandler(log_file, maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')]
     if console_output:
         handlers.append(logging.StreamHandler())
 
     logging.basicConfig(
         handlers=handlers,
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        datefmt='%Y-%m-%d %H:%M:%S',
+        force=True  # Force reconfiguration if needed
     )
+    
+    _logging_configured = True
+
+
+# Initialize logging with default settings
+setup_logging()
 
 
 
@@ -90,13 +107,6 @@ def info(info):
 
 def debug(debug):
     logging.debug(f'Debug: {debug}')
-
-
-
-# se il file 'logs/hdm.log' non esiste, lo creo
-if not os.path.exists('logs'):
-    os.makedirs('logs')
-
 
 
 # start del moodulo
