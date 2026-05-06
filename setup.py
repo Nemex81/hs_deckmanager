@@ -27,6 +27,37 @@ else:
 class BuildExeCommand(BuildExe):
     """Esegue il build e rimuove porzioni di wx non usate dal progetto."""
 
+    WX_LIB_KEEP_FILES = {"__init__.pyc", "newevent.pyc"}
+    WX_TOP_LEVEL_REMOVALS = [
+        "aui",
+        "dataview",
+        "gizmos",
+        "glcanvas",
+        "html",
+        "html2",
+        "media",
+        "propgrid",
+        "ribbon",
+        "richtext",
+        "stc",
+        "xml",
+        "xrc",
+    ]
+    WX_TOP_LEVEL_EXTRA_REMOVALS = [
+        "WebView2Loader.dll",
+        "wxbase32u_xml_vc140_x64.dll",
+        "wxmsw32u_aui_vc140_x64.dll",
+        "wxmsw32u_gl_vc140_x64.dll",
+        "wxmsw32u_html_vc140_x64.dll",
+        "wxmsw32u_media_vc140_x64.dll",
+        "wxmsw32u_propgrid_vc140_x64.dll",
+        "wxmsw32u_ribbon_vc140_x64.dll",
+        "wxmsw32u_richtext_vc140_x64.dll",
+        "wxmsw32u_stc_vc140_x64.dll",
+        "wxmsw32u_webview_vc140_x64.dll",
+        "wxmsw32u_xrc_vc140_x64.dll",
+    ]
+
     def run(self):
         super().run()
         self._prune_wx_bundle()
@@ -38,8 +69,38 @@ class BuildExeCommand(BuildExe):
             return
 
         self._prune_wx_locales(wx_dir)
+        self._prune_wx_lib(wx_dir)
+        self._prune_wx_top_level_modules(wx_dir)
         self._remove_tree(os.path.join(wx_dir, "py"))
         self._remove_tree(os.path.join(wx_dir, "tools"))
+
+    def _prune_wx_lib(self, wx_dir: str) -> None:
+        lib_dir = os.path.join(wx_dir, "lib")
+        if not os.path.isdir(lib_dir):
+            return
+
+        for entry in os.listdir(lib_dir):
+            entry_path = os.path.join(lib_dir, entry)
+            if entry in self.WX_LIB_KEEP_FILES:
+                continue
+
+            self._remove_path(entry_path)
+
+    def _prune_wx_top_level_modules(self, wx_dir: str) -> None:
+        removable_paths: list[str] = []
+        for module_name in self.WX_TOP_LEVEL_REMOVALS:
+            removable_paths.extend([
+                os.path.join(wx_dir, f"{module_name}.pyc"),
+                os.path.join(wx_dir, f"{module_name}.pyi"),
+                os.path.join(wx_dir, f"_{module_name}.cp311-win_amd64.pyd"),
+                os.path.join(wx_dir, module_name),
+            ])
+
+        for path in removable_paths:
+            self._remove_path(path)
+
+        for filename in self.WX_TOP_LEVEL_EXTRA_REMOVALS:
+            self._remove_path(os.path.join(wx_dir, filename))
 
     def _prune_wx_locales(self, wx_dir: str) -> None:
         locale_dir = os.path.join(wx_dir, "locale")
@@ -60,6 +121,14 @@ class BuildExeCommand(BuildExe):
     def _remove_tree(self, path: str) -> None:
         if os.path.isdir(path):
             shutil.rmtree(path)
+
+    def _remove_path(self, path: str) -> None:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+            return
+
+        if os.path.isfile(path):
+            os.remove(path)
 
 
 

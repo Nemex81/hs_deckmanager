@@ -2,12 +2,14 @@
   "current_phase": "validate",
   "current_agent": "Agent-Orchestrator",
   "retry_count": 0,
-  "confidence": 0.95,
+  "confidence": 0.96,
   "execution_mode": "autonomous",
-  "last_updated": "2026-05-06T17:36:56Z",
+  "last_updated": "2026-05-06T17:41:30Z",
   "phase_history": [
     "code: fixed current_window property recursion in scr/controller.py",
-    "validate: py_compile and symbol usage checks passed for current_window fix"
+    "validate: py_compile and symbol usage checks passed for current_window fix",
+    "code: pruned wx bundle to keep only core modules and wx.lib.newevent",
+    "validate: build_exe passed and pruned exe smoke test passed"
   ],
   "active_task_id": "",
   "github_write_authorized": true
