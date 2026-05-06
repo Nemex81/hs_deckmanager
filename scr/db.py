@@ -30,10 +30,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import ForeignKey
 from utyls import helper as hp
 from utyls import logger as log
+from utyls.runtime_paths import get_database_path
 #import pdb
 
 # Configurazione del database
-DATABASE_PATH = "hearthstone_decks_storage.db"                      # Percorso del database SQLite
+DATABASE_PATH = get_database_path("hearthstone_decks_storage.db")                      # Percorso del database SQLite
 engine = create_engine(f'sqlite:///{DATABASE_PATH}', echo=False, connect_args={"timeout": 30})     # Connessione al database SQLite
 Session = sessionmaker(bind=engine)                                 # Sessione del database per l'interazione con il database
 session = Session()                                                 # Sessione del database per l'interazione con il database

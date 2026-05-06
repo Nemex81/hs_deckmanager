@@ -28,6 +28,7 @@
 # lib
 from scr.app_initializer import AppInitializer
 from utyls import logger as log
+from utyls.runtime_paths import get_log_file
 
 
 
@@ -36,7 +37,7 @@ def start_app():
     Avvia l'applicazione Hearthstone Deck Manager.
     """
 
-    log.setup_logging(log_file='./logs/hdm.log', console_output=False)
+    log.setup_logging(log_file=get_log_file("hdm.log"), console_output=False)
     app_initializer = AppInitializer()
     app_initializer.initialize_app()
     app_initializer.start_app()

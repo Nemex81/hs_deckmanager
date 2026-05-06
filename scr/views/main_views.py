@@ -19,6 +19,7 @@ from .builder.proto_views import BasicView
 from utyls import enu_glob as eg
 from utyls import helper as hp
 from utyls import logger as log
+from utyls.runtime_paths import resolve_app_path
 #import pdb
 
 
@@ -41,7 +42,7 @@ class HearthstoneAppFrame(BasicView):
         """ Inizializza gli elementi dell'interfaccia utente. """
 
         # Aggiungo l'immagine
-        image = wx.Image("img/background_magic.jpeg", wx.BITMAP_TYPE_ANY)
+        image = wx.Image(resolve_app_path("img", "background_magic.jpeg"), wx.BITMAP_TYPE_ANY)
         image = image.Scale(1200, 790)  # Ridimensiona l'immagine
         bitmap = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap(image))
 

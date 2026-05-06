@@ -19,6 +19,7 @@
 # lib
 from logging.handlers import RotatingFileHandler
 import logging, os, sys
+from utyls.runtime_paths import get_log_file
 
 # Configurazione del logging
 
@@ -32,13 +33,13 @@ import logging, os, sys
 
 
 # Configurazione del logging
-os.makedirs('logs', exist_ok=True)
-handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
+DEFAULT_LOG_FILE = get_log_file("hdm.log")
+handler = RotatingFileHandler(DEFAULT_LOG_FILE, maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
 logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
 
 
-def setup_logging(log_file='logs/hdm.log', console_output=False):
+def setup_logging(log_file=None, console_output=False):
     """ 
         Configura il logging dell'applicazione.
 
@@ -50,6 +51,11 @@ def setup_logging(log_file='logs/hdm.log', console_output=False):
                     - Questa funzione deve essere chiamata all'inizio del programma per configurare il logging.
     """
 
+    if log_file is None:
+        log_file = DEFAULT_LOG_FILE
+    elif not os.path.isabs(log_file):
+        log_file = get_log_file(os.path.basename(log_file))
+
     handlers = [logging.FileHandler(log_file)]
     if console_output:
         handlers.append(logging.StreamHandler())
@@ -58,7 +64,8 @@ def setup_logging(log_file='logs/hdm.log', console_output=False):
         handlers=handlers,
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        datefmt='%Y-%m-%d %H:%M:%S',
+        force=True
     )
 
 
@@ -91,12 +98,6 @@ def info(info):
 
 def debug(debug):
     logging.debug(f'Debug: {debug}')
-
-
-
-# se il file 'logs/hdm.log' non esiste, lo creo
-if not os.path.exists('logs'):
-    os.makedirs('logs')
 
 
 
