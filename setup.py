@@ -13,15 +13,7 @@ from cx_Freeze.command.build_exe import build_exe as BuildExe
 
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-
-if sys.platform == "win32":
-    build_output_dir = os.path.join(
-        os.environ.get("LOCALAPPDATA", PROJECT_DIR),
-        "hs_deckmanager",
-        "build",
-    )
-else:
-    build_output_dir = os.path.join(PROJECT_DIR, "build")
+build_output_dir = os.path.join(PROJECT_DIR, "build")
 
 
 class BuildExeCommand(BuildExe):
