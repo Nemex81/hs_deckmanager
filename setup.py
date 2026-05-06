@@ -13,7 +13,10 @@ from cx_Freeze.command.build_exe import build_exe as BuildExe
 
 
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-build_output_dir = os.path.join(PROJECT_DIR, "build")
+APP_NAME = "hs_deckmanager"
+APP_VERSION = "0.9.6"
+BUILD_ROOT_DIR = os.path.join(PROJECT_DIR, "build")
+build_output_dir = os.path.join(BUILD_ROOT_DIR, f"{APP_NAME}-{APP_VERSION}")
 
 BUILD_EXCLUDES = [
     "archivio",
@@ -190,9 +193,9 @@ if sys.platform == "win32":
 
 setup(
     name="Heartstones Decks Manager",
-    version="0.9.6",
+    version=APP_VERSION,
     description="gestore di mazzi per heartstones accessibile agli screen reader!",
     options={"build_exe": build_exe_options},
     cmdclass={"build_exe": BuildExeCommand},
-    executables=[Executable("main.py", base=base, target_name="hs_deckmanager.exe")]
+    executables=[Executable("main.py", base=base, target_name=f"{APP_NAME}.exe")]
 )
