@@ -32,6 +32,7 @@ import logging, os, sys
 
 
 # Configurazione del logging
+os.makedirs('logs', exist_ok=True)
 handler = RotatingFileHandler('logs/hdm.log', maxBytes=10024 * 10024, backupCount=10, encoding='utf-8')
 logging.basicConfig(handlers=[handler], level=logging.DEBUG)
 
