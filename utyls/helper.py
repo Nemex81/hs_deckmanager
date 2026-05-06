@@ -10,7 +10,6 @@
 # lib
 import wx
 import sys, random
-from gtts import gTTS
 from utyls import logger as log
 #import pdb
 
@@ -58,6 +57,8 @@ def disassemble_classes_string(classes_string):
 
 def create_speech_mp3():
     # per avviare inserire  create_speech_mp3()
+    from gtts import gTTS
+
     text = input("Inserisci la frase da convertire in MP3: ")
     filename = input("Inserisci il nome del file MP3 (senza estensione): ")
     language = input("Inserisci la lingua (es. it per italiano): ")
