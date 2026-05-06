@@ -33,11 +33,12 @@ class DefaultController:
     def current_window(self):
         """ Restituisce la finestra corrente. """
 
-        if not self.win_controller.get_current_window():
+        current_window = self.win_controller.get_current_window()
+        if not current_window:
             log.warning("Nessuna finestra corrente rilevata.")
             return None
 
-        return self.current_window()
+        return current_window
 
 
     @current_window.setter
@@ -588,7 +589,7 @@ class MainController(LogycBisness):
         log.info(f"Apertura finestra: {window_key}")
         if self.current_window:
             log.info("Nascondo la finestra corrente prima di aprirne una nuova.")
-            self.current_window().Hide()
+            self.current_window.Hide()
 
         # Usa il WinController per creare/aprire la finestra
         self.win_controller.create_window(parent=parent, key=window_key, **kwargs)
@@ -598,7 +599,7 @@ class MainController(LogycBisness):
         """
         Chiude la finestra corrente e ripristina la finestra genitore.
         """
-        current_window = self.current_window()
+        current_window = self.current_window
         if current_window:
             log.info(f"Chiudo la finestra corrente: {current_window}")
             self.win_controller.close_current_window()
