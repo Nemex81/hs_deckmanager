@@ -39,8 +39,6 @@ BUILD_EXCLUDES = [
     "greenlet.tests",
     "sqlalchemy.testing",
     "sqlalchemy.ext.mypy",
-    "sqlalchemy.dialects.sqlite.aiosqlite",
-    "sqlalchemy.dialects.sqlite.pysqlcipher",
     "sqlalchemy.dialects.mysql",
     "sqlalchemy.dialects.postgresql",
     "sqlalchemy.dialects.oracle",
